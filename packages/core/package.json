@@ -1,0 +1,22 @@
+{
+  "name": "@klikgo/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Framework-free domain logic: services, ports (interfaces) and Result types.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./testing": "./src/testing/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@klikgo/config": "workspace:*",
+    "@types/node": "22.20.5",
+    "eslint": "9.39.5",
+    "typescript": "5.9.3",
+    "vitest": "3.2.7"
+  }
+}

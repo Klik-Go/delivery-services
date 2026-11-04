@@ -5,7 +5,7 @@ Phases are defined in `docs/BUILD_PLAN.md` §6. Agents update this file in every
 | Phase | Name | Status | PR | Notes |
 |---|---|---|---|---|
 | — | Docs: BUSINESS, BUILD_PLAN, CLAUDE.md, prompts | ✅ Done | initial commit | |
-| 0 | Foundations (monorepo, rules, CI) | ⬜ Not started | | |
+| 0 | Foundations (monorepo, rules, CI) | 🟡 In progress (PR open) | PR_LINK | Vercel link pending owner (OPEN_QUESTIONS Q1) |
 | 1 | Data model, migrations, RLS, seed | ⬜ Not started | | |
 | 2 | Auth and RBAC per role | ⬜ Not started | | |
 | 3 | Merchant onboarding and menu (+ AI import) | ⬜ Not started | | |
@@ -22,7 +22,27 @@ Phases are defined in `docs/BUILD_PLAN.md` §6. Agents update this file in every
 Status values: ⬜ Not started · 🟡 In progress (PR open) · ✅ Done (merged) · ⛔ Blocked (say why)
 
 ## Current phase checklist
-_Copy the current phase's acceptance criteria from `docs/BUILD_PLAN.md` here and tick them as they pass._
+### Phase 0 — Foundations (branch `phase-0-foundations`)
+Acceptance (docs/BUILD_PLAN.md §6):
+- [x] `pnpm i && pnpm dev` runs. Verified locally: `/` 200, `/api/health` → `{"data":{"status":"ok"}}`.
+- [x] `features/health.feature` passes in Cucumber (local: 7 scenarios / 35 steps passed, including `@db` against local Supabase) and Playwright (local: 16/16 on `mobile-pixel-7` + `desktop-chrome`).
+- [ ] CI green on the PR (lint, typecheck, unit, supabase start + migrate, cucumber, playwright, build). See the PR checks.
+- [ ] Vercel preview deploys. **Owner action:** link the project (docs/OPEN_QUESTIONS.md Q1).
+- [x] Security headers present: CSP with per-request nonce, HSTS, X-Frame-Options, Referrer-Policy (+ nosniff, Permissions-Policy, COOP). Covered by `features/security-headers.feature` and `apps/web/e2e/security-headers.spec.ts`.
+- [x] No secrets in repo. `.env.example` has names only.
+
+Deliverables:
+- [x] pnpm workspace + Turborepo: `apps/web`, `packages/{core,adapters,db,types,config,ui}`
+- [x] `supabase/` CLI config + first migration (PostGIS in `extensions`, pg_cron), verified with `supabase start` + `supabase db reset`
+- [x] `CLAUDE.md` extended with BUSINESS.md §10.3–10.4 rules (composition root instead of NestJS DI)
+- [x] `docs/ARCHITECTURE.md` (BFF diagram, request flow, roles, order state machine, folder map, testing strategy)
+- [x] Vitest (85 unit tests, 99.5% line coverage; core threshold 90%), Cucumber.js (TS steps, world with API client + DB helper + browser), Playwright (Pixel 7 + desktop, axe a11y)
+- [x] Security: nonce CSP in Node.js middleware, static headers in `next.config.ts`, request id + pino JSON logger with PII redaction
+- [x] GitHub Actions `ci.yml`, CodeQL, Dependabot, PR template
+- [x] `.env.example` (names only) and README with local setup
+- [ ] Vercel project linked (owner)
+
+Next: Phase 1, data model, migrations, RLS and seed (after this PR is reviewed and merged).
 
 ## Business validation (parallel, doc §8)
 - [ ] 20–30 customer interviews in the pilot barangay
