@@ -26,7 +26,7 @@ Status values: ⬜ Not started · 🟡 In progress (PR open) · ✅ Done (merged
 Acceptance (docs/BUILD_PLAN.md §6):
 - [x] `pnpm i && pnpm dev` runs. Verified locally: `/` 200, `/api/health` → `{"data":{"status":"ok"}}`.
 - [x] `features/health.feature` passes in Cucumber (local: 7 scenarios / 35 steps passed, including `@db` against local Supabase) and Playwright (local: 16/16 on `mobile-pixel-7` + `desktop-chrome`).
-- [ ] CI green on the PR (lint, typecheck, unit, supabase start + migrate, cucumber, playwright, build). See the PR checks.
+- [x] CI green on the PR (lint, typecheck, unit, supabase start + migrate, cucumber, playwright, build): [CI run 41888290385](https://github.com/Klik-Go/delivery-services/actions/runs/41888290385) on `f0ab8cd`; CodeQL green, and the unpinned-action finding is fixed by installing pnpm via corepack.
 - [ ] Vercel preview deploys. **Owner action:** link the project (docs/OPEN_QUESTIONS.md Q1).
 - [x] Security headers present: CSP with per-request nonce, HSTS, X-Frame-Options, Referrer-Policy (+ nosniff, Permissions-Policy, COOP). Covered by `features/security-headers.feature` and `apps/web/e2e/security-headers.spec.ts`.
 - [x] No secrets in repo. `.env.example` has names only.
