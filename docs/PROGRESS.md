@@ -6,7 +6,7 @@ Phases are defined in `docs/BUILD_PLAN.md` §6. Agents update this file in every
 |---|---|---|---|---|
 | — | Docs: BUSINESS, BUILD_PLAN, CLAUDE.md, prompts | ✅ Done | initial commit | |
 | 0 | Foundations (monorepo, rules, CI) | ✅ Done (merged) | [Klik-Go/delivery-services#1](https://github.com/Klik-Go/delivery-services/pull/1) | Vercel link pending owner (OPEN_QUESTIONS Q1) |
-| 0.1 | Follow-up: latest toolchain + KGo brand | 🟡 In progress (PR open) | PR_LINK | Owner answers to Q2, Q5, Q6, Q7 |
+| 0.1 | Follow-up: latest toolchain + KGo brand | 🟡 In progress (PR open) | [Klik-Go/delivery-services#3](https://github.com/Klik-Go/delivery-services/pull/3) | Owner answers to Q2, Q5, Q6, Q7 |
 | 1 | Data model, migrations, RLS, seed | ⬜ Not started | | |
 | 2 | Auth and RBAC per role | ⬜ Not started | | |
 | 3 | Merchant onboarding and menu (+ AI import) | ⬜ Not started | | |
