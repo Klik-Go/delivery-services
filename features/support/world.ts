@@ -25,6 +25,24 @@ export interface AuthScenario {
   scriptOutput?: string;
 }
 
+/** State for merchant onboarding, settings and menu steps. */
+export interface MerchantScenario {
+  /** Application ids by business name. */
+  applications: Map<string, string>;
+  merchantId?: string;
+  merchantName?: string;
+  approvedMerchantId?: string;
+  staffApi?: ApiClient;
+  adminApi?: ApiClient;
+  /** Ids created by this scenario, by name. */
+  items: Map<string, string>;
+  drafts?: { category: string; name: string; description: string | null; priceCentavos: number }[];
+  itemCountBefore?: number;
+  categoryNamesBefore?: string[];
+  /** Undo for changes to seeded stores, run after the scenario. */
+  cleanups: (() => Promise<void>)[];
+}
+
 export const BASE_URL = process.env.BASE_URL ?? "http://localhost:3000";
 
 setDefaultTimeout(30_000);
@@ -40,6 +58,7 @@ export class KlikWorld extends World {
   /** Named people, places and orders created by @db steps. */
   readonly data = new ScenarioData();
   readonly auth: AuthScenario = {};
+  readonly merchant: MerchantScenario = { applications: new Map(), items: new Map(), cleanups: [] };
   private context: BrowserContext | undefined;
   private currentPage: Page | undefined;
 
@@ -82,6 +101,7 @@ Before({ tags: "@db" }, async function (this: KlikWorld) {
 });
 
 After(async function (this: KlikWorld) {
+  for (const cleanup of this.merchant.cleanups.reverse()) await cleanup();
   await this.dispose();
 });
 

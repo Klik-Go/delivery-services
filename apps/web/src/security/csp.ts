@@ -38,7 +38,14 @@ export function buildContentSecurityPolicy({ nonce, isDev, supabaseUrl }: CspOpt
     ...(supabase ? [supabase.https, supabase.wss] : []),
     ...(isDev ? ["ws:"] : []),
   ];
-  const imgSrc = ["'self'", "blob:", "data:", ...(supabase ? [supabase.https] : [])];
+  // OpenStreetMap tiles for the store pin map (Phase 3 partner form; attribution shown on the map).
+  const imgSrc = [
+    "'self'",
+    "blob:",
+    "data:",
+    "https://tile.openstreetmap.org",
+    ...(supabase ? [supabase.https] : []),
+  ];
 
   const directives: [string, string[]][] = [
     ["default-src", ["'self'"]],

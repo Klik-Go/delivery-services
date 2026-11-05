@@ -100,7 +100,10 @@ test.describe("Feature: staff invitation with two-factor sign-in", () => {
     await page.getByRole("button", { name: "Verify" }).click();
 
     await page.waitForURL((url) => url.pathname === "/merchant");
-    await expect(page.getByRole("heading", { level: 1, name: "Merchant dashboard" })).toBeVisible();
+    await expect(page.getByText("Merchant dashboard", { exact: true })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Aling Nena's Karinderya" }),
+    ).toBeVisible();
   });
 });
 

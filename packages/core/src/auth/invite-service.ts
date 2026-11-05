@@ -73,7 +73,7 @@ export class InviteService {
       { role: input.role, merchantId, zoneId },
       inviter.id,
     );
-    const expiresAt = new Date(this.deps.clock.now().getTime() + INVITE_TTL_DAYS * 86_400_000);
+    const expiresAt = inviteExpiry(this.deps.clock.now());
     const invite = await this.deps.invites.record({
       email,
       role: input.role,
@@ -89,17 +89,27 @@ export class InviteService {
       invitedBy: inviter.id,
     });
 
-    const query = new URLSearchParams({
-      token_hash: account.value.tokenHash,
-      type: "invite",
-      next: SET_PASSWORD_PATH,
-    });
     return ok({
       inviteId: invite.id,
       userId: account.value.userId,
-      invitePath: `/auth/confirm?${query.toString()}`,
+      invitePath: invitePathFor(account.value.tokenHash),
     });
   }
+}
+
+/** The Klik Go link that verifies an invite token and continues to "choose your password". */
+export function invitePathFor(tokenHash: string): string {
+  const query = new URLSearchParams({
+    token_hash: tokenHash,
+    type: "invite",
+    next: SET_PASSWORD_PATH,
+  });
+  return `/auth/confirm?${query.toString()}`;
+}
+
+/** When a new invite expires. */
+export function inviteExpiry(now: Date): Date {
+  return new Date(now.getTime() + INVITE_TTL_DAYS * 86_400_000);
 }
 
 function scopeError(

@@ -220,7 +220,8 @@ When("enrols an authenticator app", async function (this: KlikWorld) {
 Then("they land on the merchant dashboard", async function (this: KlikWorld) {
   const page = await this.page();
   await page.waitForURL((url) => url.pathname === "/merchant");
-  await expect(page.getByRole("heading", { level: 1, name: "Merchant dashboard" })).toBeVisible();
+  // The store name is the page heading; "Merchant dashboard" labels it.
+  await expect(page.getByText("Merchant dashboard", { exact: true })).toBeVisible();
 });
 
 Given("a customer signed in with a phone code", async function (this: KlikWorld) {

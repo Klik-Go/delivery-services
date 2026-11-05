@@ -145,6 +145,10 @@ export const FEE_RULE_KINDS = ["delivery_distance_band", "small_order_fee", "ser
 export const FeeRuleKindSchema = z.enum(FEE_RULE_KINDS);
 export type FeeRuleKind = z.infer<typeof FeeRuleKindSchema>;
 
+export const MERCHANT_APPLICATION_STATUSES = ["pending", "approved", "rejected"] as const;
+export const MerchantApplicationStatusSchema = z.enum(MERCHANT_APPLICATION_STATUSES);
+export type MerchantApplicationStatus = z.infer<typeof MerchantApplicationStatusSchema>;
+
 /** Every enum above, keyed by its Postgres type name (used by the DB parity test). */
 export const POSTGRES_ENUMS: Readonly<Record<string, readonly string[]>> = {
   app_role: APP_ROLES,
@@ -168,6 +172,7 @@ export const POSTGRES_ENUMS: Readonly<Record<string, readonly string[]>> = {
   promo_type: PROMO_TYPES,
   notification_channel: NOTIFICATION_CHANNELS,
   fee_rule_kind: FEE_RULE_KINDS,
+  merchant_application_status: MERCHANT_APPLICATION_STATUSES,
 };
 
 /**

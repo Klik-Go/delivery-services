@@ -212,4 +212,57 @@ describeDb("row-level security: what each role may change", () => {
     );
     expect(err).toMatch(/row-level security|permission denied/);
   });
+
+  it("partner applications are written by the server only, not by any signed-in role", async () => {
+    for (const actor of [w.users.customer1, w.users.admin, null]) {
+      const err = await asUser(db(), actor, () =>
+        failureOf(db(), () =>
+          db().query(
+            `update public.merchant_applications set status = 'rejected', reviewed_at = now() where id = $1`,
+            [w.applications.A],
+          ),
+        ),
+      );
+      expect(err, String(actor)).toMatch(/permission denied/);
+    }
+  });
+
+  it("merchant staff manage their own store's closures and service radius, not another store's", async () => {
+    const own = await asUser(db(), w.users.staffA, () =>
+      db().query(
+        `insert into public.merchant_closures (merchant_id, closed_on, reason) values ($1, current_date + 30, 'Undas')`,
+        [w.merchantA],
+      ),
+    );
+    expect(own.rowCount).toBe(1);
+    const other = await asUser(db(), w.users.staffA, () =>
+      failureOf(db(), () =>
+        db().query(
+          `insert into public.merchant_closures (merchant_id, closed_on) values ($1, current_date + 30)`,
+          [w.merchantB],
+        ),
+      ),
+    );
+    expect(other).toMatch(/row-level security/);
+    const radius = await asUser(db(), w.users.ownerA, () =>
+      db().query(`update public.merchants set service_radius_km = 3 where id = $1`, [w.merchantA]),
+    );
+    expect(radius.rowCount).toBe(1);
+    const founding = await asUser(db(), w.users.ownerA, () =>
+      failureOf(db(), () =>
+        db().query(
+          `update public.merchants set founding_commission_until = now() + interval '10 years' where id = $1`,
+          [w.merchantA],
+        ),
+      ),
+    );
+    expect(founding).toMatch(/permission denied/);
+  });
+
+  it("a store's service radius can never exceed its zone's maximum", async () => {
+    const err = await failureOf(db(), () =>
+      db().query(`update public.merchants set service_radius_km = 50 where id = $1`, [w.merchantA]),
+    );
+    expect(err).toMatch(/above the zone maximum/);
+  });
 });

@@ -16,6 +16,7 @@ const ServerEnvSchema = z
     ),
     APP_VERSION: optionalString,
     VERCEL_GIT_COMMIT_SHA: optionalString,
+    VERCEL_ENV: optionalString,
     NEXT_PUBLIC_APP_URL: optionalUrl,
     NEXT_PUBLIC_SUPABASE_URL: optionalUrl,
     // Publishable (anon) key: safe in the browser, still only used server-side by the BFF.
@@ -25,6 +26,20 @@ const ServerEnvSchema = z
     SEND_SMS_HOOK_SECRET: optionalString,
     SEMAPHORE_API_KEY: optionalString,
     SEMAPHORE_SENDER_NAME: optionalString,
+    // AI menu import (Phase 3). Only menu photos are ever sent to Gemini, never customer data.
+    GEMINI_API_KEY: optionalString,
+    GEMINI_MODEL: z.preprocess(
+      (value) => (value === "" ? undefined : value),
+      z
+        .string()
+        .regex(/^[a-z0-9.-]+$/)
+        .default("gemini-flash-latest"),
+    ),
+    // "fake" uses the deterministic test menu reader (local dev, Cucumber, Playwright only).
+    MENU_PARSER: z.preprocess(
+      (value) => (value === "" ? undefined : value),
+      z.enum(["gemini", "fake"]).optional(),
+    ),
   })
   .transform((env) => ({
     ...env,

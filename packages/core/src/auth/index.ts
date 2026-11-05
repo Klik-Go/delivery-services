@@ -7,3 +7,4 @@ export * from "./phone-otp-service";
 export type * from "./ports";
 export * from "./session-user";
 export * from "./staff-auth-service";
+export * from "./authorize";

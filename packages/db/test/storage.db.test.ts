@@ -24,6 +24,13 @@ describeDb("storage buckets and file access", () => {
     ]);
   });
 
+  it("accepts only WebP menu photos of at most 200 KB", async () => {
+    const { rows } = await db().query<{ limit: string; types: string[] }>(
+      `select file_size_limit::text as limit, allowed_mime_types as types from storage.buckets where id = 'menu-photos'`,
+    );
+    expect(rows[0]).toEqual({ limit: "204800", types: ["image/webp"] });
+  });
+
   it("lets merchant staff upload menu photos into their own store's folder only", async () => {
     expect(
       await asUser(db(), w.users.staffA, () =>

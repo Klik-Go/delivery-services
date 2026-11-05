@@ -6,6 +6,7 @@ export type AppErrorCode =
   | "NOT_FOUND"
   | "CONFLICT"
   | "RATE_LIMITED"
+  | "UNAVAILABLE"
   | "INTERNAL";
 
 /** A field-level validation problem, e.g. from a zod parse. */
@@ -71,6 +72,13 @@ export class RateLimitedError extends AppError {
     readonly retryAfterSeconds: number,
   ) {
     super("RATE_LIMITED", message);
+  }
+}
+
+/** A dependency (e.g. the menu reader) is not configured or temporarily down; try again later. */
+export class ServiceUnavailableError extends AppError {
+  constructor(message: string) {
+    super("UNAVAILABLE", message);
   }
 }
 

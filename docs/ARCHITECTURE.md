@@ -156,6 +156,16 @@ Full diagram and policy list: `docs/ERD.md` (generated from the database). Sourc
 | merchant | `/merchant` | `merchant_owner`, `merchant_staff` | AAL2 |
 | admin | `/admin` | `admin`, `coordinator` | AAL2 |
 
+## 4d. Merchant onboarding and menus (Phase 3)
+
+- **Applications → stores.** `/partners` posts to `/api/partners/applications` (public, rate-limited per network, honeypot). Rows go to `merchant_applications` (server-written only; admins read all, coordinators their zone) with the zone that covers the pin, or none. `/admin/merchants` approves through `MerchantOnboardingService.approve`: `IStaffAccountGateway.createInvite` creates the owner's account, then `PrismaMerchantApplicationRepository.approve` creates the merchant (active, closed, unique slug), the `merchant_owner` role, the hashed invite, the application status and an audit row in **one transaction**. The admin gets the one-time invite link (Phase 2 flow).
+- **Commission.** `merchants.commission_bps` is the agreed rate; `founding_commission_until` waives it (0%) for founding partners' first 90 days. `effectiveCommissionBps(merchant, now)` in core is what settlement (Phase 9) will use.
+- **Settings.** Weekly hours are `merchants.hours` (`{ mon: [{open, close}], … }`, at most two windows a day, validated by `WeeklyHoursSchema`); holiday closures are `merchant_closures`; `service_radius_km` is capped by a trigger at the zone's `max_radius_km`. Owners change settings (`merchant.settings`); any team member opens/closes the store and edits the menu (`merchant.manage`).
+- **Menus.** `MenuService` converts pesos typed by people into centavos (`pesosToCentavos`), checks that categories and photo paths belong to the store, and every repository write filters by `merchant_id` as well as the row id.
+- **Photos.** The browser resizes to ≤1280 px WebP ≤ 200 KB (`lib/compress-image.ts`), asks `/api/merchant/:id/menu/photos` for a one-time signed upload URL (service role, path `<merchant_id>/<uuid>.webp`) and PUTs the file straight to Storage. The `menu-photos` bucket accepts only `image/webp` ≤ 200 KB, so the rule holds even for a client that skips compression.
+- **AI menu import.** `/api/merchant/:id/menu/import` (multipart photo) → `MenuImportService` (type/size checks, 10 photos/hour/store) → `IMenuParser`. Production uses `GeminiMenuParser` (REST `generateContent`, `responseSchema` JSON, zod-validated, prices parsed to centavos); only the photo and a fixed prompt are sent. Tests and demos use `FakeMenuParser` (`MENU_PARSER=fake`, ignored on Vercel production); with no key the import page says it isn't set up. Drafts are never saved by this call: the merchant edits them and `/import/confirm` saves them through `MenuService.importReviewedItems`.
+- **TanStack Query** holds the menu manager's server state (mutations invalidate the menu query).
+
 ## 5. Folder map
 
 ```
@@ -250,4 +260,7 @@ CI (`.github/workflows/ci.yml`) runs on Node 26 with pnpm 12 installed from npm 
 | 2026-11-05 | Klik Go's own OTP/sign-in rate limits in Postgres (`private.hit_rate_limit`) | Supabase sees every request from the BFF's address, so its per-IP limits cannot tell customers apart; no extra paid service |
 | 2026-11-05 | Invite links built from `generateLink` token hashes and verified server-side (`/auth/confirm`) | Works before an email provider exists (admin shares the link); no tokens in URL fragments |
 | 2026-11-05 | `forbidden()` (Next 16 `experimental.authInterrupts`) for wrong-role access | Real HTTP 403 for the acceptance criterion; revisit if the API changes when it leaves experimental |
+| 2026-11-05 | Partner applications in their own table, not `merchants(status=pending)` | An applicant has no account yet and `merchants.owner_id` is required; approval creates both in one transaction (OPEN_QUESTIONS Q15) |
+| 2026-11-05 | Photos uploaded browser → Storage via a BFF-issued signed URL; bucket enforces WebP ≤ 200 KB | No image bytes through Vercel functions; the size rule cannot be bypassed |
+| 2026-11-05 | Leaflet + OpenStreetMap tiles for the pin map | No API key for the MVP; swap behind the Phase 4 maps adapter if tile usage grows (Q17) |
 | 2026-11-04 | Cookie-based locale (no `/fil/...` URLs) | short shareable links; SEO not a pilot goal |

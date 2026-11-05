@@ -57,6 +57,20 @@ When the hosted Supabase project exists (Supabase Pro before taking real orders,
 ### Q14. Email provider for staff invites — later
 Invites currently return a one-time link that the admin shares (e.g. Viber). For branded invite and recovery emails, pick a provider (Resend or Postmark free tiers, or Supabase custom SMTP). It plugs in behind a new `IEmailSender` port; no flow changes.
 
+### Q15. BUILD_PLAN says applications create `merchants(status=pending)` — recorded conflict (decision taken)
+The Phase 3 prompt says the partner form "creates merchants(status=pending)". `merchants.owner_id` is a required link to an account, and an applicant has none yet (staff join by invite only). Phase 3 therefore stores applications in `merchant_applications`; approval creates the merchant (status `active`, closed until the owner opens it), the owner's account and the invite in one transaction. The `pending` merchant status stays for stores that an admin pauses before they are live. Say if you want it the other way round.
+
+### Q16. Gemini for menu import — owner action before real merchants use it
+1. Create an API key in Google AI Studio and set `GEMINI_API_KEY` in Vercel (Production + Preview). Optionally set `GEMINI_MODEL` (default `gemini-flash-latest`).
+2. **Before real merchants import menus, enable billing (paid tier).** On the free tier Google may use submitted content to improve its products (BUILD_PLAN §2). Only menu photos are sent, never customer data, but merchants' menus are still their business data.
+3. Never set `MENU_PARSER=fake` in Vercel (it is ignored on production anyway).
+
+### Q17. Map tiles — OpenStreetMap for now
+The partner pin map uses OpenStreetMap's public tiles (attribution shown). Their usage policy is fine for a low-traffic pilot but not for heavy use. When the customer address picker arrives (Phase 4), choose a provider (e.g. MapTiler or Google Maps, both have free tiers) and switch the tile URL behind the maps adapter; the CSP allows `https://tile.openstreetmap.org` only.
+
+### Q18. Default commission
+BUILD_PLAN says the default commission comes "from fee_rules", but `fee_rules` only holds delivery, small-order and service fees. The approval form defaults to **20%** (`DEFAULT_COMMISSION_BPS`, Appendix A's example) and the admin can change it per store. If you want a per-zone default, a `commission_default_bps` column on `zones` is a small follow-up.
+
 ### Q11. Prisma model names stay snake_case — decision to confirm
 `db:pull` keeps the database names (`prisma.orders`, `order.total_centavos`). Renaming to PascalCase/camelCase with `@@map`/`@map` would need a hand-maintained mapping layer that drifts. Repositories map rows to domain objects anyway (CLAUDE.md), so I propose keeping snake_case inside `packages/adapters`/`packages/db` only.
 

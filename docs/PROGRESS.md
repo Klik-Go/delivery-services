@@ -8,8 +8,8 @@ Phases are defined in `docs/BUILD_PLAN.md` §6. Agents update this file in every
 | 0 | Foundations (monorepo, rules, CI) | ✅ Done (merged) | [Klik-Go/delivery-services#1](https://github.com/Klik-Go/delivery-services/pull/1) | Vercel linked 2026-11-05 (preview deploys from #3) |
 | 0.1 | Follow-up: latest toolchain + KGo brand | ✅ Done (merged) | [Klik-Go/delivery-services#3](https://github.com/Klik-Go/delivery-services/pull/3) | Owner answers to Q2, Q5, Q6, Q7 |
 | 1 | Data model, migrations, RLS, seed | ✅ Done (merged) | [Klik-Go/delivery-services#6](https://github.com/Klik-Go/delivery-services/pull/6) | Placeholder pilot zone until Q8 is answered |
-| 2 | Auth and RBAC per role | 🟡 In progress (PR open) | [Klik-Go/delivery-services#7](https://github.com/Klik-Go/delivery-services/pull/7) | Owner: hosted Supabase auth settings (OPEN_QUESTIONS Q12, Q13) |
-| 3 | Merchant onboarding and menu (+ AI import) | ⬜ Not started | | |
+| 2 | Auth and RBAC per role | ✅ Done (merged) | [Klik-Go/delivery-services#7](https://github.com/Klik-Go/delivery-services/pull/7) | Owner: hosted Supabase auth settings (OPEN_QUESTIONS Q12, Q13) |
+| 3 | Merchant onboarding and menu (+ AI import) | 🟡 In progress (PR open) | PR_LINK | Owner: Gemini key + paid tier (Q16); 20-items UAT |
 | 4 | Customer discovery, store page, cart (PWA) | ⬜ Not started | | |
 | 5 | Checkout and payments (PayMongo + COD) | ⬜ Not started | | |
 | 6 | Order lifecycle, merchant queue, SLA | ⬜ Not started | | |
@@ -88,7 +88,25 @@ Deliverables:
 - [x] CI green on the PR: [CI run 41984983782](https://github.com/Klik-Go/delivery-services/actions/runs/41984983782) on `36ee8c5` (lint, typecheck, unit, Supabase + build + Cucumber + Playwright) and CodeQL clean.
 - [ ] Owner: hosted Supabase auth settings and Vercel env vars (OPEN_QUESTIONS Q12, Q13).
 
-Next: Phase 3, merchant onboarding and menu manager (+ AI menu import), after this PR is reviewed and merged.
+### Phase 3 — Merchant onboarding and menu manager (+ AI menu import) (branch `phase-3-merchant-menu`)
+Acceptance (docs/BUILD_PLAN.md §6, Gherkin in `features/merchant/`):
+- [ ] An approved merchant creates 20 items with modifiers in under 15 minutes: **manual UAT by the owner**. The item editor stays open after each save (same category, focus on the name) to make this fast.
+- [x] Photos stay under 200 KB WebP: the browser resizes to ≤1280 px WebP and steps quality down to ≤200 KB; the upload link is only issued for `image/webp` ≤ 200 KB; the `menu-photos` bucket itself refuses anything else (`menu-management.feature` uploads to the signed link and checks that a 300 KB file is refused; `storage.db.test.ts`).
+- [x] AI import never publishes without merchant review: reading a photo returns drafts only; items are saved only by the separate confirm call (`menu-import.feature`, `MenuImportService` unit tests, `e2e/merchant.spec.ts`).
+- [x] Staff of merchant A can't edit merchant B: 403 from the API, unchanged rows (`menu-management.feature`, `MenuService` unit tests, `PrismaMenuRepository` DB tests, RLS write tests).
+
+Deliverables:
+- [x] Public `/partners` application form with a pin on the map (Leaflet + OpenStreetMap), honeypot and 5/hour/network limit → `merchant_applications`; out-of-zone applications are kept ("We're not in your area yet").
+- [x] Admin review at `/admin/merchants`: approve (commission %, founding partner = 0% for 90 days with `founding_commission_until`) creates the store (active, closed), the owner's account, role and invite link in one transaction (audited); reject with a reason.
+- [x] `/merchant` dashboard (open/close toggle), `/merchant/settings` (weekly hours with lunch/dinner windows, holiday closures, prep time, COD, radius ≤ zone maximum; owner-only edits).
+- [x] `/merchant/menu`: categories (drag or arrow-button reorder), items in ₱ → centavos, modifier groups/options, photos (client-side WebP compression → signed upload URL), sold-out toggle.
+- [x] `/merchant/menu/import`: `IMenuParser` → `GeminiMenuParser` (structured JSON, zod-validated; model from `GEMINI_MODEL`), `FakeMenuParser` for tests; editable drafts with confidence; confirm → bulk insert.
+- [x] Public store page `/stores/:slug` (and `/api/stores/:slug`).
+- [x] Core: `MerchantOnboardingService`, `StoreSettingsService`, `MenuService`, `MenuImportService`, `StorefrontService` with ports and in-memory fakes; Prisma repositories tested against the local database.
+- [ ] CI green on the PR.
+- [ ] Owner: `GEMINI_API_KEY` in Vercel, paid tier before real merchant data (OPEN_QUESTIONS Q16).
+
+Next: Phase 4, customer discovery, store page and cart (PWA), after this PR is reviewed and merged.
 
 ## Business validation (parallel, doc §8)
 - [ ] 20–30 customer interviews in the pilot barangay
