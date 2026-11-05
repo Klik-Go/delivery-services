@@ -12,7 +12,7 @@ Phases are defined in `docs/BUILD_PLAN.md` §6. Agents update this file in every
 | 3 | Merchant onboarding and menu (+ AI import) | ✅ Done (merged) | [Klik-Go/delivery-services#8](https://github.com/Klik-Go/delivery-services/pull/8) | Owner: Gemini key + paid tier (Q16); 20-items UAT |
 | 3.1 | Follow-up: launch zones (Makati, San Fernando, San Marcelino) + owner answers | ✅ Done (merged) | [Klik-Go/delivery-services#9](https://github.com/Klik-Go/delivery-services/pull/9) | Owner: `main` ruleset target (Q6), Gemini paid tier (Q16) |
 | 4 | Customer discovery, store page, cart (PWA) | ✅ Done (merged) | [Klik-Go/delivery-services#10](https://github.com/Klik-Go/delivery-services/pull/10) | Owner: `GOOGLE_MAPS_API_KEY` for address search (optional, Q17) |
-| 4.1 | Follow-up: deploy fixes (readiness, migration deploy) + placeholder sign-in code | 🟡 In progress (PR open) | [Klik-Go/delivery-services#11](https://github.com/Klik-Go/delivery-services/pull/11) | Owner: GitHub secrets for migrations (Q13 step 7), `PLACEHOLDER_OTP_CODE` in Vercel (Q20) |
+| 4.1 | Follow-up: deploy fixes (readiness, migration deploy) + placeholder sign-in code | ✅ Done (merged) | [Klik-Go/delivery-services#11](https://github.com/Klik-Go/delivery-services/pull/11) | Owner: GitHub secrets for migrations (Q13 step 7), `PLACEHOLDER_OTP_CODE` in Vercel (Q20) |
 | 5 | Checkout and payments (PayMongo + COD) | ⬜ Not started | | |
 | 6 | Order lifecycle, merchant queue, SLA | ⬜ Not started | | |
 | 7 | Rider app, dispatch, live tracking | ⬜ Not started | | |
@@ -135,6 +135,7 @@ Owner report 2026-11-05: "Something went wrong" when saving a delivery address o
 - [x] Placeholder sign-in code for customers while SMS is off (`PLACEHOLDER_OTP_CODE`; riders/staff refused; switches off when `SEMAPHORE_API_KEY` is set): `placeholder-otp.feature`, `PlaceholderPhoneSignIn` tests, Supabase adapter tests against local Auth (OPEN_QUESTIONS Q20).
 - [x] Any Philippine mobile accepted (09xx and 08xx incl. DITO 0895–0898), with matching database checks (migration `20261110100000_ph_mobile_prefixes.sql`, `phone.db.test.ts`).
 - [ ] Owner: GitHub secrets + run "Deploy database migrations"; check `/api/health/ready`; set `PLACEHOLDER_OTP_CODE` in Vercel.
+- [x] Phase 4.1.1 fix (branch `phase-4.1.1-readiness-fix`): a database that has never been migrated now reads `outdated`, not `unreachable`. Production showed `42P01 relation "supabase_migrations.schema_migrations" does not exist`: the connection worked, but Postgres resolves every table name before running a query, so the single "if the table exists" query failed. Reproduced in `prisma-database-probe.db.test.ts` (table hidden in a rolled-back transaction).
 
 Next: Phase 5, checkout and payments, after this PR is reviewed and merged.
 
