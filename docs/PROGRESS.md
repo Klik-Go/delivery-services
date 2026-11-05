@@ -125,7 +125,7 @@ Deliverables:
 - [x] PWA: manifest, icons, hand-written service worker (shell + feed, offline page), offline banner, skeletons; images through `next/image` WebP.
 - [x] Map tile provider configurable (`NEXT_PUBLIC_MAP_TILE_URL`, https only, origin added to the CSP).
 - [x] Tests: 3 new features (Cucumber 70/70), core unit tests for pricing/feed/search/serviceability/addresses/places, repository DB tests, Playwright customer flows on Pixel 7 + desktop with axe checks (50/50). Screenshots: `docs/screenshots/phase-4-*`.
-- [ ] CI green on the PR.
+- [x] CI green on the PR: [CI run 42032573863](https://github.com/Klik-Go/delivery-services/actions/runs/42032573863) on `c347cbd` (lint, typecheck, unit, Supabase + build + Cucumber 70/70 + Playwright 50/50 + Lighthouse: store page 98, Home 100) and CodeQL clean.
 
 Next: Phase 5, checkout and payments, after this PR is reviewed and merged.
 
