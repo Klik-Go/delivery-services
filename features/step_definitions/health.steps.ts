@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { Then, When } from "@cucumber/cucumber";
 import { expect } from "@playwright/test";
+import { LATEST_MIGRATION } from "@klikgo/db";
 import type { KlikWorld } from "../support/world";
 
 When("I open the home page", async function (this: KlikWorld) {
@@ -42,3 +43,21 @@ Then("the response carries a request id", function (this: KlikWorld) {
   const body = response.json as { meta?: { requestId?: unknown } };
   assert.equal(body.meta?.requestId, header);
 });
+
+Then(
+  "the database is reported {string} with this build's migrations applied",
+  function (this: KlikWorld, expected: string) {
+    const body = this.response().json as {
+      data?: {
+        status?: string;
+        database?: string;
+        schemaVersion?: string;
+        expectedSchemaVersion?: string;
+      };
+    };
+    assert.equal(body.data?.status, "ready");
+    assert.equal(body.data?.database, expected);
+    assert.equal(body.data?.schemaVersion, LATEST_MIGRATION);
+    assert.equal(body.data?.expectedSchemaVersion, LATEST_MIGRATION);
+  },
+);

@@ -52,6 +52,9 @@ jobs:
       BASE_URL: http://localhost:3000
       # Deterministic menu reader for AI-import tests; Gemini is never called from CI.
       MENU_PARSER: fake
+      # Turns on the pre-launch placeholder sign-in for features/auth/placeholder-otp.feature.
+      # A test-only value: production's code lives only in Vercel (OPEN_QUESTIONS Q20).
+      PLACEHOLDER_OTP_CODE: "424242"
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup

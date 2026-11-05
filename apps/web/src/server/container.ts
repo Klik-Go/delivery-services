@@ -23,6 +23,8 @@ import {
   PrismaUserRoleRepository,
   SemaphoreSmsSender,
   SupabaseAuthGateway,
+  PrismaDatabaseProbe,
+  SupabasePhoneAccountAdmin,
   SupabaseStaffAccountGateway,
   SystemClock,
 } from "@klikgo/adapters";
@@ -48,6 +50,8 @@ import {
   MfaService,
   OtpSmsService,
   PhoneOtpService,
+  PlaceholderPhoneSignIn,
+  ReadinessService,
   StaffAuthService,
   StoreSettingsService,
   StorefrontService,
@@ -58,7 +62,7 @@ import {
   type Result,
 } from "@klikgo/core";
 import { FakeMenuParser } from "@klikgo/core/testing";
-import { getPrismaClient } from "@klikgo/db";
+import { getPrismaClient, LATEST_MIGRATION } from "@klikgo/db";
 import { randomUUID } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getServerEnv, type ServerEnv } from "./env";
@@ -71,6 +75,8 @@ import { supabaseAdminClient } from "./supabase/admin-client";
 export interface Container {
   readonly logger: Logger;
   readonly healthService: HealthService;
+  /** Database reachable and migrated (GET /api/health/ready). */
+  readonly readiness: ReadinessService;
   readonly authz: AuthorizationService;
   readonly userRoles: IUserRoleRepository;
   readonly rateLimiter: IRateLimiter;
@@ -91,6 +97,8 @@ export interface Container {
   inviteService(): Result<InviteService, AppError>;
   /** Partner applications and approvals (approval creates staff accounts: service-role key). */
   merchantOnboarding(): Result<MerchantOnboardingService, AppError>;
+  /** True while the pre-launch placeholder sign-in code is on (sign-in screens say so). */
+  readonly placeholderOtp: boolean;
   /** Services bound to one request's Supabase session (cookies). */
   forRequest(supabase: SupabaseClient): RequestServices;
 }
@@ -122,6 +130,7 @@ export function createContainer(env: ServerEnv): Container {
   let invite: InviteService | undefined;
   let onboarding: MerchantOnboardingService | undefined;
   const admin = supabaseAdminClient();
+  const placeholderCode = placeholderOtpCode(env, admin !== null, logger);
   const stores = new PrismaStoreRepository(prisma);
   const menus = new PrismaMenuRepository(prisma);
   const cache = new TtlMemoryCache();
@@ -150,6 +159,11 @@ export function createContainer(env: ServerEnv): Container {
   return {
     logger,
     healthService: new HealthService({ clock, version: env.APP_VERSION }),
+    readiness: new ReadinessService({
+      database: new PrismaDatabaseProbe(prisma),
+      expectedSchemaVersion: LATEST_MIGRATION,
+      logger,
+    }),
     authz,
     userRoles,
     rateLimiter,
@@ -212,16 +226,46 @@ export function createContainer(env: ServerEnv): Container {
       });
       return { ok: true, value: invite };
     },
+    placeholderOtp: placeholderCode !== undefined,
     forRequest(supabase) {
       const gateway = new SupabaseAuthGateway(supabase, logger);
+      const placeholder =
+        placeholderCode !== undefined && admin
+          ? new PlaceholderPhoneSignIn({
+              code: placeholderCode,
+              accounts: new SupabasePhoneAccountAdmin(admin, logger),
+              roles: userRoles,
+              gateway,
+              logger,
+            })
+          : undefined;
       return {
-        phoneOtp: new PhoneOtpService({ gateway, rateLimiter, logger }),
+        phoneOtp: new PhoneOtpService({ gateway, rateLimiter, logger, placeholder }),
         staffAuth: new StaffAuthService({ gateway, invites, rateLimiter, logger }),
         mfa: new MfaService({ gateway, rateLimiter }),
         signOut: () => gateway.signOut(),
       };
     },
   };
+}
+
+/**
+ * The placeholder sign-in code, only while SMS is off: it needs the service-role key (to create
+ * accounts) and switches itself off as soon as SEMAPHORE_API_KEY is set, so it cannot outlive
+ * the SMS launch by accident.
+ */
+function placeholderOtpCode(env: ServerEnv, hasAdmin: boolean, logger: Logger): string | undefined {
+  if (!env.PLACEHOLDER_OTP_CODE) return undefined;
+  if (env.SEMAPHORE_API_KEY) {
+    logger.warn("auth.placeholder_ignored", { reason: "SEMAPHORE_API_KEY is set" });
+    return undefined;
+  }
+  if (!hasAdmin) {
+    logger.warn("auth.placeholder_ignored", { reason: "SUPABASE_SERVICE_ROLE_KEY is not set" });
+    return undefined;
+  }
+  logger.warn("auth.placeholder_enabled", {});
+  return env.PLACEHOLDER_OTP_CODE;
 }
 
 function notConfigured(feature: string): AppError {

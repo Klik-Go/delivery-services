@@ -31,6 +31,7 @@
   "Auth": {
     "signInTitle": "Mag-sign in o mag-sign up",
     "signInLead": "Magte-text kami ng 6 na digit na code sa iyong mobile number.",
+    "signInLeadPlaceholder": "Hindi pa naka-on ang text messages. Pagkatapos i-tap ang Ipadala ang code, ilagay ang test code mula sa Klik Go team.",
     "mobileNumber": "Mobile number",
     "mobilePlaceholder": "0917 123 4567",
     "sendCode": "Ipadala ang code",
@@ -39,6 +40,7 @@
     "customerLink": "Customer o rider? Mag-sign in gamit ang phone",
     "verifyTitle": "Ilagay ang code",
     "verifyLead": "Nagpadala kami ng 6 na digit na code sa {phone}.",
+    "verifyLeadPlaceholder": "Ilagay ang test code mula sa Klik Go team para sa {phone}.",
     "verify": "I-verify",
     "verifying": "Sinusuri…",
     "digit": "Numero {n}",

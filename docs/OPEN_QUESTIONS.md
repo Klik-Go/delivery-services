@@ -25,7 +25,9 @@ When the hosted Supabase project exists (Supabase Pro before taking real orders,
 4. **Authentication → URL Configuration**: Site URL `https://<your-domain>`; redirect URLs `https://<your-domain>/auth/callback` and your Vercel preview pattern.
 5. **Authentication → Policies**: minimum password length 12. **Rate limits**: see Q12.
 6. **Vercel env vars** (Production + Preview): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `DATABASE_URL` (pooler), `DIRECT_URL`, `SEND_SMS_HOOK_SECRET`, `SEMAPHORE_API_KEY`, `SEMAPHORE_SENDER_NAME`, `NEXT_PUBLIC_APP_URL`.
-7. Run `supabase db push` for the migrations, then `pnpm bootstrap:admin` with `ADMIN_EMAIL` to create the first admin.
+7. **Migrations (automatic since Phase 4.1).** In GitHub → Settings → Secrets and variables → Actions, add `SUPABASE_ACCESS_TOKEN` (supabase.com → Account → Access tokens), `SUPABASE_PROJECT_REF` (the project's 20-letter ref, Project Settings → General) and `SUPABASE_DB_PASSWORD` (the database password). Then Actions → **Deploy database migrations** → Run workflow once; after that it runs by itself whenever migrations merge to `main`. Seed data is never pushed. Then run `pnpm bootstrap:admin` with `ADMIN_EMAIL` to create the first admin.
+   - **Check it worked:** open `https://<your-domain>/api/health/ready`. `"database": "ok"` means the app can reach the database and it has every migration this build needs. `"outdated"` means migrations are missing (run the workflow). `"unreachable"` means the app cannot connect: re-copy `DATABASE_URL` in Vercel from Supabase → Connect → ORMs (Transaction pooler, port 6543) and check the password.
+   - 2026-11-05: `PUT /api/location` returned 500 ("Something went wrong") on the deployed site. The zone lookup is the first database query on that screen; the likely cause is a hosted database without the migrations (nothing pushed them before this workflow) or a wrong `DATABASE_URL`. The readiness URL above tells which; Vercel's logs show the full error under the request id the API returns.
 8. Semaphore: register the sender name (e.g. KLIKGO) and top up credits (every OTP costs money; BUILD_PLAN §2).
 
 ### Q14. Email provider for staff invites — later
@@ -48,6 +50,14 @@ Phase 4 status: the pin maps (partner form, customer address) use Leaflet with O
 
 ### Q18. Default commission
 BUILD_PLAN says the default commission comes "from fee_rules", but `fee_rules` only holds delivery, small-order and service fees. The approval form defaults to **20%** (`DEFAULT_COMMISSION_BPS`, Appendix A's example) and the admin can change it per store. If you want a per-zone default, a `commission_default_bps` column on `zones` is a small follow-up.
+
+### Q20. Placeholder sign-in code while SMS is off (owner decision 2026-11-05; remove before launch)
+Owner request: "for customers accept any PH number for the meantime and add a placeholder code to proceed".
+- **What it does.** While `PLACEHOLDER_OTP_CODE` is set (and `SEMAPHORE_API_KEY` is not), entering that code signs a customer in with any Philippine mobile number. The server finds or creates the customer's account by phone and signs them in with a fresh random password that is never stored; Supabase issues a normal session. Real texted codes keep working.
+- **Safety rails.** Customers only: a number that belongs to a rider or staff member is refused. The usual limits still apply (5 code requests per number per hour, 10 wrong codes per number per 15 minutes, 20 requests per network per hour). The sign-in screens say a test code is needed but never show it. The code is never logged and is not in the repository: CI uses a different test-only value.
+- **Owner action to turn it on.** In Vercel → Settings → Environment Variables (Production and Preview), add `PLACEHOLDER_OTP_CODE` with the 6-digit code you chose (the one you gave in chat), then redeploy. It also needs `SUPABASE_SERVICE_ROLE_KEY` (already required for partner approvals), and the **Phone** provider enabled in Supabase → Authentication → Sign In / Providers (Q13 step 1), because the session is a phone sign-in.
+- **It switches itself off** as soon as `SEMAPHORE_API_KEY` is set. Before real customers arrive: delete `PLACEHOLDER_OTP_CODE` from Vercel, and treat accounts created during testing as test data.
+- **Phone numbers.** Any Philippine mobile is accepted now: +63 then 10 digits starting with 9 (0917, 0991, …) or 8 (Globe 0817, DITO 0895–0898). This part is permanent; phone-number libraries lagged behind new prefixes.
 
 ### Q19. Phase 4 library deviations from BUILD_PLAN (decision taken, recorded)
 BUILD_PLAN §6 Phase 4 names vaul for the item sheet and next-pwa/Serwist for the service worker. vaul is unmaintained, so the sheet is a native `<dialog>` (focus trap, Esc, backdrop built in). next-pwa and Serwist need webpack plugins while the app builds with Turbopack, so `public/sw.js` is hand-written and versioned. Lighthouse 12+ no longer has a PWA category, so "PWA installable" is checked with Chrome's own installability API in Playwright. No owner action needed.

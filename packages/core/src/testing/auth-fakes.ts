@@ -1,6 +1,7 @@
 import type {
   IAuthGateway,
   IInviteRepository,
+  IPhoneAccountAdmin,
   IRateLimiter,
   ISmsSender,
   IStaffAccountGateway,
@@ -13,7 +14,7 @@ import type {
   TotpEnrollment,
 } from "../auth/ports";
 import type { RoleGrant } from "../auth/session-user";
-import { ConflictError, UnauthorizedError, type AppError } from "../shared/errors";
+import { AppError, ConflictError, UnauthorizedError } from "../shared/errors";
 import { err, ok, type Result } from "../shared/result";
 
 /** In-memory Supabase Auth for unit tests: remembers what was asked and answers like the real one. */
@@ -26,7 +27,15 @@ export class FakeAuthGateway implements IAuthGateway {
   totpCode = "123456";
   signedOut = false;
 
+  /** Accounts created by the placeholder sign-in, shared with {@link FakePhoneAccountAdmin}. */
+  constructor(private readonly phoneAccounts?: FakePhoneAccountAdmin) {}
+
+  /** Simulates Supabase/SMS being unavailable (no SMS provider configured yet). */
+  failSends = false;
+
   sendPhoneOtp(phone: string): Promise<Result<void, AppError>> {
+    if (this.failSends)
+      return Promise.resolve(err(new AppError("INTERNAL", "Could not send the code.")));
     this.otpRequests.push(phone);
     return Promise.resolve(ok(undefined));
   }
@@ -47,6 +56,18 @@ export class FakeAuthGateway implements IAuthGateway {
       this.passwords.get(email) === password
         ? ok({ userId: `user-${email}` })
         : err(new UnauthorizedError("Wrong email or password.")),
+    );
+  }
+
+  signInWithPhonePassword(
+    phone: string,
+    password: string,
+  ): Promise<Result<{ userId: string }, AppError>> {
+    const account = this.phoneAccounts?.byPhone(phone);
+    return Promise.resolve(
+      account && account.password === password
+        ? ok({ userId: account.userId })
+        : err(new UnauthorizedError("That code is wrong or has expired.")),
     );
   }
 
@@ -153,5 +174,39 @@ export class InMemoryInviteRepository implements IInviteRepository {
   markAccepted(userId: string): Promise<void> {
     this.accepted.push(userId);
     return Promise.resolve();
+  }
+}
+
+/** In-memory phone accounts for the placeholder sign-in (what the service-role client does). */
+export class FakePhoneAccountAdmin implements IPhoneAccountAdmin {
+  private readonly accounts = new Map<string, { userId: string; password: string | null }>();
+  private rotations = 0;
+  readonly created: string[] = [];
+
+  /** An existing account, e.g. a rider's, before the sign-in runs. */
+  seed(phone: string, userId: string): void {
+    this.accounts.set(phone, { userId, password: null });
+  }
+
+  byPhone(phone: string): { userId: string; password: string | null } | undefined {
+    return this.accounts.get(phone);
+  }
+
+  findOrCreateByPhone(phone: string): Promise<Result<{ userId: string }, AppError>> {
+    const existing = this.accounts.get(phone);
+    if (existing) return Promise.resolve(ok({ userId: existing.userId }));
+    // Opaque ids, like Supabase's UUIDs (never derived from the phone).
+    this.created.push(phone);
+    const userId = `phone-user-${String(this.created.length)}`;
+    this.accounts.set(phone, { userId, password: null });
+    return Promise.resolve(ok({ userId }));
+  }
+
+  rotatePassword(userId: string): Promise<Result<string, AppError>> {
+    const account = [...this.accounts.values()].find((a) => a.userId === userId);
+    if (!account) return Promise.resolve(err(new UnauthorizedError("No such account.")));
+    this.rotations += 1;
+    account.password = `pw-${String(this.rotations)}`;
+    return Promise.resolve(ok(account.password));
   }
 }

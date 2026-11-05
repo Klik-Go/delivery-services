@@ -281,5 +281,9 @@ CI (`.github/workflows/ci.yml`) runs on Node 26 with pnpm 12 installed from npm 
 | 2026-11-05 | Search in Postgres (FTS + pg_trgm), no search service | Tens of stores per zone; one less paid service; typo-tolerant enough |
 | 2026-11-05 | Blocking (non-streamed) metadata for all clients (`htmlLimitedBots: /.*/`) | Streamed metadata lands in `<body>`, where Chrome ignores the manifest link, so store pages were not installable; link previews also need `<head>` tags |
 | 2026-11-05 | Lighthouse budget in CI = median of 3 mobile runs | Simulated-throttling scores swing ±5 between runs; one bad run should not fail a PR |
+| 2026-11-05 | Liveness `/api/health` and readiness `/api/health/ready` (database reachable + `LATEST_MIGRATION` applied) | A deploy whose database is missing migrations answered customers with 500s; monitors and the owner can now see why |
+| 2026-11-05 | Migrations deploy to hosted Supabase from GitHub Actions on merge to `main` (`deploy-migrations.yml`, `production` environment) | The hosted schema can no longer fall behind the app; seed data is never pushed |
+| 2026-11-05 | Placeholder sign-in code (env, customers only, auto-off with SMS) via admin find-or-create + random one-time password | Owner wants testing before SMS is paid for; Supabase still issues the session and real OTP stays the default path (OPEN_QUESTIONS Q20) |
+| 2026-11-05 | Philippine mobiles validated by pattern (+63 then 10 digits starting 8/9), not libphonenumber | The library rejected new real prefixes (e.g. DITO 0895–0898); DB checks match |
 | 2026-11-05 | Launch zones loaded by migration from PSA/PSGC boundaries (simplified ~5 m) | Zones are reference data every environment needs; one source of truth, reviewable in a PR; the seed only adds fake people and stores |
 | 2026-11-04 | Cookie-based locale (no `/fil/...` URLs) | short shareable links; SEO not a pilot goal |

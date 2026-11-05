@@ -2,6 +2,7 @@ import type { Logger } from "../ports/logger";
 import { RateLimitedError, ValidationError, type AppError } from "../shared/errors";
 import { err, ok, type Result } from "../shared/result";
 import { normalizePhilippineMobile } from "./phone";
+import type { PlaceholderPhoneSignIn } from "./placeholder-sign-in";
 import type { IAuthGateway, IRateLimiter, RateLimitRule } from "./ports";
 
 /** Code requests per phone (each SMS costs money). docs/BUILD_PLAN.md §6 Phase 2. */
@@ -16,7 +17,13 @@ const CODE_PATTERN = /^\d{6}$/;
 /** Phone one-time-code sign-in for customers and riders (docs/BUSINESS.md §9.2.1). */
 export class PhoneOtpService {
   constructor(
-    private readonly deps: { gateway: IAuthGateway; rateLimiter: IRateLimiter; logger: Logger },
+    private readonly deps: {
+      gateway: IAuthGateway;
+      rateLimiter: IRateLimiter;
+      logger: Logger;
+      /** Set only while SMS is not switched on (pre-launch); see PlaceholderPhoneSignIn. */
+      placeholder?: PlaceholderPhoneSignIn | undefined;
+    },
   ) {}
 
   /** Texts a sign-in code to a Philippine mobile, within the per-phone and per-network limits. */
@@ -48,7 +55,11 @@ export class PhoneOtpService {
     }
 
     const sent = await this.deps.gateway.sendPhoneOtp(phone.value);
-    if (!sent.ok) return sent;
+    if (!sent.ok) {
+      // Without an SMS provider the text cannot go out; the placeholder code still works.
+      if (!this.deps.placeholder) return sent;
+      this.deps.logger.warn("auth.placeholder_sms_skipped", { code: sent.error.code });
+    }
     return ok({ phone: phone.value });
   }
 
@@ -79,6 +90,7 @@ export class PhoneOtpService {
         ),
       );
     }
+    if (this.deps.placeholder?.matches(code)) return this.deps.placeholder.signIn(phone.value);
     return this.deps.gateway.verifyPhoneOtp(phone.value, code);
   }
 }

@@ -16,3 +16,9 @@ Feature: Platform health
     Then the response status is 200
     And the response body has data.status "ok"
     And the response carries a request id
+
+  Scenario: Monitoring checks that the database is reachable and up to date
+    Given the platform is running
+    When monitoring calls GET "/api/health/ready"
+    Then the response status is 200
+    And the database is reported "ok" with this build's migrations applied
