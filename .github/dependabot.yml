@@ -6,7 +6,11 @@ updates:
       interval: weekly
       day: monday
       timezone: Asia/Manila
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 10
+    # pnpm 12 rejects versions younger than its minimumReleaseAge (1 day) in the lockfile;
+    # waiting 2 days keeps Dependabot PRs installable and skips most bad releases.
+    cooldown:
+      default-days: 2
     groups:
       dev-tooling:
         dependency-type: development
@@ -14,16 +18,15 @@ updates:
       runtime-minor:
         dependency-type: production
         update-types: [minor, patch]
-    ignore:
-      # Major upgrades are planned changes (see docs/OPEN_QUESTIONS.md), not automatic bumps.
-      - dependency-name: "*"
-        update-types: ["version-update:semver-major"]
+      # Majors arrive one package per PR so each migration is reviewed on its own (docs/OPEN_QUESTIONS.md Q2).
   - package-ecosystem: github-actions
-    directory: /
+    directories: ["/", "/.github/actions/*"]
     schedule:
       interval: weekly
       day: monday
       timezone: Asia/Manila
+    cooldown:
+      default-days: 2
     groups:
       actions:
         patterns: ["*"]

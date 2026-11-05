@@ -1,28 +1,44 @@
 /*
- * Klik Go design tokens for Tailwind CSS v4 (CSS-first config).
- * Keep in sync with src/tokens.ts — enforced by src/tokens.test.ts.
- * Contrast: white text on brand-700 is ~5.5:1 (WCAG AA for body text).
+ * Klik Go design tokens for Tailwind CSS v4 (CSS-first config). See docs/BRAND.md.
+ * Brand = KGo logo: blue #228be6 (brand-600) + yellow #ffd43b (accent-400), Open Color scales.
+ * Keep in sync with src/tokens.ts (enforced by src/tokens.test.ts, which also checks contrast).
+ *
+ * Contrast rules: white text sits on brand-800 or darker (5.0:1). Yellow is a highlight/badge
+ * colour with ink text, or large display text on brand-800 (3.5:1). Never yellow or brand-600 for
+ * small text on white.
  */
 @theme {
-  --color-brand-50: #effcfa;
-  --color-brand-100: #c8f5ef;
-  --color-brand-500: #14b8a6;
-  --color-brand-600: #0d9488;
-  --color-brand-700: #0f766e;
-  --color-brand-800: #115e59;
-  --color-brand-900: #134e4a;
+  --color-brand-50: #e7f5ff;
+  --color-brand-100: #d0ebff;
+  --color-brand-200: #a5d8ff;
+  --color-brand-300: #74c0fc;
+  --color-brand-400: #4dabf7;
+  --color-brand-500: #339af0;
+  --color-brand-600: #228be6;
+  --color-brand-700: #1c7ed6;
+  --color-brand-800: #1971c2;
+  --color-brand-900: #1864ab;
 
-  --color-accent-500: #2563eb;
-  --color-accent-600: #1d4ed8;
-  --color-accent-700: #1e40af;
+  --color-accent-50: #fff9db;
+  --color-accent-100: #fff3bf;
+  --color-accent-200: #ffec99;
+  --color-accent-300: #ffe066;
+  --color-accent-400: #ffd43b;
+  --color-accent-500: #fcc419;
+  --color-accent-600: #fab005;
+  --color-accent-700: #f59f00;
+  --color-accent-800: #f08c00;
+  --color-accent-900: #e67700;
 
-  --color-ink: #0b1f24;
-  --color-ink-muted: #47606a;
+  --color-ink: #0b1f33;
+  --color-ink-muted: #4a5a6a;
   --color-surface: #ffffff;
-  --color-surface-muted: #f3f7f7;
+  --color-surface-muted: #f1f5f9;
 
   --font-sans:
     ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  /* Logo typeface for the wordmark and big headings only; body text stays on the system font. */
+  --font-display: var(--font-lilita-one, "Lilita One"), ui-rounded, system-ui, sans-serif;
 
   --radius-card: 1rem;
   --spacing-tap: 2.75rem; /* 44px minimum tap target */

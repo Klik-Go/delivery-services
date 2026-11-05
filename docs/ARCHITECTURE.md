@@ -8,8 +8,8 @@ Living document. Expands `docs/BUILD_PLAN.md` §5. Update it in the same PR when
 Customer PWA / Rider PWA / (later Expo)          PayMongo webhooks
              │  HTTPS only                            │
              ▼                                        ▼
-   apps/web  (Next.js 15 App Router on Vercel)  — the ONLY public entry point (BFF)
-   ├─ src/middleware.ts        request id + per-request CSP nonce (runtime: "nodejs")
+   apps/web  (Next.js 16 App Router on Vercel)  — the ONLY public entry point (BFF)
+   ├─ src/proxy.ts             request id + per-request CSP nonce (Next 16 Proxy, always Node.js)
    ├─ src/app/(customer) /     ├─ app/merchant/*   ├─ app/rider/*   ├─ app/admin/*      (UI surfaces)
    ├─ src/app/api/*            BFF route handlers: authN, RBAC, zod validation, rate limit
    └─ src/server/container.ts  composition root → packages/core services (ports)
@@ -33,7 +33,7 @@ Rules (non-negotiable, see `CLAUDE.md`):
 sequenceDiagram
   autonumber
   participant B as Browser / PWA
-  participant M as middleware.ts (Node.js)
+  participant M as proxy.ts (Node.js)
   participant R as Route handler /api/*
   participant C as container.ts
   participant S as Service (packages/core)
@@ -112,24 +112,27 @@ Every transition records `order_events(from_status, to_status, actor_id, actor_r
 ```
 apps/
   web/                      Next.js BFF + all web surfaces (the only deployable)
-    src/app/                routes (UI) and src/app/api/* (BFF handlers)
+    src/proxy.ts            Next 16 Proxy: request id + CSP nonce on every request
+    src/app/                routes (UI) and src/app/api/* (BFF handlers); icon.svg, apple-icon.png, fonts.ts
     src/server/             container.ts, env.ts (zod), http/ (envelope, request id)
     src/security/           CSP builder, static security headers
     src/i18n/               next-intl config (en, fil; cookie NEXT_LOCALE)
     messages/               en.json, fil.json (same keys, unit-tested)
+    public/brand/           production logo SVG/PNG and PWA icons (docs/BRAND.md)
     e2e/                    Playwright specs (projects: mobile-pixel-7, desktop-chrome)
 packages/
   core/                     pure TS domain: services, ports, Result, errors, money, time
     src/testing/            Fakes for ports (FakeClock, MemoryLogger, …)
   adapters/                 port implementations (pino logger, system clock, later gateways)
-  db/                       Prisma schema + client (mirrors supabase/migrations)
+  db/                       Prisma 7 schema + client (mirrors supabase/migrations); prisma.config.ts
   types/                    shared zod schemas (API envelope, request/response DTOs)
   config/                   tsconfig bases, ESLint flat config (+ boundary rules), Prettier, design tokens
   ui/                       shared shadcn/ui-style components (Button, BrandLogo, cn)
 features/                   Cucumber.js: *.feature, step_definitions/, support/ (world: API client, DB helper, browser)
 supabase/                   CLI config, migrations/, seed.sql
 scripts/                    repo tooling (with-server.mjs)
-.github/                    CI, CodeQL, Dependabot, PR template
+.github/                    CI (+ actions/setup composite), CodeQL, Dependabot, PR template
+docs/brand/                 logo source (Excalidraw SVG), original PNG, outlined SVG
 ```
 
 Package names are `@klikgo/<name>`. Workspace packages export TypeScript source (no build step); Next.js compiles them through `transpilePackages`.
@@ -137,7 +140,7 @@ Package names are `@klikgo/<name>`. Workspace packages export TypeScript source 
 ## 6. Cross-cutting concerns
 
 ### Security headers
-- **CSP** (per request, in `src/middleware.ts`): `default-src 'self'`; `script-src 'self' 'nonce-…' 'strict-dynamic'` (plus `'unsafe-eval'` only in `next dev`); `object-src 'none'`; `base-uri 'self'`; `form-action 'self'`; `frame-ancestors 'none'`; `upgrade-insecure-requests`. The Supabase origin is added to `connect-src` (https + wss) and `img-src` when `NEXT_PUBLIC_SUPABASE_URL` is set. `style-src` allows `'unsafe-inline'` because Next.js injects style attributes; styles cannot run code.
+- **CSP** (per request, in `src/proxy.ts`, the Next.js 16 Proxy that replaced middleware): `default-src 'self'`; `script-src 'self' 'nonce-…' 'strict-dynamic'` (plus `'unsafe-eval'` only in `next dev`); `object-src 'none'`; `base-uri 'self'`; `form-action 'self'`; `frame-ancestors 'none'`; `upgrade-insecure-requests`. The Supabase origin is added to `connect-src` (https + wss) and `img-src` when `NEXT_PUBLIC_SUPABASE_URL` is set. `style-src` allows `'unsafe-inline'` because Next.js injects style attributes; styles cannot run code.
 - **Static** (`next.config.ts`): HSTS 2 years + preload, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, a `Permissions-Policy` that allows only geolocation and camera for our own origin, COOP `same-origin`. `X-Powered-By` is removed.
 - Because the nonce changes per request, pages render dynamically (`connection()` in the root layout).
 
@@ -152,7 +155,9 @@ Package names are `@klikgo/<name>`. Workspace packages export TypeScript source 
 - next-intl without locale-prefixed URLs (links shared in FB/Viber groups stay short). Locale comes from the `NEXT_LOCALE` cookie, default `en`, also `fil`. `timeZone` is fixed to Asia/Manila.
 
 ### Design system
-- Tailwind v4, CSS-first. Tokens live in `packages/config/tailwind/tokens.css` (`brand-*` teal, `accent-*` blue, `ink`, `surface`, `min-h-tap` = 44 px), mirrored in `packages/config/src/tokens.ts`. A unit test keeps them in sync and checks WCAG AA contrast.
+- Brand: the KGo logo, blue `#228be6` + yellow `#ffd43b`, Lilita One display type. Rules, files and contrast table in `docs/BRAND.md`.
+- Tailwind v4, CSS-first. Tokens live in `packages/config/tailwind/tokens.css` (`brand-*` = Open Color blue, `accent-*` = Open Color yellow, `ink`, `surface`, `font-display`, `min-h-tap` = 44 px), mirrored in `packages/config/src/tokens.ts`. A unit test keeps them in sync and checks WCAG AA contrast.
+- Lilita One is self-hosted with `next/font/local` from `@fontsource/lilita-one` (`apps/web/src/app/fonts.ts`), so no request goes to Google and the CSP stays `font-src 'self'`.
 - shadcn/ui conventions (`components.json`, `cn`, `cva`, Radix `Slot`) in `packages/ui`.
 
 ## 7. Testing strategy
@@ -165,11 +170,11 @@ Package names are `@klikgo/<name>`. Workspace packages export TypeScript source 
 | UI flows | Playwright | `apps/web/e2e/` | production build, Pixel 7 + desktop Chrome, axe a11y |
 | Database / RLS | Cucumber `@db` now; pgTAP or Vitest-against-DB from Phase 1 | `features/`, `supabase/tests` | `supabase start` |
 
-CI (`.github/workflows/ci.yml`): job **static** (format, lint, typecheck, unit + coverage) and job **e2e** (supabase start → db reset → build → start server → Cucumber → Playwright, reports uploaded as artifacts). CodeQL runs on every PR and weekly.
+CI (`.github/workflows/ci.yml`) runs on Node 26 with pnpm 12 installed from npm by `.github/actions/setup` (first-party actions only): job **static** (format, lint, typecheck, unit + coverage) and job **e2e** (supabase start → db reset → build → start server → Cucumber → Playwright, reports uploaded as artifacts). CodeQL runs on every PR and weekly.
 
 ## 8. Deployment
 
-- Vercel project with **Root Directory = `apps/web`**, framework Next.js. Vercel detects pnpm from `packageManager` and installs at the monorepo root.
+- Vercel project with **Root Directory = `apps/web`**, framework Next.js, Node.js 26.x (or 24.x). Vercel installs at the monorepo root with the pnpm version in `packageManager` (setup notes: docs/OPEN_QUESTIONS.md Q1).
 - Env vars are set in Vercel (Preview and Production) and never committed.
 - Before taking real orders: Vercel Pro (Hobby is non-commercial) and Supabase Pro (backups, no pausing). See docs/BUILD_PLAN.md §2.
 
@@ -179,5 +184,9 @@ CI (`.github/workflows/ci.yml`): job **static** (format, lint, typecheck, unit +
 |---|---|---|
 | 2026-11-04 | Next.js BFF + `packages/core` instead of NestJS | BUILD_PLAN §2: one host, no cold starts, keeps SOLID ports |
 | 2026-11-04 | Supabase SQL migrations are the source of truth; Prisma mirrors | RLS, PostGIS and pg_cron cannot be expressed in Prisma schema |
-| 2026-11-04 | Next.js 15.5, Prisma 6, TypeScript 5.9, ESLint 9, Tailwind 4 | Plan specifies Next 15; Prisma 6 keeps `url` + `directUrl`; see OPEN_QUESTIONS Q2 |
+| 2026-11-04 | Next.js 15.5, Prisma 6, TypeScript 5.9, ESLint 9, Tailwind 4 | Plan specified Next 15 (superseded 2026-11-05) |
+| 2026-11-05 | Latest stable everywhere: Node 26 LTS, pnpm 12, Next 16, React 19.3, TS 6.0, ESLint 10, Vitest 5, Prisma 7, Playwright 1.64, Supabase CLI 3 | Owner: "use what is up to date" (OPEN_QUESTIONS Q2). TS 7 and Prisma 8 wait (Q9) |
+| 2026-11-05 | Prisma 7: CLI URL in `packages/db/prisma.config.ts` (`DIRECT_URL`), runtime via `@prisma/adapter-pg` (`DATABASE_URL`) | Prisma 7 removed `url`/`directUrl` from the schema |
+| 2026-11-05 | pnpm 12 supply-chain defaults kept: `allowBuilds` allowlist, `minimumReleaseAge` (1 day) | Blocks freshly published (possibly hijacked) versions; Dependabot cooldown is 2 days |
+| 2026-11-05 | KGo brand (blue `#228be6`, yellow `#ffd43b`, Lilita One) | Owner-supplied logo (OPEN_QUESTIONS Q7); see docs/BRAND.md |
 | 2026-11-04 | Cookie-based locale (no `/fil/...` URLs) | short shareable links; SEO not a pilot goal |

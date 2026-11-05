@@ -3,6 +3,8 @@ import { defineConfig, devices } from "@playwright/test";
 const PORT = Number(process.env.PORT ?? 3000);
 const BASE_URL = process.env.BASE_URL ?? `http://localhost:${PORT}`;
 const IS_CI = Boolean(process.env.CI);
+// Optional: reuse a preinstalled Chromium (e.g. sandboxes without `playwright install`).
+const CHROMIUM_PATH = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;
 
 /** E2E runs against the production build (`next start`) on a phone and a desktop. */
 export default defineConfig({
@@ -18,6 +20,7 @@ export default defineConfig({
     baseURL: BASE_URL,
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
+    ...(CHROMIUM_PATH ? { launchOptions: { executablePath: CHROMIUM_PATH } } : {}),
   },
   projects: [
     { name: "mobile-pixel-7", use: { ...devices["Pixel 7"] } },

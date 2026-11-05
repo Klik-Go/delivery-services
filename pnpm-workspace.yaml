@@ -2,18 +2,18 @@ packages:
   - apps/*
   - packages/*
 
-# pnpm 10 blocks dependency install scripts by default; allow only the ones we need.
-onlyBuiltDependencies:
-  - "@prisma/client"
-  - "@prisma/engines"
-  - "@tailwindcss/oxide"
-  - esbuild
-  - prisma
-  - sharp
-  - supabase
-  - unrs-resolver
+autoInstallPeers: true
 
-# Optional native helpers we do not need (file watchers / swc); silence the install warning.
-ignoredBuiltDependencies:
-  - "@parcel/watcher"
-  - "@swc/core"
+# pnpm blocks dependency build scripts unless allowed here (supply-chain safety).
+# true = run its install script; false = never (optional native helpers we do not need).
+allowBuilds:
+  "@parcel/watcher": false
+  "@prisma/client": true
+  "@prisma/engines": true
+  "@swc/core": false
+  "@tailwindcss/oxide": true
+  esbuild: true
+  prisma: true
+  sharp: true
+  supabase: true
+  unrs-resolver: true

@@ -1,4 +1,4 @@
 {
   "extends": "@klikgo/config/tsconfig/library.json",
-  "include": ["src/**/*.ts", "vitest.config.ts"]
+  "include": ["src/**/*.ts", "generated/**/*.ts", "prisma.config.ts", "vitest.config.ts"]
 }
