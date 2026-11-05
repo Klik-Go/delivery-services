@@ -4,38 +4,12 @@ Agents add items here when a decision is blocked, docs conflict, or the plan cou
 
 ## Open
 
-### Q6. GitHub repository settings — owner checklist (answered: "show me steps")
-The repo is **public**, so everything below is free. Menu names are GitHub's as of Nov 2026; if a label differs slightly, the search box in Settings finds it.
-
-**A. Protect `main` (Settings → Rules → Rulesets → New ruleset → New branch ruleset)**
-1. Name: `main`. Enforcement status: **Active**. Bypass list: leave empty (or add *Repository admin* for emergencies only).
-2. Target branches → Add target → **Include default branch**.
-3. Tick **Restrict deletions** and **Block force pushes**.
-4. Tick **Require a pull request before merging**. Required approvals: **0** while you are the only maintainer (the agent's PRs are opened under your account, and GitHub does not let an author approve their own PR); raise it to 1 when a second reviewer joins. Tick **Require conversation resolution before merging**.
-5. Tick **Require status checks to pass** → **Add checks** and add these four (they appear after one CI run): `Lint · typecheck · unit`, `Supabase · build · Cucumber · Playwright`, `Analyze (javascript-typescript)`, `Analyze (actions)`. Tick **Require branches to be up to date before merging**.
-6. Tick **Require code scanning results** → add **CodeQL**, security alerts threshold **High or higher**, alerts threshold **Errors**.
-7. Create.
-
-**B. Security features (Settings → Advanced Security, formerly "Code security")**
-1. **Secret Protection** → Enable. Then **Push protection** → Enable (blocks pushes that contain secrets).
-2. **Dependabot alerts** → Enable. **Dependabot security updates** → Enable. (Version updates already run from `.github/dependabot.yml`.)
-3. **Code scanning → CodeQL analysis**: keep it on **Advanced** (our `.github/workflows/codeql.yml`). Do **not** switch on *Default setup*, or GitHub rejects the workflow's uploads.
-4. Optional: **Private vulnerability reporting** → Enable.
-
-**C. Actions (Settings → Actions → General)**
-1. Actions permissions: select the 4th option, **Allow Klik-Go, and select non-Klik-Go, actions and reusable workflows**. Its sub-options only appear *after* you select it. Then tick **Allow actions created by GitHub**, leave "Marketplace verified creators" unticked and the "Allow specified actions" box empty, and click **Save**. CI uses only `actions/*` and `github/*` actions, so nothing else is needed.
-2. Leave **Require actions to be pinned to a full-length commit SHA** unticked. Our workflows reference GitHub's actions by version tag (`@v4`); ticking it would fail every CI run unless every `uses:` is rewritten to a commit SHA.
-3. Further down the same page, Workflow permissions: **Read repository contents and packages permissions**. Leave **Allow GitHub Actions to create and approve pull requests** unticked. Save.
-
-**D. Pull requests (Settings → General → "Pull Requests" section)**
-This is the repository's main settings page: the **General** item at the very top of the Settings sidebar, *not* Actions → General. Scroll about halfway down to the "Pull Requests" heading.
-1. Tick **Allow squash merging** (default commit message: pull request title and description); optionally untick **Allow merge commits** for a linear history.
-2. Tick **Automatically delete head branches** (lower in the same section). These checkboxes save as soon as you tick them.
-
-Done when: a test PR shows the four required checks, and pushing a fake key like `ghp_` + 36 characters to a branch is blocked by push protection.
-
-### Q8. Pilot barangay — needed before launch (placeholder in use)
-Which barangay (and city/municipality) is the pilot? Phase 1 seeds a **placeholder** zone (`pilot-zone`, "Pilot Zone (placeholder)"): a 4 km × 4 km square centred on 14.5995° N, 120.9842° E, 5 merchants and 3 riders inside it (owner said on 2026-11-05: "use a placeholder zone for now"). When the barangay is chosen, a migration replaces the polygon (ideally the official PSA/NAMRIA boundary) and moves the seed merchants inside it.
+### Q6. GitHub repository settings — almost done (owner, re-checked 2026-11-05 from screenshots)
+Already correct: Actions permissions (Klik-Go + GitHub actions only, no SHA pinning, read-only token, no PR creation), CodeQL on **Advanced setup**, Secret Protection + push protection, Dependabot alerts + security updates, private vulnerability reporting, the `main` ruleset's rules (restrict deletions, require a PR, require status checks, block force pushes, require CodeQL results at High or higher / Errors). Still to do:
+1. **The `main` ruleset targets nothing yet.** GitHub shows "This ruleset does not target any resources and will not be applied". Settings → Rules → Rulesets → `main` → **Target branches → Add target → Include default branch** → Save changes. Until then `main` is not protected.
+2. In the same ruleset, under **Require status checks to pass → Show additional settings**, make sure these four checks are listed (add them if not): `Lint · typecheck · unit`, `Supabase · build · Cucumber · Playwright`, `Analyze (javascript-typescript)`, `Analyze (actions)`.
+3. Settings → Advanced Security → **Dependency graph: On** (Dependabot alerts rely on it).
+4. Optional: Settings → General → Pull Requests → tick **Automatically delete head branches**. Allowing merge, squash and rebase merges is fine.
 
 ### Q10. How the BFF talks to the database under RLS — partly applied in Phase 2
 Phase 2 only needs **server reads of roles** (`PrismaUserRoleRepository`) and **privileged writes** (invites, role grants, rate-limit counters), which use the server connection as proposed. The user-scoped path (`withUserContext`: `set local role authenticated` + `request.jwt.claims` from the verified session, so RLS also applies to the BFF) will land with the first user-owned writes (addresses and menus, Phase 3–4). Objections welcome before then.
@@ -60,10 +34,11 @@ Invites currently return a one-time link that the admin shares (e.g. Viber). For
 ### Q15. BUILD_PLAN says applications create `merchants(status=pending)` — recorded conflict (decision taken)
 The Phase 3 prompt says the partner form "creates merchants(status=pending)". `merchants.owner_id` is a required link to an account, and an applicant has none yet (staff join by invite only). Phase 3 therefore stores applications in `merchant_applications`; approval creates the merchant (status `active`, closed until the owner opens it), the owner's account and the invite in one transaction. The `pending` merchant status stays for stores that an admin pauses before they are live. Say if you want it the other way round.
 
-### Q16. Gemini for menu import — owner action before real merchants use it
-1. Create an API key in Google AI Studio and set `GEMINI_API_KEY` in Vercel (Production + Preview). Optionally set `GEMINI_MODEL` (default `gemini-flash-latest`).
-2. **Before real merchants import menus, enable billing (paid tier).** On the free tier Google may use submitted content to improve its products (BUILD_PLAN §2). Only menu photos are sent, never customer data, but merchants' menus are still their business data.
-3. Never set `MENU_PARSER=fake` in Vercel (it is ignored on production anyway).
+### Q16. Gemini for menu import — paid tier still to do (owner)
+`GEMINI_API_KEY` is set (free tier, owner 2026-11-05). Remaining:
+1. **Before real merchants import menus, enable billing (paid tier).** On the free tier Google may use submitted content to improve its products (BUILD_PLAN §2). Only menu photos are sent, never customer data, but they are still merchants' business data.
+2. Check the key is set for both **Production and Preview** in Vercel; `GEMINI_MODEL` is optional (default `gemini-flash-latest`).
+3. Never set `MENU_PARSER=fake` in Vercel (ignored on production anyway).
 
 ### Q17. Map tiles — OpenStreetMap for now
 The partner pin map uses OpenStreetMap's public tiles (attribution shown). Their usage policy is fine for a low-traffic pilot but not for heavy use. When the customer address picker arrives (Phase 4), choose a provider (e.g. MapTiler or Google Maps, both have free tiers) and switch the tile URL behind the maps adapter; the CSP allows `https://tile.openstreetmap.org` only.
@@ -83,6 +58,9 @@ BUILD_PLAN says the default commission comes "from fee_rules", but `fee_rules` o
 - **Dependabot and pnpm 12:** if Dependabot cannot parse the pnpm 12 lockfile, its PRs will fail to open; then update deps with `pnpm update --latest` in a chore PR.
 
 ## Resolved
+
+### Q8. Pilot zones — resolved 2026-11-05
+**Answer: the whole of Makati City, the whole of San Marcelino (Zambales) and the whole of San Fernando (Pampanga).** Migration `20261108100000_launch_zones.sql` adds the three zones (active) with PSA/PSGC 3Q 2026 boundaries (`faeldon/philippines-json-maps`, MIT, checksum verified), simplified to ~5 m. Makati excludes the ten EMBO barangays that the Supreme Court placed under Taguig (the dataset's barangay list agrees; its city outline did not, so the zone is the city outline minus those barangays, ~18.3 km²). Types and maximum delivery radius: Makati and San Fernando are `city` (8 km), San Marcelino is `provincial` (20 km). The seed's stores, riders and customers moved into Makati; the placeholder zone is gone. Fees are still the pilot defaults (₱39 base, ₱10/km) until Phase 5 pricing.
 
 ### Q1. Vercel project link — resolved 2026-11-05
 The owner linked Vercel project `delivery-services-web` with Root Directory `apps/web`. The preview for Klik-Go/delivery-services#3 (Next 16, Node 26 toolchain, pnpm 12) built and reported **Ready**. If a future deploy fails at install, the original setup notes still apply: Node.js Version 26.x (or 24.x); for pnpm 12 use `ENABLE_EXPERIMENTAL_COREPACK=1` (Node 24) or Install Command `npx pnpm@12.16.1 install --frozen-lockfile`.

@@ -263,4 +263,5 @@ CI (`.github/workflows/ci.yml`) runs on Node 26 with pnpm 12 installed from npm 
 | 2026-11-05 | Partner applications in their own table, not `merchants(status=pending)` | An applicant has no account yet and `merchants.owner_id` is required; approval creates both in one transaction (OPEN_QUESTIONS Q15) |
 | 2026-11-05 | Photos uploaded browser → Storage via a BFF-issued signed URL; bucket enforces WebP ≤ 200 KB | No image bytes through Vercel functions; the size rule cannot be bypassed |
 | 2026-11-05 | Leaflet + OpenStreetMap tiles for the pin map | No API key for the MVP; swap behind the Phase 4 maps adapter if tile usage grows (Q17) |
+| 2026-11-05 | Launch zones loaded by migration from PSA/PSGC boundaries (simplified ~5 m) | Zones are reference data every environment needs; one source of truth, reviewable in a PR; the seed only adds fake people and stores |
 | 2026-11-04 | Cookie-based locale (no `/fil/...` URLs) | short shareable links; SEO not a pilot goal |

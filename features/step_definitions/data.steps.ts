@@ -16,7 +16,7 @@ const centavos = (peso: string): number => pesosToCentavos(peso.replace("₱", "
 Given("the pilot zone from the seed data", async function (this: KlikWorld) {
   const rows = await this.db.query<{ id: string; lat: number; lng: number }>(
     `select id, extensions.st_y(c) as lat, extensions.st_x(c) as lng
-     from public.zones, extensions.st_centroid(area::extensions.geometry) c where slug = 'pilot-zone'`,
+     from public.zones, extensions.st_pointonsurface(area::extensions.geometry) c where slug = 'makati'`,
   );
   const zone = rows[0];
   assert.ok(zone, "The seed has no pilot zone. Run `pnpm db:reset`.");

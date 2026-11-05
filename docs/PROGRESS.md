@@ -9,7 +9,8 @@ Phases are defined in `docs/BUILD_PLAN.md` §6. Agents update this file in every
 | 0.1 | Follow-up: latest toolchain + KGo brand | ✅ Done (merged) | [Klik-Go/delivery-services#3](https://github.com/Klik-Go/delivery-services/pull/3) | Owner answers to Q2, Q5, Q6, Q7 |
 | 1 | Data model, migrations, RLS, seed | ✅ Done (merged) | [Klik-Go/delivery-services#6](https://github.com/Klik-Go/delivery-services/pull/6) | Placeholder pilot zone until Q8 is answered |
 | 2 | Auth and RBAC per role | ✅ Done (merged) | [Klik-Go/delivery-services#7](https://github.com/Klik-Go/delivery-services/pull/7) | Owner: hosted Supabase auth settings (OPEN_QUESTIONS Q12, Q13) |
-| 3 | Merchant onboarding and menu (+ AI import) | 🟡 In progress (PR open) | [Klik-Go/delivery-services#8](https://github.com/Klik-Go/delivery-services/pull/8) | Owner: Gemini key + paid tier (Q16); 20-items UAT |
+| 3 | Merchant onboarding and menu (+ AI import) | ✅ Done (merged) | [Klik-Go/delivery-services#8](https://github.com/Klik-Go/delivery-services/pull/8) | Owner: Gemini key + paid tier (Q16); 20-items UAT |
+| 3.1 | Follow-up: launch zones (Makati, San Fernando, San Marcelino) + owner answers | 🟡 In progress (PR open) | PR_LINK | Owner: `main` ruleset target (Q6), Gemini paid tier (Q16) |
 | 4 | Customer discovery, store page, cart (PWA) | ⬜ Not started | | |
 | 5 | Checkout and payments (PayMongo + COD) | ⬜ Not started | | |
 | 6 | Order lifecycle, merchant queue, SLA | ⬜ Not started | | |
