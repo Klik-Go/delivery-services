@@ -4,7 +4,7 @@
 
 Klik Go is a delivery platform for the Philippines, built for barangays and provincial towns, on a Hybrid Aggregator + Managed Logistics model. It starts with food delivery in one pilot zone, then grows into groceries, parcels, pharmacy and B2B.
 
-> Status: Phases 0–3 merged; Phase 3.1 (launch zones) and Phase 4 (customer discovery, store page, cart) in review. See `docs/PROGRESS.md`.
+> Status: Phases 0–3.1 merged; Phase 4 (customer discovery, store page, cart) in review. See `docs/PROGRESS.md`.
 
 ## Docs
 | File | What it is |
