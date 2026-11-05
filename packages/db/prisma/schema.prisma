@@ -234,35 +234,39 @@ model menu_items {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model merchants {
-  id                   String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  zone_id              String                   @db.Uuid
-  owner_id             String                   @db.Uuid
-  name                 String
-  slug                 String                   @unique
-  description          String?
-  category             merchant_category        @default(food)
-  location             Unsupported("geography")
-  address_line         String?
-  phone                String?
-  commission_bps       Int                      @default(2000)
-  accepts_cod          Boolean                  @default(true)
-  is_open              Boolean                  @default(false)
-  default_prep_minutes Int                      @default(15)
-  hours                Json                     @default("{}")
-  status               merchant_status          @default(pending)
-  rating_avg           Decimal                  @default(0) @db.Decimal(3, 2)
-  rating_count         Int                      @default(0)
-  cover_photo_path     String?
-  created_at           DateTime                 @default(now()) @db.Timestamptz(6)
-  updated_at           DateTime                 @default(now()) @db.Timestamptz(6)
-  invites              invites[]
-  menu_categories      menu_categories[]
-  menu_items           menu_items[]
-  profiles             profiles                 @relation(fields: [owner_id], references: [id], onUpdate: NoAction)
-  zones                zones                    @relation(fields: [zone_id], references: [id], onUpdate: NoAction)
-  orders               orders[]
-  promos               promos[]
-  user_roles           user_roles[]
+  id                        String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  zone_id                   String                   @db.Uuid
+  owner_id                  String                   @db.Uuid
+  name                      String
+  slug                      String                   @unique
+  description               String?
+  category                  merchant_category        @default(food)
+  location                  Unsupported("geography")
+  address_line              String?
+  phone                     String?
+  commission_bps            Int                      @default(2000)
+  accepts_cod               Boolean                  @default(true)
+  is_open                   Boolean                  @default(false)
+  default_prep_minutes      Int                      @default(15)
+  hours                     Json                     @default("{}")
+  status                    merchant_status          @default(pending)
+  rating_avg                Decimal                  @default(0) @db.Decimal(3, 2)
+  rating_count              Int                      @default(0)
+  cover_photo_path          String?
+  created_at                DateTime                 @default(now()) @db.Timestamptz(6)
+  updated_at                DateTime                 @default(now()) @db.Timestamptz(6)
+  service_radius_km         Decimal?                 @db.Decimal(4, 1)
+  founding_commission_until DateTime?                @db.Timestamptz(6)
+  invites                   invites[]
+  menu_categories           menu_categories[]
+  menu_items                menu_items[]
+  merchant_applications     merchant_applications[]
+  merchant_closures         merchant_closures[]
+  profiles                  profiles                 @relation(fields: [owner_id], references: [id], onUpdate: NoAction)
+  zones                     zones                    @relation(fields: [zone_id], references: [id], onUpdate: NoAction)
+  orders                    orders[]
+  promos                    promos[]
+  user_roles                user_roles[]
 
   @@index([location], map: "merchants_location_gix", type: Gist)
   @@index([owner_id], map: "merchants_owner_idx")
@@ -497,6 +501,7 @@ model profiles {
   invites_invites_accepted_byToprofiles      invites[]                   @relation("invites_accepted_byToprofiles")
   invites_invites_invited_byToprofiles       invites[]                   @relation("invites_invited_byToprofiles")
   loyalty_stamps                             loyalty_stamps[]
+  merchant_applications                      merchant_applications[]
   merchants                                  merchants[]
   notifications                              notifications[]
   orders_orders_cancelled_byToprofiles       orders[]                    @relation("orders_cancelled_byToprofiles")
@@ -713,31 +718,77 @@ model webhook_events {
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model zones {
-  id                   String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name                 String
-  slug                 String                   @unique
-  zone_type            zone_type                @default(barangay)
-  area                 Unsupported("geography")
-  base_fee_centavos    Int
-  per_km_centavos      Int                      @default(0)
-  surge_multiplier_bps Int                      @default(10000)
-  max_radius_km        Decimal                  @db.Decimal(4, 1)
-  is_active            Boolean                  @default(false)
-  service_hours        Json                     @default("{}")
-  coordinator_id       String?                  @db.Uuid
-  created_at           DateTime                 @default(now()) @db.Timestamptz(6)
-  updated_at           DateTime                 @default(now()) @db.Timestamptz(6)
-  fee_rules            fee_rules[]
-  invites              invites[]
-  merchants            merchants[]
-  orders               orders[]
-  promos               promos[]
-  riders               riders[]
-  user_roles           user_roles[]
-  profiles             profiles?                @relation(fields: [coordinator_id], references: [id], onUpdate: NoAction)
+  id                    String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                  String
+  slug                  String                   @unique
+  zone_type             zone_type                @default(barangay)
+  area                  Unsupported("geography")
+  base_fee_centavos     Int
+  per_km_centavos       Int                      @default(0)
+  surge_multiplier_bps  Int                      @default(10000)
+  max_radius_km         Decimal                  @db.Decimal(4, 1)
+  is_active             Boolean                  @default(false)
+  service_hours         Json                     @default("{}")
+  coordinator_id        String?                  @db.Uuid
+  created_at            DateTime                 @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime                 @default(now()) @db.Timestamptz(6)
+  fee_rules             fee_rules[]
+  invites               invites[]
+  merchant_applications merchant_applications[]
+  merchants             merchants[]
+  orders                orders[]
+  promos                promos[]
+  riders                riders[]
+  user_roles            user_roles[]
+  profiles              profiles?                @relation(fields: [coordinator_id], references: [id], onUpdate: NoAction)
 
   @@index([area], map: "zones_area_gix", type: Gist)
   @@index([coordinator_id], map: "zones_coordinator_idx")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model merchant_applications {
+  id               String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  business_name    String
+  owner_name       String
+  phone            String
+  email            String
+  category         merchant_category           @default(food)
+  barangay         String
+  city             String
+  address_line     String?
+  location         Unsupported("geography")
+  zone_id          String?                     @db.Uuid
+  status           merchant_application_status @default(pending)
+  merchant_id      String?                     @db.Uuid
+  reviewed_by      String?                     @db.Uuid
+  reviewed_at      DateTime?                   @db.Timestamptz(6)
+  rejection_reason String?
+  created_at       DateTime                    @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime                    @default(now()) @db.Timestamptz(6)
+  merchants        merchants?                  @relation(fields: [merchant_id], references: [id], onUpdate: NoAction)
+  profiles         profiles?                   @relation(fields: [reviewed_by], references: [id], onUpdate: NoAction)
+  zones            zones?                      @relation(fields: [zone_id], references: [id], onUpdate: NoAction)
+
+  @@index([status, created_at], map: "merchant_applications_status_idx")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model merchant_closures {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  merchant_id String    @db.Uuid
+  closed_on   DateTime  @db.Date
+  reason      String?
+  created_at  DateTime  @default(now()) @db.Timestamptz(6)
+  merchants   merchants @relation(fields: [merchant_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([merchant_id, closed_on])
+  @@index([merchant_id, closed_on], map: "merchant_closures_merchant_idx")
   @@schema("public")
 }
 
@@ -932,6 +983,14 @@ enum zone_type {
   barangay
   city
   provincial
+
+  @@schema("public")
+}
+
+enum merchant_application_status {
+  pending
+  approved
+  rejected
 
   @@schema("public")
 }

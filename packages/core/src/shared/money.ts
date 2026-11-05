@@ -41,3 +41,14 @@ export function pesosToCentavos(input: string): Centavos {
   const [whole = "0", fraction = ""] = trimmed.replaceAll(",", "").split(".");
   return assertCentavos(Number(whole) * 100 + Number(fraction.padEnd(2, "0")));
 }
+
+/** Centavos as a plain peso amount for an input field: 12050 → "120.50", 9000 → "90". */
+export function centavosToPesoInput(centavos: Centavos): string {
+  const value = assertCentavos(centavos);
+  const sign = value < 0 ? "-" : "";
+  const whole = Math.floor(Math.abs(value) / 100);
+  const fraction = Math.abs(value) % 100;
+  return fraction === 0
+    ? `${sign}${String(whole)}`
+    : `${sign}${String(whole)}.${String(fraction).padStart(2, "0")}`;
+}

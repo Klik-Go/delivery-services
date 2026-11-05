@@ -11,7 +11,7 @@ export function TextField({ label, error, id, ...props }: TextFieldProps): JSX.E
   const inputId = id ?? props.name;
   const errorId = error ? `${inputId}-error` : undefined;
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex min-w-0 flex-col gap-1">
       <label htmlFor={inputId} className="text-ink text-sm font-semibold">
         {label}
       </label>
@@ -19,7 +19,7 @@ export function TextField({ label, error, id, ...props }: TextFieldProps): JSX.E
         id={inputId}
         aria-invalid={error ? true : undefined}
         aria-describedby={errorId}
-        className="border-ink-muted/40 focus:border-brand-800 focus:outline-brand-600 text-ink min-h-tap rounded-xl border-2 px-3 text-base"
+        className="border-ink-muted/40 focus:border-brand-800 focus:outline-brand-600 text-ink min-h-tap w-full min-w-0 rounded-xl border-2 px-3 text-base"
         {...props}
       />
       {error ? (

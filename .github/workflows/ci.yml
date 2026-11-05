@@ -50,6 +50,8 @@ jobs:
       DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
       DIRECT_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
       BASE_URL: http://localhost:3000
+      # Deterministic menu reader for AI-import tests; Gemini is never called from CI.
+      MENU_PARSER: fake
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
@@ -80,7 +82,7 @@ jobs:
           } >> "$GITHUB_ENV"
           rm "$RUNNER_TEMP/supabase.env"
 
-      - name: Database tests (RLS isolation, PostGIS, integrity)
+      - name: Database and repository tests (RLS isolation, PostGIS, integrity, Prisma repositories)
         run: pnpm test:db
       - name: Prisma schema and ERD match the migrated database
         run: |

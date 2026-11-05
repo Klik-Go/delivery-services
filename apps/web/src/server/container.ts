@@ -2,6 +2,14 @@ import "server-only";
 import {
   createPinoLogger,
   DevSmsSender,
+  GeminiMenuParser,
+  PrismaMenuRepository,
+  PrismaMerchantApplicationRepository,
+  PrismaStoreRepository,
+  PrismaZoneLocator,
+  SupabasePhotoStorage,
+  UnconfiguredMenuParser,
+  UnconfiguredPhotoStorage,
   PostgresRateLimiter,
   PrismaInviteRepository,
   PrismaUserRoleRepository,
@@ -16,16 +24,24 @@ import {
   err,
   HealthService,
   InviteService,
+  MenuImportService,
+  MenuService,
+  MerchantOnboardingService,
   MfaService,
   OtpSmsService,
   PhoneOtpService,
   StaffAuthService,
+  StoreSettingsService,
+  StorefrontService,
+  type IMenuParser,
   type IRateLimiter,
   type IUserRoleRepository,
   type Logger,
   type Result,
 } from "@klikgo/core";
+import { FakeMenuParser } from "@klikgo/core/testing";
 import { getPrismaClient } from "@klikgo/db";
+import { randomUUID } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getServerEnv, type ServerEnv } from "./env";
 import { supabaseAdminClient } from "./supabase/admin-client";
@@ -41,8 +57,14 @@ export interface Container {
   readonly userRoles: IUserRoleRepository;
   readonly rateLimiter: IRateLimiter;
   readonly otpSms: OtpSmsService;
+  readonly storeSettings: StoreSettingsService;
+  readonly menu: MenuService;
+  readonly menuImport: MenuImportService;
+  readonly storefront: StorefrontService;
   /** Staff invitations need the service-role key; an error explains what to configure otherwise. */
   inviteService(): Result<InviteService, AppError>;
+  /** Partner applications and approvals (approval creates staff accounts: service-role key). */
+  merchantOnboarding(): Result<MerchantOnboardingService, AppError>;
   /** Services bound to one request's Supabase session (cookies). */
   forRequest(supabase: SupabaseClient): RequestServices;
 }
@@ -72,6 +94,19 @@ export function createContainer(env: ServerEnv): Container {
       })
     : new DevSmsSender(logger);
   let invite: InviteService | undefined;
+  let onboarding: MerchantOnboardingService | undefined;
+  const admin = supabaseAdminClient();
+  const stores = new PrismaStoreRepository(prisma);
+  const menus = new PrismaMenuRepository(prisma);
+  const menu = new MenuService({
+    menus,
+    photos: admin
+      ? new SupabasePhotoStorage(admin, logger)
+      : new UnconfiguredPhotoStorage(env.NEXT_PUBLIC_SUPABASE_URL),
+    authz,
+    logger,
+    newId: randomUUID,
+  });
 
   return {
     logger,
@@ -80,16 +115,32 @@ export function createContainer(env: ServerEnv): Container {
     userRoles,
     rateLimiter,
     otpSms: new OtpSmsService({ sms, logger }),
+    storeSettings: new StoreSettingsService({ stores, authz }),
+    menu,
+    menuImport: new MenuImportService({
+      parser: menuParser(env, logger),
+      rateLimiter,
+      authz,
+      logger,
+    }),
+    storefront: new StorefrontService({ storefronts: stores, menus, menuService: menu }),
+    merchantOnboarding() {
+      if (onboarding) return { ok: true, value: onboarding };
+      if (!admin) return err(notConfigured("Merchant approvals"));
+      onboarding = new MerchantOnboardingService({
+        applications: new PrismaMerchantApplicationRepository(prisma),
+        zones: new PrismaZoneLocator(prisma),
+        accounts: new SupabaseStaffAccountGateway(admin, logger),
+        rateLimiter,
+        authz,
+        clock,
+        logger,
+      });
+      return { ok: true, value: onboarding };
+    },
     inviteService() {
       if (invite) return { ok: true, value: invite };
-      const admin = supabaseAdminClient();
-      if (!admin)
-        return err(
-          new AppError(
-            "INTERNAL",
-            "Staff invitations are not configured (SUPABASE_SERVICE_ROLE_KEY).",
-          ),
-        );
+      if (!admin) return err(notConfigured("Staff invitations"));
       invite = new InviteService({
         accounts: new SupabaseStaffAccountGateway(admin, logger),
         roles: userRoles,
@@ -110,6 +161,19 @@ export function createContainer(env: ServerEnv): Container {
       };
     },
   };
+}
+
+function notConfigured(feature: string): AppError {
+  return new AppError("INTERNAL", `${feature} are not configured (SUPABASE_SERVICE_ROLE_KEY).`);
+}
+
+/** Gemini when a key is set; the deterministic fake only when asked for (tests, local demos). */
+function menuParser(env: ServerEnv, logger: Logger): IMenuParser {
+  // The fake never answers real merchants: it is ignored on Vercel production.
+  if (env.MENU_PARSER === "fake" && env.VERCEL_ENV !== "production") return new FakeMenuParser();
+  if (env.GEMINI_API_KEY)
+    return new GeminiMenuParser({ apiKey: env.GEMINI_API_KEY, model: env.GEMINI_MODEL, logger });
+  return new UnconfiguredMenuParser();
 }
 
 let container: Container | undefined;

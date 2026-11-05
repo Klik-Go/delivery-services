@@ -22,7 +22,7 @@
     "db:reset": "supabase db reset",
     "db:stop": "supabase stop",
     "db:generate": "turbo run db:generate",
-    "test:db": "pnpm --filter @klikgo/db test:db",
+    "test:db": "pnpm db:generate && pnpm --filter @klikgo/db --filter @klikgo/adapters --sequential test:db",
     "bootstrap:admin": "node --import tsx scripts/bootstrap-admin.ts"
   },
   "devDependencies": {

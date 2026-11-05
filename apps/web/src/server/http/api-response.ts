@@ -15,6 +15,7 @@ const HTTP_STATUS_BY_CODE: Record<AppErrorCode, number> = {
   NOT_FOUND: 404,
   CONFLICT: 409,
   RATE_LIMITED: 429,
+  UNAVAILABLE: 503,
   INTERNAL: 500,
 };
 

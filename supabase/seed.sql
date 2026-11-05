@@ -32,7 +32,7 @@ declare
   v_tea uuid := '5eed0000-0000-4000-8000-000000000103';
   v_silog uuid := '5eed0000-0000-4000-8000-000000000104';
   v_merienda uuid := '5eed0000-0000-4000-8000-000000000105';
-  v_hours jsonb := '{"mon":[["10:00","14:00"],["17:00","21:00"]],"tue":[["10:00","14:00"],["17:00","21:00"]],"wed":[["10:00","14:00"],["17:00","21:00"]],"thu":[["10:00","14:00"],["17:00","21:00"]],"fri":[["10:00","14:00"],["17:00","21:00"]],"sat":[["10:00","21:00"]],"sun":[["10:00","21:00"]]}';
+  v_hours jsonb := '{"mon":[{"open":"10:00","close":"14:00"},{"open":"17:00","close":"21:00"}],"tue":[{"open":"10:00","close":"14:00"},{"open":"17:00","close":"21:00"}],"wed":[{"open":"10:00","close":"14:00"},{"open":"17:00","close":"21:00"}],"thu":[{"open":"10:00","close":"14:00"},{"open":"17:00","close":"21:00"}],"fri":[{"open":"10:00","close":"14:00"},{"open":"17:00","close":"21:00"}],"sat":[{"open":"10:00","close":"21:00"}],"sun":[{"open":"10:00","close":"21:00"}]}';
   v_person record;
   v_merchant record;
   v_item record;
@@ -81,7 +81,8 @@ begin
 
   insert into public.user_roles (user_id, role, zone_id) values (v_admin, 'admin', null), (v_coordinator, 'coordinator', v_zone);
 
-  -- Five founding merchants: 0% commission for the first 3 months (docs/BUSINESS.md §4.2).
+  -- Five founding merchants: 20% commission, waived for their first 90 days (docs/BUSINESS.md §4.2,
+  -- Appendix A).
   for v_merchant in
     select * from (values
       (v_nena, v_owner_nena, 'Aling Nena''s Karinderya', 'aling-nenas-karinderya', 'Lutong bahay: ulam, rice and kakanin.', 14.5995, 120.9842),
@@ -92,11 +93,11 @@ begin
     ) as m(id, owner_id, name, slug, description, lat, lng)
   loop
     insert into public.merchants (id, zone_id, owner_id, name, slug, description, category, location, commission_bps,
-                                  accepts_cod, is_open, default_prep_minutes, hours, status)
+                                  founding_commission_until, accepts_cod, is_open, default_prep_minutes, hours, status)
     values (
       v_merchant.id, v_zone, v_merchant.owner_id, v_merchant.name, v_merchant.slug, v_merchant.description, 'food',
       extensions.st_setsrid(extensions.st_makepoint(v_merchant.lng, v_merchant.lat), 4326)::extensions.geography,
-      0, true, true, 15, v_hours, 'active'
+      2000, now() + interval '90 days', true, true, 15, v_hours, 'active'
     );
     insert into public.user_roles (user_id, role, merchant_id) values (v_merchant.owner_id, 'merchant_owner', v_merchant.id);
   end loop;

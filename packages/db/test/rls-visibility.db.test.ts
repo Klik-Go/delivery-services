@@ -1,6 +1,6 @@
 import { beforeEach, expect, it } from "vitest";
 import { asUser } from "../src/testing";
-import { describeDb, ids, useRollbackTransaction } from "./support";
+import { describeDb, failureOf, ids, useRollbackTransaction } from "./support";
 import { buildWorld, type World } from "./world";
 
 type Viewer = keyof World["users"] | "anon";
@@ -239,5 +239,27 @@ describeDb("row-level security: who can see which rows", () => {
     const flags = `select key as id from public.feature_flags where key = 'pabili_mode_test'`;
     expect(await seen("customer1", flags)).toEqual(["pabili_mode_test"]);
     expect(await seen("anon", flags)).toEqual([]);
+  });
+
+  it("merchant applications: admins see all; coordinators their zone; nobody else", async () => {
+    const all = Object.values(w.applications);
+    const q = `select id from public.merchant_applications where id = any($1)`;
+    expect(await seen("admin", q, [all])).toEqual(sorted(...all));
+    expect(await seen("coordA", q, [all])).toEqual([w.applications.A]);
+    expect(await seen("coordB", q, [all])).toEqual([w.applications.B]);
+    for (const viewer of ["ownerA", "staffA", "customer1", "riderA1"] as const)
+      expect(await seen(viewer, q, [all]), viewer).toEqual([]);
+    // Anonymous visitors have no grant at all on applications (applicants' contact details).
+    const anon = await asUser(db(), null, () => failureOf(db(), () => db().query(q, [all])));
+    expect(anon).toMatch(/permission denied/);
+  });
+
+  it("holiday closures follow their store: public for live stores, team-only while pending", async () => {
+    const q = `select merchant_id as id from public.merchant_closures where merchant_id = any($1)`;
+    const both = [w.merchantA, w.pendingMerchant];
+    expect(await seen("anon", q, [both])).toEqual([w.merchantA]);
+    expect(await seen("customer1", q, [both])).toEqual([w.merchantA]);
+    expect(await seen("ownerB", q, [both])).toEqual(sorted(w.merchantA, w.pendingMerchant));
+    expect(await seen("admin", q, [both])).toEqual(sorted(w.merchantA, w.pendingMerchant));
   });
 });

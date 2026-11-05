@@ -29,6 +29,8 @@ export interface World {
   readonly merchantA: string;
   readonly merchantB: string;
   readonly pendingMerchant: string;
+  /** Partner applications: one in zone A, one in zone B, one outside every zone. */
+  readonly applications: Record<"A" | "B" | "outside", string>;
   readonly riders: Record<"A1" | "A2" | "B", string>;
   /** order1: customer1 @ A, delivered by riderA1. */
   readonly order1: string;
@@ -228,6 +230,25 @@ export async function buildWorld(db: pg.ClientBase, fx: DbFixtures): Promise<Wor
      values ($1, '0-2 km', 'delivery_distance_band', 0, 2000, 3900), ($2, 'paused 0-2 km', 'delivery_distance_band', 0, 2000, 3900)`,
     [zoneA, pausedZone],
   );
+  const application = async (name: string, at: LatLng, zoneId: string | null): Promise<string> => {
+    const row = await db.query<{ id: string }>(
+      `insert into public.merchant_applications (business_name, owner_name, phone, email, barangay, city, location, zone_id)
+       values ($1, 'Applicant', '+639170000999', 'apply@example.test', 'Poblacion', 'Placeholder City',
+               extensions.st_setsrid(extensions.st_makepoint($2, $3), 4326)::extensions.geography, $4)
+       returning id`,
+      [name, at.lng, at.lat, zoneId],
+    );
+    return row.rows[0]?.id ?? "";
+  };
+  const applications = {
+    A: await application("Lugaw sa Kanto", offsetLatLng(CENTRE_A, 300), zoneA),
+    B: await application("Puto ni Lola", offsetLatLng(CENTRE_B, 300), zoneB),
+    outside: await application("Malayong Kainan", offsetLatLng(CENTRE_A, 60_000), null),
+  };
+  await db.query(
+    `insert into public.merchant_closures (merchant_id, closed_on, reason) values ($1, current_date + 7, 'Fiesta'), ($2, current_date + 7, 'Fiesta')`,
+    [merchantA, pendingMerchant],
+  );
   await db.query(
     `insert into public.feature_flags (key, description, enabled) values ('pabili_mode_test', 'Pabili (buy-for-me)', false)
      on conflict (key) do nothing`,
@@ -253,6 +274,7 @@ export async function buildWorld(db: pg.ClientBase, fx: DbFixtures): Promise<Wor
     merchantA,
     merchantB,
     pendingMerchant,
+    applications,
     riders: { A1: riderA1, A2: riderA2, B: riderB },
     order1,
     order2,

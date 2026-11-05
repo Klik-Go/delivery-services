@@ -20,6 +20,8 @@ erDiagram
   merchants |o--o{ invites : "merchant_id"
   zones |o--o{ invites : "zone_id"
   profiles ||--o{ loyalty_stamps : "customer_id"
+  profiles |o--o{ merchant_applications : "reviewed_by"
+  zones |o--o{ merchant_applications : "zone_id"
   profiles ||--o{ merchants : "owner_id"
   zones ||--o{ merchants : "zone_id"
   profiles ||--o{ notifications : "user_id"
@@ -113,6 +115,10 @@ erDiagram
   merchants ||--o{ menu_categories : "merchant_id"
   menu_categories ||--o{ menu_items : "category_id, merchant_id"
   merchants ||--o{ menu_items : "merchant_id"
+  merchants |o--o{ merchant_applications : "merchant_id"
+  profiles |o--o{ merchant_applications : "reviewed_by"
+  zones |o--o{ merchant_applications : "zone_id"
+  merchants ||--o{ merchant_closures : "merchant_id"
   profiles ||--o{ merchants : "owner_id"
   zones ||--o{ merchants : "zone_id"
   menu_items ||--o{ modifier_groups : "menu_item_id"
@@ -121,6 +127,26 @@ erDiagram
   merchants ||--o{ orders : "merchant_id"
   merchants |o--o{ promos : "merchant_id"
   merchants |o--o{ user_roles : "merchant_id"
+  merchant_applications {
+    uuid id PK
+    text business_name
+    text owner_name
+    text phone
+    text email
+    merchant_category category
+    text barangay
+    text city
+    text address_line
+    geography location
+    uuid zone_id FK
+    merchant_application_status status
+    uuid merchant_id FK
+    uuid reviewed_by FK
+    timestamptz reviewed_at
+    text rejection_reason
+    timestamptz created_at
+    timestamptz updated_at
+  }
   merchants {
     uuid id PK
     uuid zone_id FK
@@ -143,6 +169,15 @@ erDiagram
     text cover_photo_path
     timestamptz created_at
     timestamptz updated_at
+    numeric service_radius_km
+    timestamptz founding_commission_until
+  }
+  merchant_closures {
+    uuid id PK
+    uuid merchant_id FK, UK
+    date closed_on UK
+    text reason
+    timestamptz created_at
   }
   menu_categories {
     uuid id PK
@@ -556,6 +591,8 @@ Role helpers live in the `private` schema (`has_role`, `is_admin`, `is_merchant_
 | `loyalty_stamps` | on | `loyalty_stamps_select` (select · authenticated) |
 | `menu_categories` | on | `menu_categories_member_write` (all · authenticated)<br>`menu_categories_select` (select · anon, authenticated) |
 | `menu_items` | on | `menu_items_member_write` (all · authenticated)<br>`menu_items_select` (select · anon, authenticated) |
+| `merchant_applications` | on | `merchant_applications_admin_select` (select · authenticated)<br>`merchant_applications_coordinator_select` (select · authenticated) |
+| `merchant_closures` | on | `merchant_closures_member_write` (all · authenticated)<br>`merchant_closures_select` (select · anon, authenticated) |
 | `merchants` | on | `merchants_select` (select · anon, authenticated)<br>`merchants_update_member` (update · authenticated) |
 | `modifier_groups` | on | `modifier_groups_member_write` (all · authenticated)<br>`modifier_groups_select` (select · anon, authenticated) |
 | `modifier_options` | on | `modifier_options_member_write` (all · authenticated)<br>`modifier_options_select` (select · anon, authenticated) |

@@ -6,11 +6,14 @@ import { SignOutButton } from "@/components/auth/sign-out-button";
 /** Header + content frame shared by the merchant, rider and admin surfaces. */
 export async function SurfaceShell({
   title,
+  eyebrow,
   lead,
   who,
   children,
 }: {
   readonly title: string;
+  /** Small label above the title, e.g. "Merchant dashboard" over the store name. */
+  readonly eyebrow?: string | undefined;
   readonly lead: string;
   readonly who: string;
   readonly children?: ReactNode;
@@ -26,6 +29,9 @@ export async function SurfaceShell({
         <SignOutButton label={t("signOut")} />
       </header>
       <main className="flex flex-col gap-4">
+        {eyebrow ? (
+          <p className="text-brand-800 text-sm font-semibold tracking-wide uppercase">{eyebrow}</p>
+        ) : null}
         <h1 className="text-ink text-3xl font-bold">{title}</h1>
         <p className="text-ink-muted">{lead}</p>
         <p className="text-ink-muted text-sm">{t("signedInAs", { who })}</p>

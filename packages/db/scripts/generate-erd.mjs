@@ -14,7 +14,15 @@ const DOMAINS = [
   ["People, roles and zones", ["profiles", "user_roles", "invites", "zones", "addresses"]],
   [
     "Merchants and menus",
-    ["merchants", "menu_categories", "menu_items", "modifier_groups", "modifier_options"],
+    [
+      "merchant_applications",
+      "merchants",
+      "merchant_closures",
+      "menu_categories",
+      "menu_items",
+      "modifier_groups",
+      "modifier_options",
+    ],
   ],
   ["Riders", ["riders", "rider_kyc_documents", "rider_locations", "rider_location_breadcrumbs"]],
   [

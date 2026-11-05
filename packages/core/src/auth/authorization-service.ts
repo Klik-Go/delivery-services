@@ -8,7 +8,10 @@ export type Surface = "customer" | "rider" | "merchant" | "admin";
 export type Action =
   | { readonly type: "surface.open"; readonly surface: Surface }
   | { readonly type: "staff.invite" }
-  | { readonly type: "merchant.manage"; readonly merchantId: string };
+  | { readonly type: "merchant.manage"; readonly merchantId: string }
+  | { readonly type: "merchant.settings"; readonly merchantId: string }
+  | { readonly type: "merchant.applications.view" }
+  | { readonly type: "merchant.applications.review" };
 
 /** Result of an authorization check, with the reason when refused. */
 export type AuthorizationDecision =
@@ -48,12 +51,38 @@ export class AuthorizationService {
           { roles: ["admin", "merchant_owner", "merchant_staff"], requiresMfa: true },
           (role, merchantId) => role === "admin" || merchantId === action.merchantId,
         );
+      case "merchant.settings":
+        return this.check(
+          user,
+          { roles: ["admin", "merchant_owner"], requiresMfa: true },
+          (role, merchantId) => role === "admin" || merchantId === action.merchantId,
+        );
+      case "merchant.applications.view":
+        return this.check(user, { roles: ["admin", "coordinator"], requiresMfa: true }, () => true);
+      case "merchant.applications.review":
+        return this.check(user, { roles: ["admin"], requiresMfa: true }, () => true);
     }
   }
 
   /** True when {@link decide} allows the action. */
   can(user: SessionUser | null, action: Action): boolean {
     return this.decide(user, action).allowed;
+  }
+
+  /** Stores this person works for (owner or staff), in a stable order. */
+  merchantIdsOf(user: SessionUser): string[] {
+    const ids = user.roles
+      .filter((grant) => grant.role === "merchant_owner" || grant.role === "merchant_staff")
+      .map((grant) => grant.merchantId)
+      .filter((id): id is string => id !== null);
+    return [...new Set(ids)].sort();
+  }
+
+  /** Zones this person coordinates. */
+  zoneIdsOf(user: SessionUser): string[] {
+    return user.roles
+      .filter((grant) => grant.role === "coordinator" && grant.zoneId !== null)
+      .map((grant) => grant.zoneId as string);
   }
 
   /** True for merchant, coordinator and admin users (who must use TOTP). */

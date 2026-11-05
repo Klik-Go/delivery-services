@@ -34,7 +34,8 @@ export async function sql(text: string, params: unknown[] = []): Promise<pg.Quer
 /** Clears rate-limit counters for the reserved test numbers so reruns are not blocked. */
 export async function resetTestNumberLimits(): Promise<void> {
   await sql(
-    `delete from private.rate_limit_counters where key like 'otp:phone:+6391700001%' or key like 'otp-verify:phone:+6391700001%' or key = 'otp:ip:unknown'`,
+    `delete from private.rate_limit_counters where key like 'otp:phone:+6391700001%' or key like 'otp-verify:phone:+6391700001%' or key = 'otp:ip:unknown'
+       or key ~ '^partner-apply:ip:(unknown|::1|::ffff:127\\.0\\.0\\.1|127\\.0\\.0\\.1)$'`,
   );
 }
 
@@ -109,4 +110,49 @@ async function expectOk<T extends { ok(): boolean; status(): number; text(): Pro
   const response = await pending;
   if (!response.ok()) throw new Error(`${response.status()}: ${await response.text()}`);
   return response;
+}
+
+/** Creates a merchant staff account for `merchantId` and signs it in (password + TOTP). */
+export async function signedInMerchant(
+  baseURL: string,
+  merchantId: string,
+  role: "merchant_owner" | "merchant_staff" = "merchant_owner",
+): Promise<APIRequestContext> {
+  const email = `e2e-${role}-${randomBytes(4).toString("hex")}@example.test`;
+  const password = `Pw-${randomBytes(12).toString("base64url")}`;
+  const admin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
+    process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",
+    { auth: { persistSession: false, autoRefreshToken: false } },
+  );
+  const { data, error } = await admin.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+  });
+  if (!data.user) throw new Error(error?.message ?? "Could not create the e2e merchant user");
+  await sql(`insert into public.user_roles (user_id, role, merchant_id) values ($1, $2, $3)`, [
+    data.user.id,
+    role,
+    merchantId,
+  ]);
+  const api = await apiSession(baseURL);
+  await expectOk(api.post("/api/auth/password", { data: { email, password } }));
+  const enrolment = (await (
+    await expectOk(api.post("/api/auth/mfa/enroll", { data: {} }))
+  ).json()) as { data: { factorId: string; secret: string } };
+  await expectOk(
+    api.post("/api/auth/mfa/verify", {
+      data: { factorId: enrolment.data.factorId, code: totpCode(enrolment.data.secret) },
+    }),
+  );
+  return api;
+}
+
+/** Id of a seeded store by name. */
+export async function merchantIdByName(name: string): Promise<string> {
+  const rows = await sql(`select id from public.merchants where name = $1`, [name]);
+  const id = (rows.rows[0] as { id: string } | undefined)?.id;
+  if (!id) throw new Error(`No merchant named ${name} (run pnpm db:reset)`);
+  return id;
 }

@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { addCentavos, assertCentavos, formatPeso, pesosToCentavos } from "./money";
+import {
+  addCentavos,
+  assertCentavos,
+  centavosToPesoInput,
+  formatPeso,
+  pesosToCentavos,
+} from "./money";
 
 describe("money in integer centavos", () => {
   it("formats centavos as Philippine pesos", () => {
@@ -35,5 +41,13 @@ describe("money in integer centavos", () => {
     expect(() => pesosToCentavos("12.345")).toThrow(RangeError);
     expect(() => pesosToCentavos("abc")).toThrow(RangeError);
     expect(() => pesosToCentavos("")).toThrow(RangeError);
+  });
+
+  it("shows centavos as a peso amount someone can edit", () => {
+    expect(centavosToPesoInput(12050)).toBe("120.50");
+    expect(centavosToPesoInput(9000)).toBe("90");
+    expect(centavosToPesoInput(5)).toBe("0.05");
+    expect(centavosToPesoInput(-150)).toBe("-1.50");
+    expect(pesosToCentavos(centavosToPesoInput(129995))).toBe(129995);
   });
 });
