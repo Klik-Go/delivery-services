@@ -49,7 +49,7 @@ Deliverables:
 - [x] Q6: step-by-step GitHub settings checklist in OPEN_QUESTIONS Q6 (owner to apply).
 - [x] Q7 brand: KGo logo and colours across tokens, `<BrandLogo />`, Lilita One wordmark, favicon, Apple/PWA icons, home page, docs (`docs/BRAND.md`).
 - [x] All checks green locally on Node 26 (lint, typecheck, unit, Cucumber incl. `@db`, Playwright 22/22 incl. axe, build).
-- [ ] CI green on the PR.
+- [x] CI green on the PR: [CI run 41972124662](https://github.com/Klik-Go/delivery-services/actions/runs/41972124662) on `675b4d4` (Node 26, pnpm 12); CodeQL green.
 - [ ] Owner: Vercel link (Q1), GitHub settings (Q6), pilot barangay (Q8).
 
 Next: Phase 1, data model, migrations, RLS and seed (after this PR is reviewed and merged).
