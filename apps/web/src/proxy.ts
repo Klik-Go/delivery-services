@@ -3,10 +3,11 @@ import { buildContentSecurityPolicy, generateNonce } from "./security/csp";
 import { REQUEST_ID_HEADER, resolveRequestId } from "./server/http/request-id";
 
 /**
- * Runs on every page and API request: assigns a request id and a fresh CSP nonce.
- * Node.js runtime (not Edge) per CLAUDE.md, so later auth checks can use Node-only libraries.
+ * Next.js 16 Proxy (formerly middleware). Runs on every page and API request: assigns a request id
+ * and a fresh CSP nonce. Proxies always run on the Node.js runtime (CLAUDE.md: never Edge), so
+ * later auth checks can use Node-only libraries.
  */
-export function middleware(request: NextRequest): NextResponse {
+export function proxy(request: NextRequest): NextResponse {
   const nonce = generateNonce();
   const csp = buildContentSecurityPolicy({
     nonce,
@@ -27,7 +28,9 @@ export function middleware(request: NextRequest): NextResponse {
   return response;
 }
 
+// No `runtime` key: Next.js 16 proxies always use Node.js and reject the option.
 export const config = {
-  runtime: "nodejs",
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|icon.svg|robots.txt).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|icon.svg|apple-icon.png|robots.txt|brand/).*)",
+  ],
 };

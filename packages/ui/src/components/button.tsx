@@ -4,13 +4,14 @@ import type { ButtonHTMLAttributes, JSX } from "react";
 import { cn } from "../lib/cn";
 
 const buttonVariants = cva(
-  "inline-flex min-h-tap items-center justify-center gap-2 rounded-full px-5 text-base font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600 disabled:pointer-events-none disabled:opacity-50 motion-reduce:transition-none",
+  "inline-flex min-h-tap items-center justify-center gap-2 rounded-full px-5 text-base font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 disabled:pointer-events-none disabled:opacity-50 motion-reduce:transition-none",
   {
     variants: {
       variant: {
-        primary: "bg-brand-700 text-white hover:bg-brand-800",
-        secondary: "bg-surface-muted text-ink hover:bg-brand-100",
-        ghost: "bg-transparent text-brand-700 hover:bg-brand-50",
+        // White on brand-800 is 5.0:1; the logo blue (brand-600) is too light for white text.
+        primary: "bg-brand-800 text-white hover:bg-brand-900",
+        secondary: "bg-surface-muted text-ink hover:bg-brand-50",
+        ghost: "bg-transparent text-brand-800 hover:bg-brand-50",
       },
       size: {
         md: "h-tap",

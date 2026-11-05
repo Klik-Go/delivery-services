@@ -59,7 +59,7 @@ Limits change, so confirm each one on the provider's pricing page before launch.
 
 ## 3. UI/UX direction (Uber Eats / GrabFood / foodpanda patterns, adapted for PH)
 
-Principles: mobile-first (design at 360 px), thumb-reachable actions, one primary action per screen, a clear price before tapping "Place order", fast on budget Android phones over 3G/4G, and Taglish-friendly copy. Brand per doc: bold blue/teal, clean sans, map-pin motif, a friendly local tone.
+Principles: mobile-first (design at 360 px), thumb-reachable actions, one primary action per screen, a clear price before tapping "Place order", fast on budget Android phones over 3G/4G, and Taglish-friendly copy. Brand: the KGo logo (blue `#228be6`, yellow `#ffd43b`, Lilita One wordmark, clean system sans for body), a friendly local tone; see `docs/BRAND.md` (finalised 2026-11-05, replaces the earlier blue/teal + map-pin idea).
 
 **Navigation:** bottom tab bar with Home · Search · Orders · Account. A persistent "Deliver to" address chip at the top. Bottom sheets (not new pages) for item options, address picker and filters.
 
@@ -197,7 +197,7 @@ Non-negotiables:
 - Update docs/PROGRESS.md in the same PR (tick finished items, add evidence links).
 - TDD/BDD: first write a Cucumber.js .feature (Gherkin, business language from docs/BUSINESS.md) + failing step definitions and Vitest unit tests, then implement until green. Add Playwright e2e for UI flows (mobile viewport Pixel 7 + desktop).
 - RLS enabled on every table; add a SQL test proving a user can't read another user's rows.
-- Next.js middleware must use runtime "nodejs" (not Edge).
+- The Next.js Proxy (src/proxy.ts, formerly middleware) must run on the Node.js runtime (not Edge); Next.js 16 proxies are Node-only.
 - Work on a feature branch, open a PR with: summary, screenshots for UI, test evidence, migration notes. CI must be green. Do not merge.
 - Finish by listing what you built, how to test it locally, env vars needed, and open questions.
 ```
@@ -213,12 +213,12 @@ Prompt:
 ```
 [Shared header]
 Phase 0 — Foundations.
-1. Create a pnpm workspace + Turborepo: apps/web (Next.js 15 App Router, TS strict, Tailwind, shadcn/ui, next-intl ready for en + fil), packages/core (no framework imports), packages/adapters, packages/db (Prisma client for Supabase Postgres, using pooled DATABASE_URL + DIRECT_URL), packages/types (shared zod schemas), packages/config (eslint, prettier, tsconfig base, tailwind tokens: brand teal/blue per docs/BUSINESS.md §4.1), packages/ui (shared components).
+1. Create a pnpm workspace + Turborepo: apps/web (Next.js App Router, originally 15, now 16 per docs/ARCHITECTURE.md §9, TS strict, Tailwind, shadcn/ui, next-intl ready for en + fil), packages/core (no framework imports), packages/adapters, packages/db (Prisma client for Supabase Postgres, using pooled DATABASE_URL + DIRECT_URL), packages/types (shared zod schemas), packages/config (eslint, prettier, tsconfig base, tailwind tokens: brand per docs/BRAND.md), packages/ui (shared components).
 2. supabase/: init Supabase CLI config with PostGIS + pg_cron enabled in the first migration.
 3. CLAUDE.md: convert docs/BUSINESS.md §10.3–10.4 (SOLID, layer order, TypeScript, error handling, naming, comments, testing coverage targets) into agent rules, replacing NestJS DI with a composition root at apps/web/src/server/container.ts. Include the non-negotiables from the shared header.
 4. docs/ARCHITECTURE.md: BFF diagram, roles, order state machine, folder map (copy section 5 of docs/BUILD_PLAN.md and expand).
 5. Testing: Vitest (unit), Cucumber.js with TS step defs in features/ (world object with API client + db helpers), Playwright (projects: mobile Pixel 7, desktop Chrome). Write features/health.feature: "Given the platform is running When I open the home page Then I see the Klik Go brand" and GET /api/health returns {data:{status:"ok"}}.
-6. Security: next.config headers (strict CSP with nonces, HSTS, frame-ancestors none), middleware runtime "nodejs", a request-id + structured JSON logger (pino) helper.
+6. Security: next.config headers (strict CSP with nonces, HSTS, frame-ancestors none), Proxy/middleware on the Node.js runtime, a request-id + structured JSON logger (pino) helper.
 7. GitHub Actions ci.yml: pnpm cache, lint, typecheck, unit, `supabase start` + `supabase db reset`, cucumber, playwright (upload report artifact), next build. Add Dependabot and a CodeQL workflow.
 8. .env.example with names only. README with local setup.
 Acceptance: all CI jobs green; health scenario passes; no secrets in repo.

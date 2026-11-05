@@ -16,8 +16,6 @@ const nextConfig: NextConfig = {
     "@klikgo/config",
   ],
   serverExternalPackages: ["pino"],
-  // ESLint runs as its own CI step (`pnpm lint`) with the shared flat config.
-  eslint: { ignoreDuringBuilds: true },
   headers() {
     return Promise.resolve([{ source: "/:path*", headers: [...STATIC_SECURITY_HEADERS] }]);
   },

@@ -4,6 +4,7 @@ import { connection } from "next/server";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
 import type { JSX, ReactNode } from "react";
+import { lilitaOne } from "./fonts";
 import "./globals.css";
 
 /** Localised title and description. */
@@ -13,6 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title: { default: t("title"), template: "%s · Klik Go" },
     description: t("description"),
     applicationName: "Klik Go",
+    icons: { icon: "/icon.svg", apple: "/apple-icon.png" },
   };
 }
 
@@ -32,7 +34,7 @@ export default async function RootLayout({
   await connection();
   const locale = await getLocale();
   return (
-    <html lang={locale}>
+    <html lang={locale} className={lilitaOne.variable}>
       <body className="min-h-dvh">
         <NextIntlClientProvider>{children}</NextIntlClientProvider>
       </body>

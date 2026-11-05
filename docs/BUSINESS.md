@@ -147,6 +147,7 @@ Klik Go uses a zone-first, not city-first, expansion strategy. Each zone is a se
 - Tagline: 'Delivered to your door, wherever you are.'
 - Brand values: speed, reliability, community, accessibility
 - Visual identity: bold primary color (blue or teal), clean sans-serif typography, map/pin motif
+  - Final identity (owner decision, 5 Nov 2026): the **KGo** logo, yellow (#ffd43b) Lilita One lettering on a blue (#228be6) tile. Full guide: `docs/BRAND.md`.
 - Tone of voice: friendly, local, dependable — not corporate
 
 ## 4.2 Go-to-Market Strategy

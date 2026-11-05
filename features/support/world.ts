@@ -33,7 +33,8 @@ export class KlikWorld extends World {
   /** Opens (once per scenario) a real Chromium page so UI steps see what a customer sees. */
   async page(): Promise<Page> {
     if (!this.currentPage) {
-      browser ??= await chromium.launch();
+      const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;
+      browser ??= await chromium.launch(executablePath ? { executablePath } : {});
       this.context = await browser.newContext({ baseURL: BASE_URL });
       this.currentPage = await this.context.newPage();
     }

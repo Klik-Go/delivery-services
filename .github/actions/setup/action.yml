@@ -1,24 +1,25 @@
 name: Setup Node + pnpm
-description: Installs Node from .nvmrc, pnpm via corepack (pinned by packageManager), restores the pnpm store and installs dependencies.
-# First-party actions only: pnpm comes from Node's bundled corepack instead of a third-party action,
-# so no unpinned external code runs in CI (CodeQL actions/unpinned-tag).
+description: Installs Node from .nvmrc, the pnpm version pinned in package.json "packageManager", restores the pnpm store and installs dependencies.
+# First-party actions only (CodeQL actions/unpinned-tag). Node 25+ no longer bundles corepack,
+# so pnpm is installed from the npm registry at the exact version package.json pins.
 runs:
   using: composite
   steps:
     - uses: actions/setup-node@v4
       with:
         node-version-file: .nvmrc
-    - name: Enable pnpm (corepack)
+    - name: Install pnpm (version from packageManager)
       shell: bash
       run: |
-        corepack enable
+        PNPM_VERSION="$(node -p "require('./package.json').packageManager.split('@')[1]")"
+        npm install --global --allow-scripts=pnpm "pnpm@${PNPM_VERSION}"
         pnpm --version
         echo "PNPM_STORE=$(pnpm store path --silent)" >> "$GITHUB_ENV"
     - uses: actions/cache@v4
       with:
         path: ${{ env.PNPM_STORE }}
-        key: pnpm-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-        restore-keys: pnpm-${{ runner.os }}-
+        key: pnpm-${{ runner.os }}-node${{ hashFiles('.nvmrc') }}-${{ hashFiles('pnpm-lock.yaml') }}
+        restore-keys: pnpm-${{ runner.os }}-node${{ hashFiles('.nvmrc') }}-
     - name: Install
       shell: bash
       run: pnpm install --frozen-lockfile

@@ -8,7 +8,8 @@
 1. `docs/BUSINESS.md`: the business rules (order lifecycle §5.2, rider/merchant rules §5.3–5.4, zones §5.5, features §9, SOLID rules §10.3–10.4).
 2. `docs/BUILD_PLAN.md`: architecture, data model corrections, and the phase you are on (goal, deliverables, acceptance, prompt).
 3. `docs/PROGRESS.md`: what is done and what is next.
-4. `docs/ARCHITECTURE.md` and `docs/OPEN_QUESTIONS.md` once they exist.
+4. `docs/ARCHITECTURE.md` and `docs/OPEN_QUESTIONS.md`.
+5. `docs/BRAND.md` before any UI work (logo, colours, typography, contrast rules).
 
 If the docs conflict, `docs/BUILD_PLAN.md` wins on tech choices and `docs/BUSINESS.md` wins on business rules. Record each conflict in `docs/OPEN_QUESTIONS.md`.
 
@@ -16,7 +17,7 @@ If the docs conflict, `docs/BUILD_PLAN.md` wins on tech choices and `docs/BUSINE
 - **BFF:** `apps/web` (Next.js App Router) is the only public entry point. Browsers and mobile apps call only `/api/*` route handlers. No other public API.
 - Domain logic lives in `packages/core` (pure TypeScript, SOLID, ports/interfaces, `Result` types). External integrations go in `packages/adapters`. Wiring goes in `apps/web/src/server/container.ts`. Layer order: Route handler → Service → Repository/Adapter. No business logic in components or route handlers.
 - Every order status change goes through `OrderStateMachine` and writes an `order_events` row.
-- Next.js middleware uses `runtime: "nodejs"` (not Edge).
+- The Next.js Proxy (`apps/web/src/proxy.ts`, formerly middleware) runs on the Node.js runtime. Next.js 16 proxies are Node-only; never move request handling to Edge.
 - TypeScript strict. No `any`. Validate every input with Zod.
 
 ### Where code goes (layer order, strict)
@@ -48,7 +49,7 @@ If the docs conflict, `docs/BUILD_PLAN.md` wins on tech choices and `docs/BUSINE
 - Server state: TanStack Query against `/api/*`. Global client state: small Zustand stores. Live updates: Supabase Realtime **private channels** (read-only). All writes go through `/api/*`.
 - Forms: React Hook Form + zod schemas from `packages/types`.
 - Tailwind utilities only. No inline styles, no CSS modules, no hard-coded colours or spacing; use the tokens in `packages/config/tailwind/tokens.css`.
-- The CSP is nonce-based and set in `src/middleware.ts`. Never add `'unsafe-inline'` to `script-src`. Allow a new origin only with a reason in the PR.
+- The CSP is nonce-based and set in `src/proxy.ts`. Never add `'unsafe-inline'` to `script-src`. Allow a new origin only with a reason in the PR.
 - Always handle loading, error and empty states.
 
 ### Database rules
@@ -100,3 +101,5 @@ pnpm db:start && pnpm db:reset   # local Supabase (Docker)
 - Files kebab-case, classes PascalCase, functions camelCase, constants SCREAMING_SNAKE_CASE. Interfaces get the `I` prefix only for repository and gateway ports.
 - Comments explain *why*, not *what*. JSDoc on public functions.
 - Tailwind + shadcn/ui with tokens from `packages/config`. Mobile-first at 360 px.
+- Brand (docs/BRAND.md): KGo logo blue `brand-600` + yellow `accent-400`. Buttons and white text use `brand-800`; yellow only with `ink` text or as large display text; Lilita One (`font-display`) for the wordmark and large headings only. Use `<BrandLogo />`, never a re-drawn logo.
+- Toolchain: Node 26 LTS (`.nvmrc`), pnpm 12 (`packageManager`; keep its `allowBuilds` allowlist and `minimumReleaseAge`). New dependencies are pinned to exact versions at least a day old.

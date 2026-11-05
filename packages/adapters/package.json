@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Implementations of packages/core ports for external services (logging, clock, later PayMongo, SMS, maps…).",
+  "description": "Implementations of packages/core ports for external services (logging, clock, later PayMongo, SMS, maps\u2026).",
   "exports": {
     ".": "./src/index.ts"
   },
@@ -17,9 +17,9 @@
   },
   "devDependencies": {
     "@klikgo/config": "workspace:*",
-    "@types/node": "22.20.5",
-    "eslint": "9.39.5",
-    "typescript": "5.9.3",
-    "vitest": "3.2.7"
+    "@types/node": "26.6.6",
+    "eslint": "10.14.0",
+    "typescript": "6.0.3",
+    "vitest": "5.1.0"
   }
 }
