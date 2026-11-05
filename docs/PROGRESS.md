@@ -11,7 +11,7 @@ Phases are defined in `docs/BUILD_PLAN.md` §6. Agents update this file in every
 | 2 | Auth and RBAC per role | ✅ Done (merged) | [Klik-Go/delivery-services#7](https://github.com/Klik-Go/delivery-services/pull/7) | Owner: hosted Supabase auth settings (OPEN_QUESTIONS Q12, Q13) |
 | 3 | Merchant onboarding and menu (+ AI import) | ✅ Done (merged) | [Klik-Go/delivery-services#8](https://github.com/Klik-Go/delivery-services/pull/8) | Owner: Gemini key + paid tier (Q16); 20-items UAT |
 | 3.1 | Follow-up: launch zones (Makati, San Fernando, San Marcelino) + owner answers | 🟡 In progress (PR open) | [Klik-Go/delivery-services#9](https://github.com/Klik-Go/delivery-services/pull/9) | Owner: `main` ruleset target (Q6), Gemini paid tier (Q16) |
-| 4 | Customer discovery, store page, cart (PWA) | 🟡 In progress (PR open) | Phase 4 PR (branch `phase-4-customer-cart`) | Owner: `GOOGLE_MAPS_API_KEY` for address search (optional, Q17) |
+| 4 | Customer discovery, store page, cart (PWA) | 🟡 In progress (PR open) | [Klik-Go/delivery-services#10](https://github.com/Klik-Go/delivery-services/pull/10) | Owner: `GOOGLE_MAPS_API_KEY` for address search (optional, Q17) |
 | 5 | Checkout and payments (PayMongo + COD) | ⬜ Not started | | |
 | 6 | Order lifecycle, merchant queue, SLA | ⬜ Not started | | |
 | 7 | Rider app, dispatch, live tracking | ⬜ Not started | | |
