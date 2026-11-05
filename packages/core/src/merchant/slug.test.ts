@@ -9,6 +9,13 @@ describe("store slugs", () => {
     expect(slugify("  Niño's  BBQ & Grill!! ")).toBe("ninos-bbq-grill");
     expect(slugify("!!!")).toBe("store");
     expect(slugify("a".repeat(70))).toHaveLength(60);
+    expect(slugify(`${"a".repeat(59)} b`)).toBe("a".repeat(59));
+  });
+
+  it("stays fast on hostile input full of dashes", () => {
+    const started = performance.now();
+    expect(slugify(`${"-".repeat(100_000)}x${"-".repeat(100_000)}`)).toBe("x");
+    expect(performance.now() - started).toBeLessThan(200);
   });
 });
 
