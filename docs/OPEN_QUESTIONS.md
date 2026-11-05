@@ -23,12 +23,14 @@ The repo is **public**, so everything below is free. Menu names are GitHub's as 
 4. Optional: **Private vulnerability reporting** → Enable.
 
 **C. Actions (Settings → Actions → General)**
-1. Actions permissions: **Allow Klik-Go, and select non-Klik-Go, actions and reusable workflows** → tick **Allow actions created by GitHub**. CI uses only `actions/*` and `github/*` actions, so nothing else is needed.
-2. Workflow permissions: **Read repository contents and packages permissions**. Leave **Allow GitHub Actions to create and approve pull requests** unticked.
+1. Actions permissions: select the 4th option, **Allow Klik-Go, and select non-Klik-Go, actions and reusable workflows**. Its sub-options only appear *after* you select it. Then tick **Allow actions created by GitHub**, leave "Marketplace verified creators" unticked and the "Allow specified actions" box empty, and click **Save**. CI uses only `actions/*` and `github/*` actions, so nothing else is needed.
+2. Leave **Require actions to be pinned to a full-length commit SHA** unticked. Our workflows reference GitHub's actions by version tag (`@v4`); ticking it would fail every CI run unless every `uses:` is rewritten to a commit SHA.
+3. Further down the same page, Workflow permissions: **Read repository contents and packages permissions**. Leave **Allow GitHub Actions to create and approve pull requests** unticked. Save.
 
-**D. Pull requests (Settings → General → Pull Requests)**
-1. Allow **squash merging** (default commit message: pull request title and description); optionally disable merge commits for a linear history.
-2. Tick **Automatically delete head branches**.
+**D. Pull requests (Settings → General → "Pull Requests" section)**
+This is the repository's main settings page: the **General** item at the very top of the Settings sidebar, *not* Actions → General. Scroll about halfway down to the "Pull Requests" heading.
+1. Tick **Allow squash merging** (default commit message: pull request title and description); optionally untick **Allow merge commits** for a linear history.
+2. Tick **Automatically delete head branches** (lower in the same section). These checkboxes save as soon as you tick them.
 
 Done when: a test PR shows the four required checks, and pushing a fake key like `ghp_` + 36 characters to a branch is blocked by push protection.
 
