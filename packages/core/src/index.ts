@@ -7,3 +7,4 @@ export type * from "./ports/logger";
 export * from "./health/health-service";
 export * from "./auth";
 export * from "./merchant";
+export * from "./catalog";

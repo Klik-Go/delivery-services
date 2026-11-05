@@ -265,4 +265,18 @@ describeDb("row-level security: what each role may change", () => {
     );
     expect(err).toMatch(/above the zone maximum/);
   });
+
+  it("the waitlist is written by the server only, never directly by a client", async () => {
+    for (const actor of [w.users.customer1, w.users.admin, null]) {
+      const err = await asUser(db(), actor, () =>
+        failureOf(db(), () =>
+          db().query(
+            `insert into public.waitlist_signups (name, phone, barangay, location)
+             values ('X', '+639170000997', 'Y', 'SRID=4326;POINT(121 14)')`,
+          ),
+        ),
+      );
+      expect(err, String(actor)).toMatch(/permission denied/);
+    }
+  });
 });

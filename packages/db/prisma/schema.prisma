@@ -209,6 +209,7 @@ model menu_categories {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model menu_items {
   id              String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   merchant_id     String            @db.Uuid
@@ -228,11 +229,13 @@ model menu_items {
 
   @@index([category_id, merchant_id], map: "menu_items_category_idx")
   @@index([merchant_id, category_id, sort], map: "menu_items_merchant_idx")
+  @@index([name(ops: raw("gin_trgm_ops"))], map: "menu_items_name_trgm", type: Gin)
   @@schema("public")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model merchants {
   id                        String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   zone_id                   String                   @db.Uuid
@@ -271,6 +274,7 @@ model merchants {
   @@index([location], map: "merchants_location_gix", type: Gist)
   @@index([owner_id], map: "merchants_owner_idx")
   @@index([zone_id, status], map: "merchants_zone_status_idx")
+  @@index([name(ops: raw("gin_trgm_ops"))], map: "merchants_name_trgm", type: Gin)
   @@schema("public")
 }
 
@@ -557,6 +561,7 @@ model promos {
   is_active             Boolean             @default(true)
   created_at            DateTime            @default(now()) @db.Timestamptz(6)
   updated_at            DateTime            @default(now()) @db.Timestamptz(6)
+  is_featured           Boolean             @default(false)
   promo_redemptions     promo_redemptions[]
   merchants             merchants?          @relation(fields: [merchant_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   zones                 zones?              @relation(fields: [zone_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
@@ -789,6 +794,24 @@ model merchant_closures {
 
   @@unique([merchant_id, closed_on])
   @@index([merchant_id, closed_on], map: "merchant_closures_merchant_idx")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model waitlist_signups {
+  id         String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name       String
+  phone      String
+  email      String?
+  barangay   String
+  city       String?
+  location   Unsupported("geography")
+  created_at DateTime                 @default(now()) @db.Timestamptz(6)
+
+  @@index([created_at], map: "waitlist_signups_created_idx")
+  @@index([location], map: "waitlist_signups_location_gix", type: Gist)
   @@schema("public")
 }
 

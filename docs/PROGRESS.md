@@ -10,8 +10,8 @@ Phases are defined in `docs/BUILD_PLAN.md` §6. Agents update this file in every
 | 1 | Data model, migrations, RLS, seed | ✅ Done (merged) | [Klik-Go/delivery-services#6](https://github.com/Klik-Go/delivery-services/pull/6) | Placeholder pilot zone until Q8 is answered |
 | 2 | Auth and RBAC per role | ✅ Done (merged) | [Klik-Go/delivery-services#7](https://github.com/Klik-Go/delivery-services/pull/7) | Owner: hosted Supabase auth settings (OPEN_QUESTIONS Q12, Q13) |
 | 3 | Merchant onboarding and menu (+ AI import) | ✅ Done (merged) | [Klik-Go/delivery-services#8](https://github.com/Klik-Go/delivery-services/pull/8) | Owner: Gemini key + paid tier (Q16); 20-items UAT |
-| 3.1 | Follow-up: launch zones (Makati, San Fernando, San Marcelino) + owner answers | 🟡 In progress (PR open) | [Klik-Go/delivery-services#9](https://github.com/Klik-Go/delivery-services/pull/9) | Owner: `main` ruleset target (Q6), Gemini paid tier (Q16) |
-| 4 | Customer discovery, store page, cart (PWA) | ⬜ Not started | | |
+| 3.1 | Follow-up: launch zones (Makati, San Fernando, San Marcelino) + owner answers | ✅ Done (merged) | [Klik-Go/delivery-services#9](https://github.com/Klik-Go/delivery-services/pull/9) | Owner: `main` ruleset target (Q6), Gemini paid tier (Q16) |
+| 4 | Customer discovery, store page, cart (PWA) | 🟡 In progress (PR open) | [Klik-Go/delivery-services#10](https://github.com/Klik-Go/delivery-services/pull/10) | Owner: `GOOGLE_MAPS_API_KEY` for address search (optional, Q17) |
 | 5 | Checkout and payments (PayMongo + COD) | ⬜ Not started | | |
 | 6 | Order lifecycle, merchant queue, SLA | ⬜ Not started | | |
 | 7 | Rider app, dispatch, live tracking | ⬜ Not started | | |
@@ -107,7 +107,27 @@ Deliverables:
 - [x] CI green on the PR: [CI run 41995509468](https://github.com/Klik-Go/delivery-services/actions/runs/41995509468) on `c3bf622` (lint, typecheck, unit, Supabase + build + Cucumber + Playwright) and CodeQL clean.
 - [ ] Owner: `GEMINI_API_KEY` in Vercel, paid tier before real merchant data (OPEN_QUESTIONS Q16).
 
-Next: Phase 4, customer discovery, store page and cart (PWA), after this PR is reviewed and merged.
+### Phase 4 — Customer discovery, store page, cart (PWA) (branch `phase-4-customer-cart`)
+Acceptance (docs/BUILD_PLAN.md §6, Gherkin in `features/customer/`):
+- [x] Lighthouse mobile Performance ≥ 85 on the store page: `pnpm lighthouse` (`scripts/lighthouse-budget.mjs`, default mobile profile, simulated slow 4G) takes the median of 3 runs: `/s/aling-nenas-karinderya` 93 (runs 85/93/94, LCP 1.0 s) and Home 99 locally; it runs in CI after Playwright and uploads the HTML reports.
+- [x] PWA installable on the store page: `e2e/customer.spec.ts` asks Chrome itself (`Page.getInstallabilityErrors`) after the service worker registers; the only error allowed is `in-incognito`, which every Playwright context is. (Lighthouse 12 removed its PWA category.) This test caught that streamed metadata put the store page's manifest link in `<body>`; fixed with `htmlLimitedBots: /.*/` in `next.config.ts`.
+- [x] Adding from a second store prompts a cart replace ("Start a new cart?" with Keep / Start new): `cart.feature`, `cart-store.test.ts`, `e2e/customer.spec.ts`.
+- [x] The cart's server re-price matches the UI: the cart shows only numbers from `POST /api/cart/quote` (`PricingService`, Phase 4 fee strategies), and e2e checks subtotal ₱120, delivery ₱39, small-order ₱20, total ₱179 for 2 × Kapeng Barako to Ayala Avenue, the same numbers `cart.feature` gets from the API.
+- [x] An out-of-zone address shows "We're not in your area yet — join the waitlist": `serviceability.feature`, `e2e/customer.spec.ts` (Kapitolyo, Pasig → waitlist row saved).
+
+Deliverables:
+- [x] Address onboarding `/address`: GPS, pin map (move the map under the pin), Google Places autocomplete through `/api/geo/autocomplete` + `/api/geo/place` (session tokens, server key, 10-minute cache, 60/min/IP) when `GOOGLE_MAPS_API_KEY` is set; signed-in customers save the address with a required landmark and contact number. Guests' pin lives in an httpOnly `kg_loc` cookie (`PUT /api/location`).
+- [x] Out of zone → waitlist (`waitlist_signups`, admin-only RLS, 5/hour/network).
+- [x] Home feed rails (Order again, Near you, Under ₱100, Fast, Free delivery), category chips, featured promos (`promos.is_featured`), cached per zone for 60 s.
+- [x] Search with filters (category, open now, sort) over Postgres full-text + trigram (`pg_trgm`), grouped by store, with recent searches.
+- [x] Store page `/s/[slug]` (old `/stores/[slug]` redirects): hero, info strip (ETA, delivery fee, COD), opening status in Manila time, sticky category tabs with scroll-spy, item bottom sheet with modifier rules, sticky "View cart" bar.
+- [x] Single-store cart (Zustand, persisted on the device) priced only by the server: delivery fee strategies (distance bands, zone base + per km), small-order and service fees, sold-out / removed / choice issues.
+- [x] PWA: manifest, icons, hand-written service worker (shell + feed, offline page), offline banner, skeletons; images through `next/image` WebP.
+- [x] Map tile provider configurable (`NEXT_PUBLIC_MAP_TILE_URL`, https only, origin added to the CSP).
+- [x] Tests: 3 new features (Cucumber 70/70), core unit tests for pricing/feed/search/serviceability/addresses/places, repository DB tests, Playwright customer flows on Pixel 7 + desktop with axe checks (50/50). Screenshots: `docs/screenshots/phase-4-*`.
+- [x] CI green on the PR: [CI run 42032573863](https://github.com/Klik-Go/delivery-services/actions/runs/42032573863) on `c347cbd` (lint, typecheck, unit, Supabase + build + Cucumber 70/70 + Playwright 50/50 + Lighthouse: store page 98, Home 100) and CodeQL clean.
+
+Next: Phase 5, checkout and payments, after this PR is reviewed and merged.
 
 ## Business validation (parallel, doc §8)
 - [ ] 20–30 customer interviews in the pilot barangay

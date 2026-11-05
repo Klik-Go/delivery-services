@@ -30,6 +30,20 @@ describe("Content-Security-Policy", () => {
     expect(csp.has("upgrade-insecure-requests")).toBe(true);
   });
 
+  it("allows map tiles from OpenStreetMap by default, or from the configured provider", () => {
+    const osm = directives(buildContentSecurityPolicy({ nonce: "n", isDev: false }));
+    const custom = directives(
+      buildContentSecurityPolicy({
+        nonce: "n",
+        isDev: false,
+        tileOrigin: "https://api.maptiler.com",
+      }),
+    );
+    expect(osm.get("img-src")).toContain("https://tile.openstreetmap.org");
+    expect(custom.get("img-src")).toContain("https://api.maptiler.com");
+    expect(custom.get("img-src")).not.toContain("openstreetmap");
+  });
+
   it("allows eval and HMR websockets only in development", () => {
     const prod = buildContentSecurityPolicy({ nonce: "n", isDev: false });
     const dev = buildContentSecurityPolicy({ nonce: "n", isDev: true });

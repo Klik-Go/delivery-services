@@ -4,6 +4,7 @@ import "leaflet/dist/leaflet.css";
 import type { Map as LeafletMap } from "leaflet";
 import { MapPin } from "lucide-react";
 import { useEffect, useRef, type JSX } from "react";
+import { mapTileUrl } from "@/lib/map-tiles";
 
 /** A point on the map. */
 export interface Pin {
@@ -11,8 +12,8 @@ export interface Pin {
   readonly lng: number;
 }
 
-/** OpenStreetMap tiles (attribution required). Swap the provider with the Phase 4 maps adapter. */
-const TILES = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
+/** OSM-based tiles (attribution required); NEXT_PUBLIC_MAP_TILE_URL picks the provider. */
+const TILES = mapTileUrl(process.env.NEXT_PUBLIC_MAP_TILE_URL);
 const ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
 
 /**

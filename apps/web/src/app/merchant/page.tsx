@@ -77,10 +77,7 @@ export default async function MerchantPage({
           ))}
         </ul>
       </nav>
-      <a
-        className="text-brand-800 self-start font-semibold underline"
-        href={`/stores/${store.slug}`}
-      >
+      <a className="text-brand-800 self-start font-semibold underline" href={`/s/${store.slug}`}>
         {t("storePage")}
       </a>
     </SurfaceShell>

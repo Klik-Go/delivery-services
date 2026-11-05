@@ -456,6 +456,16 @@ erDiagram
   orders |o--o{ referrals : "qualifying_order_id"
   profiles ||--o| referrals : "referee_id"
   profiles ||--o{ referrals : "referrer_id"
+  waitlist_signups {
+    uuid id PK
+    text name
+    text phone
+    text email
+    text barangay
+    text city
+    geography location
+    timestamptz created_at
+  }
   ratings {
     uuid id PK
     uuid order_id FK, UK
@@ -485,6 +495,7 @@ erDiagram
     bool is_active
     timestamptz created_at
     timestamptz updated_at
+    bool is_featured
   }
   promo_redemptions {
     uuid id PK
@@ -613,5 +624,6 @@ Role helpers live in the `private` schema (`has_role`, `is_admin`, `is_merchant_
 | `rider_locations` | on | `rider_locations_insert_self` (insert · authenticated)<br>`rider_locations_select` (select · authenticated)<br>`rider_locations_select_customer_delivery` (select · authenticated)<br>`rider_locations_update_self` (update · authenticated) |
 | `riders` | on | `riders_select` (select · authenticated)<br>`riders_select_customer_delivery` (select · authenticated)<br>`riders_update_self` (update · authenticated) |
 | `user_roles` | on | `user_roles_select` (select · authenticated) |
+| `waitlist_signups` | on | `waitlist_signups_admin_select` (select · authenticated) |
 | `webhook_events` | on | none: server only |
 | `zones` | on | `zones_select` (select · anon, authenticated) |

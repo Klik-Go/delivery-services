@@ -3,6 +3,14 @@ import {
   createPinoLogger,
   DevSmsSender,
   GeminiMenuParser,
+  GooglePlaceSearch,
+  PrismaAddressRepository,
+  PrismaCatalogRepository,
+  PrismaSearchRepository,
+  PrismaServiceArea,
+  PrismaWaitlistRepository,
+  TtlMemoryCache,
+  UnconfiguredPlaceSearch,
   PrismaMenuRepository,
   PrismaMerchantApplicationRepository,
   PrismaStoreRepository,
@@ -19,8 +27,18 @@ import {
   SystemClock,
 } from "@klikgo/adapters";
 import {
+  AddressService,
   AppError,
   AuthorizationService,
+  DistanceBandFee,
+  FeedService,
+  PlaceSearchService,
+  PricingService,
+  SearchService,
+  ServiceabilityService,
+  ServiceFee,
+  SmallOrderFee,
+  ZoneBaseFee,
   err,
   HealthService,
   InviteService,
@@ -61,6 +79,14 @@ export interface Container {
   readonly menu: MenuService;
   readonly menuImport: MenuImportService;
   readonly storefront: StorefrontService;
+  readonly pricing: PricingService;
+  readonly feed: FeedService;
+  readonly search: SearchService;
+  readonly serviceability: ServiceabilityService;
+  readonly addresses: AddressService;
+  readonly places: PlaceSearchService;
+  /** True when address autocomplete has a key (the address screen hides it otherwise). */
+  readonly placesConfigured: boolean;
   /** Staff invitations need the service-role key; an error explains what to configure otherwise. */
   inviteService(): Result<InviteService, AppError>;
   /** Partner applications and approvals (approval creates staff accounts: service-role key). */
@@ -98,11 +124,24 @@ export function createContainer(env: ServerEnv): Container {
   const admin = supabaseAdminClient();
   const stores = new PrismaStoreRepository(prisma);
   const menus = new PrismaMenuRepository(prisma);
+  const cache = new TtlMemoryCache();
+  const serviceArea = new PrismaServiceArea(prisma);
+  const catalog = new PrismaCatalogRepository(prisma);
+  const photos = admin
+    ? new SupabasePhotoStorage(admin, logger)
+    : new UnconfiguredPhotoStorage(env.NEXT_PUBLIC_SUPABASE_URL);
+  // Delivery fee: the zone's distance bands first, otherwise base fee + per-km (OCP: add strategies).
+  const pricing = new PricingService({
+    catalog,
+    serviceArea,
+    delivery: [new DistanceBandFee(), new ZoneBaseFee()],
+    surcharges: [new SmallOrderFee(), new ServiceFee()],
+    clock,
+  });
+  const feed = new FeedService({ serviceArea, catalog, pricing, photos, cache, clock });
   const menu = new MenuService({
     menus,
-    photos: admin
-      ? new SupabasePhotoStorage(admin, logger)
-      : new UnconfiguredPhotoStorage(env.NEXT_PUBLIC_SUPABASE_URL),
+    photos,
     authz,
     logger,
     newId: randomUUID,
@@ -124,6 +163,28 @@ export function createContainer(env: ServerEnv): Container {
       logger,
     }),
     storefront: new StorefrontService({ storefronts: stores, menus, menuService: menu }),
+    pricing,
+    feed,
+    search: new SearchService({ serviceArea, search: new PrismaSearchRepository(prisma), feed }),
+    serviceability: new ServiceabilityService({
+      serviceArea,
+      waitlist: new PrismaWaitlistRepository(prisma),
+      rateLimiter,
+      logger,
+    }),
+    addresses: new AddressService({
+      addresses: new PrismaAddressRepository(prisma),
+      serviceArea,
+      authz,
+    }),
+    places: new PlaceSearchService({
+      places: env.GOOGLE_MAPS_API_KEY
+        ? new GooglePlaceSearch({ apiKey: env.GOOGLE_MAPS_API_KEY, logger })
+        : new UnconfiguredPlaceSearch(),
+      cache,
+      rateLimiter,
+    }),
+    placesConfigured: Boolean(env.GOOGLE_MAPS_API_KEY),
     merchantOnboarding() {
       if (onboarding) return { ok: true, value: onboarding };
       if (!admin) return err(notConfigured("Merchant approvals"));

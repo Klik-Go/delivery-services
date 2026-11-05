@@ -6,6 +6,8 @@ export interface CspOptions {
   readonly isDev: boolean;
   /** Supabase project URL, allowed for Realtime (wss) and Storage images. */
   readonly supabaseUrl?: string | undefined;
+  /** Origin of the map tile provider (src/lib/map-tiles.ts); defaults to OpenStreetMap. */
+  readonly tileOrigin?: string | undefined;
 }
 
 function supabaseOrigins(
@@ -25,7 +27,12 @@ function supabaseOrigins(
  * Builds a strict, nonce-based CSP. `'strict-dynamic'` lets nonce-trusted Next.js chunks load
  * their dependencies while blocking injected inline scripts (the main XSS vector).
  */
-export function buildContentSecurityPolicy({ nonce, isDev, supabaseUrl }: CspOptions): string {
+export function buildContentSecurityPolicy({
+  nonce,
+  isDev,
+  supabaseUrl,
+  tileOrigin = "https://tile.openstreetmap.org",
+}: CspOptions): string {
   const supabase = supabaseOrigins(supabaseUrl);
   const scriptSrc = [
     "'self'",
@@ -38,14 +45,8 @@ export function buildContentSecurityPolicy({ nonce, isDev, supabaseUrl }: CspOpt
     ...(supabase ? [supabase.https, supabase.wss] : []),
     ...(isDev ? ["ws:"] : []),
   ];
-  // OpenStreetMap tiles for the store pin map (Phase 3 partner form; attribution shown on the map).
-  const imgSrc = [
-    "'self'",
-    "blob:",
-    "data:",
-    "https://tile.openstreetmap.org",
-    ...(supabase ? [supabase.https] : []),
-  ];
+  // Map tiles for the pin maps (partner form, address setup; attribution shown on the map).
+  const imgSrc = ["'self'", "blob:", "data:", tileOrigin, ...(supabase ? [supabase.https] : [])];
 
   const directives: [string, string[]][] = [
     ["default-src", ["'self'"]],
