@@ -12,7 +12,7 @@ Phases are defined in `docs/BUILD_PLAN.md` §6. Agents update this file in every
 | 3 | Merchant onboarding and menu (+ AI import) | ✅ Done (merged) | [Klik-Go/delivery-services#8](https://github.com/Klik-Go/delivery-services/pull/8) | Owner: Gemini key + paid tier (Q16); 20-items UAT |
 | 3.1 | Follow-up: launch zones (Makati, San Fernando, San Marcelino) + owner answers | ✅ Done (merged) | [Klik-Go/delivery-services#9](https://github.com/Klik-Go/delivery-services/pull/9) | Owner: `main` ruleset target (Q6), Gemini paid tier (Q16) |
 | 4 | Customer discovery, store page, cart (PWA) | ✅ Done (merged) | [Klik-Go/delivery-services#10](https://github.com/Klik-Go/delivery-services/pull/10) | Owner: `GOOGLE_MAPS_API_KEY` for address search (optional, Q17) |
-| 4.1 | Follow-up: deploy fixes (readiness, migration deploy) + placeholder sign-in code | 🟡 In progress (PR open) | Phase 4.1 PR (branch `phase-4.1-launch-fixes`) | Owner: GitHub secrets for migrations (Q13 step 7), `PLACEHOLDER_OTP_CODE` in Vercel (Q20) |
+| 4.1 | Follow-up: deploy fixes (readiness, migration deploy) + placeholder sign-in code | 🟡 In progress (PR open) | [Klik-Go/delivery-services#11](https://github.com/Klik-Go/delivery-services/pull/11) | Owner: GitHub secrets for migrations (Q13 step 7), `PLACEHOLDER_OTP_CODE` in Vercel (Q20) |
 | 5 | Checkout and payments (PayMongo + COD) | ⬜ Not started | | |
 | 6 | Order lifecycle, merchant queue, SLA | ⬜ Not started | | |
 | 7 | Rider app, dispatch, live tracking | ⬜ Not started | | |
