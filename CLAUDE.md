@@ -61,6 +61,14 @@ If the docs conflict, `docs/BUILD_PLAN.md` wins on tech choices and `docs/BUSINE
 - Never string-interpolate user input into SQL.
 - Runtime uses pooled `DATABASE_URL`; the Prisma CLI uses `DIRECT_URL`.
 
+### Auth rules (Phase 2)
+- Auth goes through BFF routes only (`/api/auth/*`) using `@supabase/ssr` cookies; never call Supabase Auth from browser code.
+- Get the user with `getSessionUser()` (identity verified by Supabase, roles from `user_roles`). Never read roles from the client, cookies or JWT claims.
+- Pages under a surface use `requireSurface(...)` in their layout; API handlers use `requireUser()` / `requireAction(...)`; services also check `AuthorizationService` (defence in depth).
+- Staff (merchant, coordinator, admin) need AAL2; new staff join by invite only. Customers and riders use phone OTP.
+- Every new credential-guessing or SMS/email-sending endpoint gets a rate limit through `IRateLimiter`.
+- Never log OTP codes, passwords, tokens or full phone numbers.
+
 ## Money, time, data
 - **Money is always integer centavos** (`*_centavos` columns, `number` ints in TS). No floats for money. Format with one `formatPeso()` helper.
 - Store times in UTC and display them in Asia/Manila.

@@ -25,6 +25,8 @@ export const BRAND_COLORS = {
   yellow700: "#f59f00",
   yellow800: "#f08c00",
   yellow900: "#e67700",
+  danger50: "#fff5f5",
+  danger900: "#c92a2a",
   ink: "#0b1f33",
   inkMuted: "#4a5a6a",
   surface: "#ffffff",

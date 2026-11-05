@@ -64,6 +64,18 @@ pnpm db:reset
 
 `db:reset` reapplies every migration in `supabase/migrations` plus `supabase/seed.sql` (placeholder pilot zone, 5 merchants with menus, 3 riders, test customers; no passwords).
 
+Sign-in locally (phone OTP, staff invites and TOTP) needs Supabase Auth and a few env vars:
+
+```bash
+echo "SEND_SMS_HOOK_SECRET=v1,whsec_$(openssl rand -base64 32)" > supabase/.env   # gitignored; read by supabase start
+```
+
+Then put the values from `pnpm exec supabase status -o env` (`API_URL`, `ANON_KEY`, `SERVICE_ROLE_KEY`, `DB_URL`) and the same `SEND_SMS_HOOK_SECRET` into `apps/web/.env.local` as `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `DATABASE_URL`/`DIRECT_URL` and `SEND_SMS_HOOK_SECRET`. Test phone numbers +639170000101 to +639170000110 always accept the code `123456` (no SMS is sent). Create the first admin with:
+
+```bash
+ADMIN_EMAIL=you@example.com pnpm bootstrap:admin
+```
+
 Database tests and generated files (need the local DB running):
 
 ```bash

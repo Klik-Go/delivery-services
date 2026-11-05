@@ -37,11 +37,25 @@ Done when: a test PR shows the four required checks, and pushing a fake key like
 ### Q8. Pilot barangay — needed before launch (placeholder in use)
 Which barangay (and city/municipality) is the pilot? Phase 1 seeds a **placeholder** zone (`pilot-zone`, "Pilot Zone (placeholder)"): a 4 km × 4 km square centred on 14.5995° N, 120.9842° E, 5 merchants and 3 riders inside it (owner said on 2026-11-05: "use a placeholder zone for now"). When the barangay is chosen, a migration replaces the polygon (ideally the official PSA/NAMRIA boundary) and moves the seed merchants inside it.
 
-### Q10. How the BFF talks to the database under RLS — proposal for Phase 2
-Phase 1 writes RLS for the `authenticated` / `anon` roles and tests it exactly as clients hit it. For the BFF I propose two clearly separated paths in `packages/adapters`:
-1. **User-scoped reads/writes** (`withUserContext(userId, fn)`): one transaction that runs `set local role authenticated` and `set_config('request.jwt.claims', …, true)` from the verified Supabase session, so RLS applies to every query the BFF makes on a user's behalf (defence in depth on top of the service's own checks).
-2. **Privileged writes** (order creation and status changes, payments, ledger, role grants): the service connection (bypasses RLS), only inside core services, always setting `klikgo.actor_id` / `klikgo.actor_role` so `order_events` and audit rows name the actor.
-This needs Prisma's driver adapter to share one `pg` transaction; I'll confirm the exact Prisma 7 API in Phase 2. Objections welcome before then.
+### Q10. How the BFF talks to the database under RLS — partly applied in Phase 2
+Phase 2 only needs **server reads of roles** (`PrismaUserRoleRepository`) and **privileged writes** (invites, role grants, rate-limit counters), which use the server connection as proposed. The user-scoped path (`withUserContext`: `set local role authenticated` + `request.jwt.claims` from the verified session, so RLS also applies to the BFF) will land with the first user-owned writes (addresses and menus, Phase 3–4). Objections welcome before then.
+
+### Q12. Supabase's own per-IP limits behind the BFF — hosted project setting (owner)
+All auth requests reach Supabase from the BFF's server address, so Supabase's built-in per-IP limits (sign-ins, OTP sends, verifications) count *all* Klik Go users together and could block everyone at once. Klik Go enforces the real per-phone and per-network limits itself. **Action when creating the hosted project:** Authentication → Rate Limits: raise "SMS messages sent", "Sign-ups and sign-ins" and "Token verifications" well above expected peak traffic (e.g. 1000/hour) and keep Klik Go's limits as the guard. Locally `supabase/config.toml` already does this.
+
+### Q13. Hosted Supabase and Vercel settings for auth — owner checklist
+When the hosted Supabase project exists (Supabase Pro before taking real orders, BUILD_PLAN §2):
+1. **Authentication → Providers → Phone**: enable. SMS provider: any (it is ignored when the hook is on).
+2. **Authentication → Hooks → Send SMS hook**: type HTTPS, URL `https://<your-domain>/api/hooks/send-sms`, generate a secret, and put the same value in Vercel as `SEND_SMS_HOOK_SECRET`.
+3. **Authentication → Multi-Factor**: enable TOTP (enroll + verify).
+4. **Authentication → URL Configuration**: Site URL `https://<your-domain>`; redirect URLs `https://<your-domain>/auth/callback` and your Vercel preview pattern.
+5. **Authentication → Policies**: minimum password length 12. **Rate limits**: see Q12.
+6. **Vercel env vars** (Production + Preview): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `DATABASE_URL` (pooler), `DIRECT_URL`, `SEND_SMS_HOOK_SECRET`, `SEMAPHORE_API_KEY`, `SEMAPHORE_SENDER_NAME`, `NEXT_PUBLIC_APP_URL`.
+7. Run `supabase db push` for the migrations, then `pnpm bootstrap:admin` with `ADMIN_EMAIL` to create the first admin.
+8. Semaphore: register the sender name (e.g. KLIKGO) and top up credits (every OTP costs money; BUILD_PLAN §2).
+
+### Q14. Email provider for staff invites — later
+Invites currently return a one-time link that the admin shares (e.g. Viber). For branded invite and recovery emails, pick a provider (Resend or Postmark free tiers, or Supabase custom SMTP). It plugs in behind a new `IEmailSender` port; no flow changes.
 
 ### Q11. Prisma model names stay snake_case — decision to confirm
 `db:pull` keeps the database names (`prisma.orders`, `order.total_centavos`). Renaming to PascalCase/camelCase with `@@map`/`@map` would need a hand-maintained mapping layer that drifts. Repositories map rows to domain objects anyway (CLAUDE.md), so I propose keeping snake_case inside `packages/adapters`/`packages/db` only.

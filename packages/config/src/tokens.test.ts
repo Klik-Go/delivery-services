@@ -14,8 +14,9 @@ const css = readFileSync(fileURLToPath(new URL("../tailwind/tokens.css", import.
 
 /** blue600 → --color-brand-600, yellow400 → --color-accent-400, inkMuted → --color-ink-muted. */
 function cssVariableFor(name: string): string {
-  const scale = /^(blue|yellow)(\d+)$/.exec(name);
-  if (scale) return `--color-${scale[1] === "blue" ? "brand" : "accent"}-${scale[2]}`;
+  const scale = /^(blue|yellow|danger)(\d+)$/.exec(name);
+  const prefix: Record<string, string> = { blue: "brand", yellow: "accent", danger: "danger" };
+  if (scale) return `--color-${prefix[scale[1] ?? ""] ?? ""}-${scale[2]}`;
   return `--color-${name.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}`;
 }
 
@@ -67,6 +68,11 @@ describe("design tokens", () => {
       expect(contrast(BRAND_COLORS.ink, surface)).toBeGreaterThanOrEqual(7);
       expect(contrast(BRAND_COLORS.inkMuted, surface)).toBeGreaterThanOrEqual(4.5);
     }
+  });
+
+  it("keeps error text readable on its tint and on white", () => {
+    expect(contrast(BRAND_COLORS.danger900, BRAND_COLORS.danger50)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(BRAND_COLORS.danger900, BRAND_COLORS.surface)).toBeGreaterThanOrEqual(4.5);
   });
 
   it("matches the 44px minimum tap target", () => {

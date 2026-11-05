@@ -18,6 +18,13 @@ const ServerEnvSchema = z
     VERCEL_GIT_COMMIT_SHA: optionalString,
     NEXT_PUBLIC_APP_URL: optionalUrl,
     NEXT_PUBLIC_SUPABASE_URL: optionalUrl,
+    // Publishable (anon) key: safe in the browser, still only used server-side by the BFF.
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: optionalString,
+    // Server-only secrets below. Never prefix with NEXT_PUBLIC_.
+    SUPABASE_SERVICE_ROLE_KEY: optionalString,
+    SEND_SMS_HOOK_SECRET: optionalString,
+    SEMAPHORE_API_KEY: optionalString,
+    SEMAPHORE_SENDER_NAME: optionalString,
   })
   .transform((env) => ({
     ...env,

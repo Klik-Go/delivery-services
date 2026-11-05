@@ -1,6 +1,12 @@
 /** Stable, machine-readable error codes shared by services and the BFF. */
 export type AppErrorCode =
-  "VALIDATION_FAILED" | "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "INTERNAL";
+  | "VALIDATION_FAILED"
+  | "UNAUTHORIZED"
+  | "FORBIDDEN"
+  | "NOT_FOUND"
+  | "CONFLICT"
+  | "RATE_LIMITED"
+  | "INTERNAL";
 
 /** A field-level validation problem, e.g. from a zod parse. */
 export interface ValidationIssue {
@@ -55,6 +61,16 @@ export class NotFoundError extends AppError {
 export class ConflictError extends AppError {
   constructor(message: string) {
     super("CONFLICT", message);
+  }
+}
+
+/** Too many attempts; the caller should wait `retryAfterSeconds` before trying again. */
+export class RateLimitedError extends AppError {
+  constructor(
+    message: string,
+    readonly retryAfterSeconds: number,
+  ) {
+    super("RATE_LIMITED", message);
   }
 }
 

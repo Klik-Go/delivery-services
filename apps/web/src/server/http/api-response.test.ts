@@ -2,6 +2,7 @@ import {
   ConflictError,
   ForbiddenError,
   NotFoundError,
+  RateLimitedError,
   UnauthorizedError,
   ValidationError,
 } from "@klikgo/core";
@@ -60,5 +61,13 @@ describe("API response envelope", () => {
       code: "INTERNAL",
       message: "Something went wrong. Please try again.",
     });
+  });
+
+  it("answers 429 with Retry-After when someone is rate-limited", async () => {
+    const response = jsonError(new RateLimitedError("Too many codes.", 1800), { requestId: "r" });
+    expect(response.status).toBe(429);
+    expect(response.headers.get("retry-after")).toBe("1800");
+    const body = (await response.json()) as { error: { code: string } };
+    expect(body.error.code).toBe("RATE_LIMITED");
   });
 });

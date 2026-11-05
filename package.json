@@ -22,7 +22,8 @@
     "db:reset": "supabase db reset",
     "db:stop": "supabase stop",
     "db:generate": "turbo run db:generate",
-    "test:db": "pnpm --filter @klikgo/db test:db"
+    "test:db": "pnpm --filter @klikgo/db test:db",
+    "bootstrap:admin": "node --import tsx scripts/bootstrap-admin.ts"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.14.0",
@@ -32,10 +33,12 @@
     "@klikgo/db": "workspace:*",
     "@klikgo/types": "workspace:*",
     "@playwright/test": "1.64.1",
+    "@supabase/supabase-js": "2.118.0",
     "@types/node": "26.6.6",
     "@types/pg": "8.23.1",
     "@vitest/coverage-v8": "5.1.0",
     "eslint": "10.14.0",
+    "otpauth": "9.6.0",
     "pg": "8.23.1",
     "prettier": "3.9.10",
     "prettier-plugin-tailwindcss": "0.8.1",
