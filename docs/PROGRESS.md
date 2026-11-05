@@ -103,7 +103,7 @@ Deliverables:
 - [x] `/merchant/menu/import`: `IMenuParser` → `GeminiMenuParser` (structured JSON, zod-validated; model from `GEMINI_MODEL`), `FakeMenuParser` for tests; editable drafts with confidence; confirm → bulk insert.
 - [x] Public store page `/stores/:slug` (and `/api/stores/:slug`).
 - [x] Core: `MerchantOnboardingService`, `StoreSettingsService`, `MenuService`, `MenuImportService`, `StorefrontService` with ports and in-memory fakes; Prisma repositories tested against the local database.
-- [ ] CI green on the PR.
+- [x] CI green on the PR: [CI run 41995509468](https://github.com/Klik-Go/delivery-services/actions/runs/41995509468) on `c3bf622` (lint, typecheck, unit, Supabase + build + Cucumber + Playwright) and CodeQL clean.
 - [ ] Owner: `GEMINI_API_KEY` in Vercel, paid tier before real merchant data (OPEN_QUESTIONS Q16).
 
 Next: Phase 4, customer discovery, store page and cart (PWA), after this PR is reviewed and merged.
