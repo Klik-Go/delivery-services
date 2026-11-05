@@ -680,14 +680,14 @@ Then("they get an upload link for a file in their store's folder", function (thi
 });
 
 /** Bytes that start like a WebP file (RIFF….WEBP); Storage checks size and declared type. */
-function webpBytes(kb: number): Uint8Array {
+function webpBytes(kb: number): Uint8Array<ArrayBuffer> {
   const bytes = new Uint8Array(kb * 1024);
   bytes.set(new TextEncoder().encode("RIFF"), 0);
   bytes.set(new TextEncoder().encode("WEBPVP8 "), 8);
   return bytes;
 }
 
-async function putToLink(uploadUrl: string, bytes: Uint8Array): Promise<Response> {
+async function putToLink(uploadUrl: string, bytes: Uint8Array<ArrayBuffer>): Promise<Response> {
   return fetch(uploadUrl, {
     method: "PUT",
     headers: { "content-type": "image/webp", "x-upsert": "false" },
@@ -725,7 +725,12 @@ Then(
 
 // ---------- AI import ----------
 
-async function importFile(world: KlikWorld, bytes: Uint8Array, type: string, filename: string) {
+async function importFile(
+  world: KlikWorld,
+  bytes: Uint8Array<ArrayBuffer>,
+  type: string,
+  filename: string,
+) {
   const form = new FormData();
   form.append("photo", new Blob([bytes], { type }), filename);
   return world.api.request("POST", menuPath(world, "/import"), { body: form });
