@@ -60,3 +60,20 @@ export type PasswordSignIn = z.infer<typeof PasswordSignInSchema>;
 export type SetPassword = z.infer<typeof SetPasswordSchema>;
 export type MfaVerify = z.infer<typeof MfaVerifySchema>;
 export type InviteStaff = z.infer<typeof InviteStaffSchema>;
+
+/** One-time link kinds Supabase can mint for `/auth/confirm` (token-hash flow). */
+export const CONFIRM_LINK_TYPES = [
+  "invite",
+  "recovery",
+  "email",
+  "magiclink",
+  "email_change",
+] as const;
+
+/** Query string of `/auth/confirm?token_hash=…&type=…&next=…`. */
+export const ConfirmLinkQuerySchema = z.object({
+  token_hash: z.string().min(1).max(512),
+  type: z.enum(CONFIRM_LINK_TYPES),
+  next: z.string().max(512).optional(),
+});
+export type ConfirmLinkQuery = z.infer<typeof ConfirmLinkQuerySchema>;

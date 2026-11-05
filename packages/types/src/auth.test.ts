@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  ConfirmLinkQuerySchema,
   InviteStaffSchema,
   MfaVerifySchema,
   OtpVerifySchema,
@@ -46,5 +47,18 @@ describe("auth API schemas", () => {
       sms: { otp: "482913" },
     });
     expect(payload).toEqual({ user: { phone: "639171234567" }, sms: { otp: "482913" } });
+  });
+
+  it("accepts a shared invite link and refuses unknown link kinds or empty tokens", () => {
+    expect(
+      ConfirmLinkQuerySchema.safeParse({ token_hash: "abc", type: "invite", next: "/x" }).success,
+    ).toBe(true);
+    expect(ConfirmLinkQuerySchema.safeParse({ token_hash: "abc", type: "signup" }).success).toBe(
+      false,
+    );
+    expect(ConfirmLinkQuerySchema.safeParse({ token_hash: "", type: "invite" }).success).toBe(
+      false,
+    );
+    expect(ConfirmLinkQuerySchema.safeParse({ type: "recovery" }).success).toBe(false);
   });
 });
