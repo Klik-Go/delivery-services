@@ -1,0 +1,24 @@
+name: Setup Node + pnpm
+description: Installs Node from .nvmrc, pnpm via corepack (pinned by packageManager), restores the pnpm store and installs dependencies.
+# First-party actions only: pnpm comes from Node's bundled corepack instead of a third-party action,
+# so no unpinned external code runs in CI (CodeQL actions/unpinned-tag).
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: .nvmrc
+    - name: Enable pnpm (corepack)
+      shell: bash
+      run: |
+        corepack enable
+        pnpm --version
+        echo "PNPM_STORE=$(pnpm store path --silent)" >> "$GITHUB_ENV"
+    - uses: actions/cache@v4
+      with:
+        path: ${{ env.PNPM_STORE }}
+        key: pnpm-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+        restore-keys: pnpm-${{ runner.os }}-
+    - name: Install
+      shell: bash
+      run: pnpm install --frozen-lockfile

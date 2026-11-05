@@ -1,0 +1,49 @@
+import { z } from "zod";
+
+// Empty strings (e.g. an untouched copy of .env.example) count as "not set".
+const optionalString = z.preprocess(
+  (value) => (value === "" ? undefined : value),
+  z.string().optional(),
+);
+const optionalUrl = z.preprocess((value) => (value === "" ? undefined : value), z.url().optional());
+
+const ServerEnvSchema = z
+  .object({
+    NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+    LOG_LEVEL: z.preprocess(
+      (value) => (value === "" ? undefined : value),
+      z.enum(["debug", "info", "warn", "error"]).default("info"),
+    ),
+    APP_VERSION: optionalString,
+    VERCEL_GIT_COMMIT_SHA: optionalString,
+    NEXT_PUBLIC_APP_URL: optionalUrl,
+    NEXT_PUBLIC_SUPABASE_URL: optionalUrl,
+  })
+  .transform((env) => ({
+    ...env,
+    APP_VERSION: env.APP_VERSION ?? env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? "dev",
+  }));
+
+/** Validated server configuration. Secrets added in later phases are read here, never in components. */
+export type ServerEnv = z.infer<typeof ServerEnvSchema>;
+
+/**
+ * Validates environment variables. Error messages list variable names only, never values,
+ * because values may be secrets and errors end up in logs.
+ */
+export function parseServerEnv(source: Record<string, string | undefined>): ServerEnv {
+  const parsed = ServerEnvSchema.safeParse(source);
+  if (!parsed.success) {
+    const names = [...new Set(parsed.error.issues.map((issue) => issue.path.join(".")))].join(", ");
+    throw new Error(`Invalid server environment variables: ${names}. See .env.example.`);
+  }
+  return parsed.data;
+}
+
+let cached: ServerEnv | undefined;
+
+/** Returns the validated process environment (parsed once per process). */
+export function getServerEnv(): ServerEnv {
+  cached ??= parseServerEnv(process.env);
+  return cached;
+}

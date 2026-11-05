@@ -1,0 +1,28 @@
+{
+  "Metadata": {
+    "title": "Klik Go — Hatid sa pinto mo, nasaan ka man",
+    "description": "Pagkain at pangangailangan mula sa mga tindahan sa inyong lugar, hatid ng mga rider mula sa inyong barangay."
+  },
+  "Home": {
+    "brand": "Klik Go",
+    "tagline": "Hatid sa pinto mo, nasaan ka man.",
+    "intro": "Umorder sa mga paborito mong karinderya, milk tea shop at tindahan, hatid ng mga rider na kabisado ang inyong barangay.",
+    "status": "Malapit nang magbukas sa aming pilot zone",
+    "valuesHeading": "Bakit Klik Go",
+    "values": {
+      "speed": {
+        "title": "Mabilis",
+        "body": "Malapit ang biyahe, lokal ang rider, mainit ang pagkain."
+      },
+      "reliability": {
+        "title": "Maaasahan",
+        "body": "Malinaw ang presyo bago umorder at may live tracking pagkatapos."
+      },
+      "community": {
+        "title": "Komunidad",
+        "body": "Mas mababang singil sa lokal na merchant, patas na kita sa lokal na rider."
+      }
+    },
+    "footer": "Klik Go · Gawa sa Pilipinas"
+  }
+}

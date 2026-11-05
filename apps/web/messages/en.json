@@ -1,0 +1,25 @@
+{
+  "Metadata": {
+    "title": "Klik Go — Delivered to your door, wherever you are",
+    "description": "Food and essentials from your neighborhood stores, delivered by riders from your barangay."
+  },
+  "Home": {
+    "brand": "Klik Go",
+    "tagline": "Delivered to your door, wherever you are.",
+    "intro": "Order from the karinderias, milk tea shops and stores you already love, delivered by riders who know your barangay.",
+    "status": "Launching soon in our pilot zone",
+    "valuesHeading": "Why Klik Go",
+    "values": {
+      "speed": { "title": "Fast", "body": "Short distances, local riders, hot food." },
+      "reliability": {
+        "title": "Reliable",
+        "body": "Clear prices before you order and live tracking after."
+      },
+      "community": {
+        "title": "Community",
+        "body": "Lower fees for local merchants, fair pay for local riders."
+      }
+    },
+    "footer": "Klik Go · Made in the Philippines"
+  }
+}

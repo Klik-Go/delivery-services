@@ -1,0 +1,26 @@
+@import "tailwindcss";
+@import "@klikgo/config/tailwind/tokens.css";
+
+/* Shared components live outside this app; tell Tailwind to scan them. */
+@source "../../../../packages/ui/src";
+
+@layer base {
+  html {
+    color-scheme: light;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-surface text-ink font-sans antialiased;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}

@@ -1,0 +1,13 @@
+node_modules
+.next
+.turbo
+coverage
+playwright-report
+test-results
+reports
+pnpm-lock.yaml
+packages/db/generated
+supabase/.temp
+supabase/.branches
+# Docs are hand-edited prose; keep diffs intentional.
+*.md

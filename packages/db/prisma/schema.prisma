@@ -1,0 +1,18 @@
+// Klik Go Prisma schema.
+// Supabase CLI SQL migrations (supabase/migrations) are the source of truth for the database,
+// because RLS policies, PostGIS columns and pg_cron jobs live in SQL. This schema mirrors them
+// for typed queries; Phase 1 adds the models (keep both in sync, see docs/ARCHITECTURE.md).
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  // Pooled connection (Supavisor, transaction mode) used at runtime by serverless functions.
+  url        = env("DATABASE_URL")
+  // Direct connection used by Prisma CLI for introspection.
+  directUrl  = env("DIRECT_URL")
+  extensions = [postgis(schema: "extensions"), pg_cron]
+}
