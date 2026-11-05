@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import type { JSX } from "react";
 import { PhoneSignInForm } from "@/components/auth/phone-sign-in-form";
+import { getContainer } from "@/server/container";
 import { safeNextPath } from "@/server/http/safe-next";
 
 /** Phone sign-in / sign-up for customers and riders. */
@@ -16,7 +17,9 @@ export default async function SignInPage({
     <>
       <header className="flex flex-col gap-1">
         <h1 className="text-ink text-2xl font-bold">{t("signInTitle")}</h1>
-        <p className="text-ink-muted">{t("signInLead")}</p>
+        <p className="text-ink-muted">
+          {getContainer().placeholderOtp ? t("signInLeadPlaceholder") : t("signInLead")}
+        </p>
       </header>
       <PhoneSignInForm next={next ? safeNextPath(next) : null} />
       <Link

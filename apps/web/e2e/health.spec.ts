@@ -29,6 +29,15 @@ test.describe("Feature: Platform health", () => {
     expect(body.meta.requestId).toBe(response.headers()["x-request-id"]);
   });
 
+  test("Scenario: Monitoring checks that the database is reachable and up to date", async ({
+    request,
+  }) => {
+    const response = await request.get("/api/health/ready");
+    expect(response.status()).toBe(200);
+    const body = (await response.json()) as { data: { status: string; database: string } };
+    expect(body.data).toMatchObject({ status: "ready", database: "ok" });
+  });
+
   test("the home page fits a 360px phone without horizontal scrolling", async ({ page }) => {
     await page.setViewportSize({ width: 360, height: 740 });
     await page.goto("/");

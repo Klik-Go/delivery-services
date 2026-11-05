@@ -31,6 +31,7 @@
   "Auth": {
     "signInTitle": "Sign in or sign up",
     "signInLead": "We'll text a 6-digit code to your mobile number.",
+    "signInLeadPlaceholder": "Text messages aren't switched on yet. After you tap Send code, enter the test code from the Klik Go team.",
     "mobileNumber": "Mobile number",
     "mobilePlaceholder": "0917 123 4567",
     "sendCode": "Send code",
@@ -39,6 +40,7 @@
     "customerLink": "Customer or rider? Sign in with your phone",
     "verifyTitle": "Enter your code",
     "verifyLead": "We sent a 6-digit code to {phone}.",
+    "verifyLeadPlaceholder": "Enter the test code from the Klik Go team for {phone}.",
     "verify": "Verify",
     "verifying": "Checking…",
     "digit": "Digit {n}",

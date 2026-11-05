@@ -5,6 +5,7 @@ export * from "./shared/time";
 export type * from "./ports/clock";
 export type * from "./ports/logger";
 export * from "./health/health-service";
+export * from "./health/readiness-service";
 export * from "./auth";
 export * from "./merchant";
 export * from "./catalog";

@@ -4,7 +4,7 @@
 
 Klik Go is a delivery platform for the Philippines, built for barangays and provincial towns, on a Hybrid Aggregator + Managed Logistics model. It starts with food delivery in one pilot zone, then grows into groceries, parcels, pharmacy and B2B.
 
-> Status: Phases 0–3.1 merged; Phase 4 (customer discovery, store page, cart) in review. See `docs/PROGRESS.md`.
+> Status: Phases 0–4 merged; Phase 4.1 (deploy fixes, placeholder sign-in code) in review. See `docs/PROGRESS.md`.
 
 ## Docs
 | File | What it is |
@@ -48,7 +48,7 @@ pnpm install
 pnpm dev
 ```
 
-Open http://localhost:3000, and http://localhost:3000/api/health should return `{"data":{"status":"ok"},...}`.
+Open http://localhost:3000, and http://localhost:3000/api/health should return `{"data":{"status":"ok"},...}`. Once the local database is running and migrated, http://localhost:3000/api/health/ready returns `"database":"ok"` (503 with `unreachable` or `outdated` otherwise).
 
 Environment: copy `.env.example` to `apps/web/.env.local` and fill values only when a phase needs them. Phase 0 runs with no env vars.
 

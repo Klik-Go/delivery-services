@@ -50,6 +50,20 @@ export class SupabaseAuthGateway implements IAuthGateway {
     return ok({ userId: data.user.id });
   }
 
+  async signInWithPhonePassword(
+    phone: string,
+    password: string,
+  ): Promise<Result<{ userId: string }, AppError>> {
+    const { data, error } = await this.client.auth.signInWithPassword({ phone, password });
+    if (!error && data.user) return ok({ userId: data.user.id });
+    // The usual cause is the Phone provider being off in the hosted project (OPEN_QUESTIONS Q20).
+    this.logger.error("supabase.phone_password_sign_in_failed", {
+      status: error?.status,
+      code: error?.code,
+    });
+    return err(new AppError("INTERNAL", "Sign-in isn't available right now. Try again later."));
+  }
+
   async updatePassword(password: string): Promise<Result<void, AppError>> {
     const { error } = await this.client.auth.updateUser({ password });
     if (!error) return ok(undefined);

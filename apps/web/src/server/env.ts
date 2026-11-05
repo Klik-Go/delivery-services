@@ -26,6 +26,15 @@ const ServerEnvSchema = z
     SEND_SMS_HOOK_SECRET: optionalString,
     SEMAPHORE_API_KEY: optionalString,
     SEMAPHORE_SENDER_NAME: optionalString,
+    // Pre-launch only: a shared 6-digit code that signs customers in while SMS is off
+    // (ignored once SEMAPHORE_API_KEY is set). docs/OPEN_QUESTIONS.md Q20.
+    PLACEHOLDER_OTP_CODE: z.preprocess(
+      (value) => (value === "" ? undefined : value),
+      z
+        .string()
+        .regex(/^\d{6}$/, "must be 6 digits")
+        .optional(),
+    ),
     // AI menu import (Phase 3). Only menu photos are ever sent to Gemini, never customer data.
     GEMINI_API_KEY: optionalString,
     GEMINI_MODEL: z.preprocess(

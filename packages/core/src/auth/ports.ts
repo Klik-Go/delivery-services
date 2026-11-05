@@ -62,6 +62,11 @@ export interface IAuthGateway {
     email: string,
     password: string,
   ): Promise<Result<{ readonly userId: string }, AppError>>;
+  /** Placeholder sign-in only (see PlaceholderPhoneSignIn): phone + one-time random password. */
+  signInWithPhonePassword(
+    phone: string,
+    password: string,
+  ): Promise<Result<{ readonly userId: string }, AppError>>;
   updatePassword(password: string): Promise<Result<void, AppError>>;
   mfaStatus(): Promise<Result<MfaStatus, AppError>>;
   enrollTotp(): Promise<Result<TotpEnrollment, AppError>>;
@@ -78,6 +83,17 @@ export interface IStaffAccountGateway {
 }
 
 /** Reads and grants roles in user_roles. */
+/**
+ * Server-only account operations behind the placeholder sign-in (service role). Exists only
+ * until SMS is switched on; see docs/OPEN_QUESTIONS.md Q20.
+ */
+export interface IPhoneAccountAdmin {
+  /** The account for this phone (+63…), created and marked confirmed if it is new. */
+  findOrCreateByPhone(phone: string): Promise<Result<{ readonly userId: string }, AppError>>;
+  /** Replaces the account's password with a fresh random one and returns it (never stored). */
+  rotatePassword(userId: string): Promise<Result<string, AppError>>;
+}
+
 export interface IUserRoleRepository {
   rolesFor(userId: string): Promise<RoleGrant[]>;
   grant(userId: string, grant: RoleGrant, grantedBy: string): Promise<void>;
