@@ -175,6 +175,15 @@ importers:
       '@klikgo/config':
         specifier: workspace:*
         version: link:packages/config
+      '@klikgo/core':
+        specifier: workspace:*
+        version: link:packages/core
+      '@klikgo/db':
+        specifier: workspace:*
+        version: link:packages/db
+      '@klikgo/types':
+        specifier: workspace:*
+        version: link:packages/types
       '@playwright/test':
         specifier: 1.64.1
         version: 1.64.1
@@ -364,6 +373,9 @@ importers:
 
   packages/db:
     dependencies:
+      '@klikgo/types':
+        specifier: workspace:*
+        version: link:../types
       '@prisma/adapter-pg':
         specifier: 7.10.1
         version: 7.10.1

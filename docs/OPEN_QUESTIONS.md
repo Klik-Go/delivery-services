@@ -34,8 +34,17 @@ This is the repository's main settings page: the **General** item at the very to
 
 Done when: a test PR shows the four required checks, and pushing a fake key like `ghp_` + 36 characters to a branch is blocked by push protection.
 
-### Q8. Pilot barangay — needed by Phase 1
-Phase 1 seeds one pilot zone polygon. Which barangay (and city/municipality) is the pilot? Without an answer, Phase 1 uses clearly labelled placeholder coordinates.
+### Q8. Pilot barangay — needed before launch (placeholder in use)
+Which barangay (and city/municipality) is the pilot? Phase 1 seeds a **placeholder** zone (`pilot-zone`, "Pilot Zone (placeholder)"): a 4 km × 4 km square centred on 14.5995° N, 120.9842° E, 5 merchants and 3 riders inside it (owner said on 2026-11-05: "use a placeholder zone for now"). When the barangay is chosen, a migration replaces the polygon (ideally the official PSA/NAMRIA boundary) and moves the seed merchants inside it.
+
+### Q10. How the BFF talks to the database under RLS — proposal for Phase 2
+Phase 1 writes RLS for the `authenticated` / `anon` roles and tests it exactly as clients hit it. For the BFF I propose two clearly separated paths in `packages/adapters`:
+1. **User-scoped reads/writes** (`withUserContext(userId, fn)`): one transaction that runs `set local role authenticated` and `set_config('request.jwt.claims', …, true)` from the verified Supabase session, so RLS applies to every query the BFF makes on a user's behalf (defence in depth on top of the service's own checks).
+2. **Privileged writes** (order creation and status changes, payments, ledger, role grants): the service connection (bypasses RLS), only inside core services, always setting `klikgo.actor_id` / `klikgo.actor_role` so `order_events` and audit rows name the actor.
+This needs Prisma's driver adapter to share one `pg` transaction; I'll confirm the exact Prisma 7 API in Phase 2. Objections welcome before then.
+
+### Q11. Prisma model names stay snake_case — decision to confirm
+`db:pull` keeps the database names (`prisma.orders`, `order.total_centavos`). Renaming to PascalCase/camelCase with `@@map`/`@map` would need a hand-maintained mapping layer that drifts. Repositories map rows to domain objects anyway (CLAUDE.md), so I propose keeping snake_case inside `packages/adapters`/`packages/db` only.
 
 ### Q9. Tooling that is not on its newest major yet — follow-up
 "Use what is up to date" (Q2) is applied everywhere except where the newest release cannot work yet:

@@ -1,10 +1,8 @@
-// Klik Go Prisma schema.
-// Supabase CLI SQL migrations (supabase/migrations) are the source of truth for the database,
-// because RLS policies, PostGIS columns and pg_cron jobs live in SQL. This schema mirrors them
-// for typed queries; Phase 1 adds the models (keep both in sync, see docs/ARCHITECTURE.md).
-//
-// Prisma 7: connection URLs live in prisma.config.ts (CLI, DIRECT_URL) and in the pg driver
-// adapter (runtime, pooled DATABASE_URL), not in this file.
+// Klik Go Prisma schema. GENERATED: run `pnpm --filter @klikgo/db db:pull`; do not edit by hand.
+// Source of truth: supabase/migrations (RLS, PostGIS and pg_cron live in SQL). This file mirrors
+// the migrated database for typed queries; CI fails if it drifts (`db:pull --check`).
+// Prisma 7: connection URLs are in prisma.config.ts (CLI, DIRECT_URL) and in the pg driver
+// adapter (runtime, pooled DATABASE_URL). Geography columns are Unsupported: query them with SQL.
 
 generator client {
   provider = "prisma-client"
@@ -13,4 +11,927 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  schemas  = ["auth", "public"]
+}
+
+/// Supabase Auth user (auth.users). Owned by Supabase; only the id and the profile link are mapped.
+model users {
+  id       String    @id @db.Uuid
+  profiles profiles?
+
+  @@schema("auth")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model addresses {
+  id            String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id       String                   @db.Uuid
+  label         String                   @default("Home")
+  location      Unsupported("geography")
+  street        String?
+  landmark      String?
+  barangay      String
+  city          String
+  notes         String?
+  contact_phone String?
+  is_default    Boolean                  @default(false)
+  created_at    DateTime                 @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime                 @default(now()) @db.Timestamptz(6)
+  profiles      profiles                 @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([location], map: "addresses_location_gix", type: Gist)
+  @@index([user_id], map: "addresses_user_idx")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model audit_logs {
+  id          BigInt    @id @default(autoincrement())
+  actor_id    String?   @db.Uuid
+  actor_role  app_role?
+  action      String
+  entity_type String
+  entity_id   String?   @db.Uuid
+  meta        Json      @default("{}")
+  ip          String?   @db.Inet
+  created_at  DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([actor_id, created_at(sort: Desc)], map: "audit_logs_actor_idx")
+  @@index([entity_type, entity_id, created_at(sort: Desc)], map: "audit_logs_entity_idx")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model device_push_subscriptions {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id      String    @db.Uuid
+  endpoint     String    @unique
+  p256dh       String
+  auth         String
+  user_agent   String?
+  created_at   DateTime  @default(now()) @db.Timestamptz(6)
+  last_used_at DateTime? @db.Timestamptz(6)
+  profiles     profiles  @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([user_id], map: "device_push_subscriptions_user_idx")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model dispatch_offers {
+  id                      String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  order_id                String                @db.Uuid
+  rider_id                String                @db.Uuid
+  status                  dispatch_offer_status @default(offered)
+  rider_earnings_centavos Int
+  offered_at              DateTime              @default(now()) @db.Timestamptz(6)
+  expires_at              DateTime              @db.Timestamptz(6)
+  responded_at            DateTime?             @db.Timestamptz(6)
+  orders                  orders                @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  riders                  riders                @relation(fields: [rider_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([order_id, rider_id])
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model feature_flags {
+  key         String    @id
+  description String?
+  enabled     Boolean   @default(false)
+  rollout     Json      @default("{}")
+  updated_by  String?   @db.Uuid
+  updated_at  DateTime  @default(now()) @db.Timestamptz(6)
+  profiles    profiles? @relation(fields: [updated_by], references: [id], onUpdate: NoAction)
+
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model fee_rules {
+  id                    String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  zone_id               String        @db.Uuid
+  name                  String
+  kind                  fee_rule_kind
+  min_distance_m        Int?
+  max_distance_m        Int?
+  min_subtotal_centavos Int?
+  fee_centavos          Int
+  priority              Int           @default(0)
+  is_active             Boolean       @default(true)
+  created_at            DateTime      @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime      @default(now()) @db.Timestamptz(6)
+  zones                 zones         @relation(fields: [zone_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model invites {
+  id                                     String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email                                  String
+  role                                   app_role
+  merchant_id                            String?    @db.Uuid
+  zone_id                                String?    @db.Uuid
+  invited_by                             String?    @db.Uuid
+  token_hash                             String?    @unique
+  expires_at                             DateTime   @db.Timestamptz(6)
+  accepted_at                            DateTime?  @db.Timestamptz(6)
+  accepted_by                            String?    @db.Uuid
+  created_at                             DateTime   @default(now()) @db.Timestamptz(6)
+  profiles_invites_accepted_byToprofiles profiles?  @relation("invites_accepted_byToprofiles", fields: [accepted_by], references: [id], onUpdate: NoAction)
+  profiles_invites_invited_byToprofiles  profiles?  @relation("invites_invited_byToprofiles", fields: [invited_by], references: [id], onUpdate: NoAction)
+  merchants                              merchants? @relation(fields: [merchant_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  zones                                  zones?     @relation(fields: [zone_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model ledger_entries {
+  id              BigInt         @id @default(autoincrement())
+  txn_id          String         @db.Uuid
+  account         ledger_account
+  party_type      ledger_party
+  party_id        String?        @db.Uuid
+  debit_centavos  Int            @default(0)
+  credit_centavos Int            @default(0)
+  order_id        String?        @db.Uuid
+  memo            String?
+  created_at      DateTime       @default(now()) @db.Timestamptz(6)
+  orders          orders?        @relation(fields: [order_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+
+  @@index([party_type, party_id, created_at], map: "ledger_entries_party_idx")
+  @@index([txn_id], map: "ledger_entries_txn_idx")
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model loyalty_stamps {
+  id                                              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  customer_id                                     String    @db.Uuid
+  order_id                                        String    @unique @db.Uuid
+  created_at                                      DateTime  @default(now()) @db.Timestamptz(6)
+  redeemed_at                                     DateTime? @db.Timestamptz(6)
+  redeemed_order_id                               String?   @db.Uuid
+  profiles                                        profiles  @relation(fields: [customer_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  orders_loyalty_stamps_order_idToorders          orders    @relation("loyalty_stamps_order_idToorders", fields: [order_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  orders_loyalty_stamps_redeemed_order_idToorders orders?   @relation("loyalty_stamps_redeemed_order_idToorders", fields: [redeemed_order_id], references: [id], onUpdate: NoAction)
+
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model menu_categories {
+  id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  merchant_id String       @db.Uuid
+  name        String
+  sort        Int          @default(0)
+  is_active   Boolean      @default(true)
+  created_at  DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime     @default(now()) @db.Timestamptz(6)
+  merchants   merchants    @relation(fields: [merchant_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  menu_items  menu_items[]
+
+  @@unique([id, merchant_id])
+  @@index([merchant_id, sort], map: "menu_categories_merchant_idx")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model menu_items {
+  id              String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  merchant_id     String            @db.Uuid
+  category_id     String            @db.Uuid
+  name            String
+  description     String?
+  price_centavos  Int
+  is_available    Boolean           @default(true)
+  photo_path      String?
+  sort            Int               @default(0)
+  created_at      DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime          @default(now()) @db.Timestamptz(6)
+  menu_categories menu_categories   @relation(fields: [category_id, merchant_id], references: [id, merchant_id], onDelete: Cascade, onUpdate: NoAction)
+  merchants       merchants         @relation(fields: [merchant_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  modifier_groups modifier_groups[]
+  order_items     order_items[]
+
+  @@index([category_id, merchant_id], map: "menu_items_category_idx")
+  @@index([merchant_id, category_id, sort], map: "menu_items_merchant_idx")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model merchants {
+  id                   String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  zone_id              String                   @db.Uuid
+  owner_id             String                   @db.Uuid
+  name                 String
+  slug                 String                   @unique
+  description          String?
+  category             merchant_category        @default(food)
+  location             Unsupported("geography")
+  address_line         String?
+  phone                String?
+  commission_bps       Int                      @default(2000)
+  accepts_cod          Boolean                  @default(true)
+  is_open              Boolean                  @default(false)
+  default_prep_minutes Int                      @default(15)
+  hours                Json                     @default("{}")
+  status               merchant_status          @default(pending)
+  rating_avg           Decimal                  @default(0) @db.Decimal(3, 2)
+  rating_count         Int                      @default(0)
+  cover_photo_path     String?
+  created_at           DateTime                 @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime                 @default(now()) @db.Timestamptz(6)
+  invites              invites[]
+  menu_categories      menu_categories[]
+  menu_items           menu_items[]
+  profiles             profiles                 @relation(fields: [owner_id], references: [id], onUpdate: NoAction)
+  zones                zones                    @relation(fields: [zone_id], references: [id], onUpdate: NoAction)
+  orders               orders[]
+  promos               promos[]
+  user_roles           user_roles[]
+
+  @@index([location], map: "merchants_location_gix", type: Gist)
+  @@index([owner_id], map: "merchants_owner_idx")
+  @@index([zone_id, status], map: "merchants_zone_status_idx")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model modifier_groups {
+  id               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  menu_item_id     String             @db.Uuid
+  name             String
+  min_select       Int                @default(0)
+  max_select       Int                @default(1)
+  is_required      Boolean            @default(false)
+  sort             Int                @default(0)
+  created_at       DateTime           @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime           @default(now()) @db.Timestamptz(6)
+  menu_items       menu_items         @relation(fields: [menu_item_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  modifier_options modifier_options[]
+
+  @@index([menu_item_id, sort], map: "modifier_groups_item_idx")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model modifier_options {
+  id                   String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  modifier_group_id    String          @db.Uuid
+  name                 String
+  price_delta_centavos Int             @default(0)
+  is_available         Boolean         @default(true)
+  sort                 Int             @default(0)
+  created_at           DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime        @default(now()) @db.Timestamptz(6)
+  modifier_groups      modifier_groups @relation(fields: [modifier_group_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([modifier_group_id, sort], map: "modifier_options_group_idx")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model notifications {
+  id         String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String               @db.Uuid
+  channel    notification_channel
+  template   String
+  payload    Json                 @default("{}")
+  order_id   String?              @db.Uuid
+  status     String               @default("queued")
+  error      String?
+  sent_at    DateTime?            @db.Timestamptz(6)
+  read_at    DateTime?            @db.Timestamptz(6)
+  created_at DateTime             @default(now()) @db.Timestamptz(6)
+  orders     orders?              @relation(fields: [order_id], references: [id], onUpdate: NoAction)
+  profiles   profiles             @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([user_id, created_at(sort: Desc)], map: "notifications_user_idx")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model order_events {
+  id          BigInt        @id @default(autoincrement())
+  order_id    String        @db.Uuid
+  from_status order_status?
+  to_status   order_status
+  actor_id    String?       @db.Uuid
+  actor_role  app_role?
+  meta        Json          @default("{}")
+  created_at  DateTime      @default(dbgenerated("clock_timestamp()")) @db.Timestamptz(6)
+  orders      orders        @relation(fields: [order_id], references: [id], onUpdate: NoAction)
+
+  @@index([order_id, created_at], map: "order_events_order_idx")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model order_items {
+  id                      String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  order_id                String      @db.Uuid
+  menu_item_id            String?     @db.Uuid
+  name_snapshot           String
+  unit_price_centavos     Int
+  modifiers_unit_centavos Int         @default(0)
+  quantity                Int
+  modifiers_snapshot      Json        @default("[]")
+  note                    String?
+  line_total_centavos     Int
+  created_at              DateTime    @default(now()) @db.Timestamptz(6)
+  menu_items              menu_items? @relation(fields: [menu_item_id], references: [id], onUpdate: NoAction)
+  orders                  orders      @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([order_id], map: "order_items_order_idx")
+  @@schema("public")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model order_status_transitions {
+  from_status order_status
+  to_status   order_status
+
+  @@id([from_status, to_status])
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model orders {
+  id                                                      String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code                                                    String                       @unique
+  customer_id                                             String                       @db.Uuid
+  merchant_id                                             String                       @db.Uuid
+  rider_id                                                String?                      @db.Uuid
+  zone_id                                                 String                       @db.Uuid
+  status                                                  order_status                 @default(awaiting_payment)
+  dispatch_status                                         dispatch_status              @default(unassigned)
+  subtotal_centavos                                       Int
+  delivery_fee_centavos                                   Int                          @default(0)
+  service_fee_centavos                                    Int                          @default(0)
+  small_order_fee_centavos                                Int                          @default(0)
+  discount_centavos                                       Int                          @default(0)
+  tip_centavos                                            Int                          @default(0)
+  total_centavos                                          Int
+  payment_method                                          payment_method
+  payment_status                                          payment_status               @default(pending)
+  address_snapshot                                        Json
+  dropoff                                                 Unsupported("geography")
+  scheduled_for                                           DateTime?                    @db.Timestamptz(6)
+  prep_minutes                                            Int?
+  delivery_pin_hash                                       String?
+  cancel_reason                                           String?
+  cancelled_by                                            String?                      @db.Uuid
+  cancelled_by_role                                       app_role?
+  placed_at                                               DateTime?                    @db.Timestamptz(6)
+  accepted_at                                             DateTime?                    @db.Timestamptz(6)
+  preparing_at                                            DateTime?                    @db.Timestamptz(6)
+  ready_at                                                DateTime?                    @db.Timestamptz(6)
+  picked_up_at                                            DateTime?                    @db.Timestamptz(6)
+  delivered_at                                            DateTime?                    @db.Timestamptz(6)
+  rejected_at                                             DateTime?                    @db.Timestamptz(6)
+  cancelled_at                                            DateTime?                    @db.Timestamptz(6)
+  failed_at                                               DateTime?                    @db.Timestamptz(6)
+  created_at                                              DateTime                     @default(now()) @db.Timestamptz(6)
+  updated_at                                              DateTime                     @default(now()) @db.Timestamptz(6)
+  dispatch_offers                                         dispatch_offers[]
+  ledger_entries                                          ledger_entries[]
+  loyalty_stamps_loyalty_stamps_order_idToorders          loyalty_stamps?              @relation("loyalty_stamps_order_idToorders")
+  loyalty_stamps_loyalty_stamps_redeemed_order_idToorders loyalty_stamps[]             @relation("loyalty_stamps_redeemed_order_idToorders")
+  notifications                                           notifications[]
+  order_events                                            order_events[]
+  order_items                                             order_items[]
+  profiles_orders_cancelled_byToprofiles                  profiles?                    @relation("orders_cancelled_byToprofiles", fields: [cancelled_by], references: [id], onUpdate: NoAction)
+  profiles_orders_customer_idToprofiles                   profiles                     @relation("orders_customer_idToprofiles", fields: [customer_id], references: [id], onUpdate: NoAction)
+  merchants                                               merchants                    @relation(fields: [merchant_id], references: [id], onUpdate: NoAction)
+  riders                                                  riders?                      @relation(fields: [rider_id], references: [id], onUpdate: NoAction)
+  zones                                                   zones                        @relation(fields: [zone_id], references: [id], onUpdate: NoAction)
+  payments                                                payments[]
+  promo_redemptions                                       promo_redemptions?
+  ratings                                                 ratings[]
+  referrals                                               referrals[]
+  rider_location_breadcrumbs                              rider_location_breadcrumbs[]
+
+  @@index([customer_id, created_at(sort: Desc)], map: "orders_customer_idx")
+  @@index([dropoff], map: "orders_dropoff_gix", type: Gist)
+  @@index([merchant_id, status, created_at(sort: Desc)], map: "orders_merchant_status_idx")
+  @@index([zone_id, status, created_at(sort: Desc)], map: "orders_zone_status_idx")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model payments {
+  id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  order_id        String         @db.Uuid
+  gateway         String
+  intent_id       String
+  gateway_ref     String?
+  amount_centavos Int
+  status          payment_status @default(pending)
+  method          payment_method
+  created_at      DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime       @default(now()) @db.Timestamptz(6)
+  orders          orders         @relation(fields: [order_id], references: [id], onUpdate: NoAction)
+
+  @@unique([gateway, intent_id])
+  @@index([order_id], map: "payments_order_idx")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model payouts {
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  party_type      ledger_party
+  party_id        String        @db.Uuid
+  period_start    DateTime      @db.Date
+  period_end      DateTime      @db.Date
+  amount_centavos Int
+  status          payout_status @default(draft)
+  reference       String?
+  paid_at         DateTime?     @db.Timestamptz(6)
+  created_at      DateTime      @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime      @default(now()) @db.Timestamptz(6)
+
+  @@unique([party_type, party_id, period_start, period_end])
+  @@index([party_type, party_id, period_start(sort: Desc)], map: "payouts_party_idx")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model profiles {
+  id                                         String                      @id @db.Uuid
+  full_name                                  String?
+  phone                                      String?                     @unique
+  email                                      String?
+  locale                                     String                      @default("en")
+  status                                     profile_status              @default(active)
+  created_at                                 DateTime                    @default(now()) @db.Timestamptz(6)
+  updated_at                                 DateTime                    @default(now()) @db.Timestamptz(6)
+  addresses                                  addresses[]
+  device_push_subscriptions                  device_push_subscriptions[]
+  feature_flags                              feature_flags[]
+  invites_invites_accepted_byToprofiles      invites[]                   @relation("invites_accepted_byToprofiles")
+  invites_invites_invited_byToprofiles       invites[]                   @relation("invites_invited_byToprofiles")
+  loyalty_stamps                             loyalty_stamps[]
+  merchants                                  merchants[]
+  notifications                              notifications[]
+  orders_orders_cancelled_byToprofiles       orders[]                    @relation("orders_cancelled_byToprofiles")
+  orders_orders_customer_idToprofiles        orders[]                    @relation("orders_customer_idToprofiles")
+  users                                      users                       @relation(fields: [id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  promo_redemptions                          promo_redemptions[]
+  ratings                                    ratings[]
+  referrals_referrals_referee_idToprofiles   referrals?                  @relation("referrals_referee_idToprofiles")
+  referrals_referrals_referrer_idToprofiles  referrals[]                 @relation("referrals_referrer_idToprofiles")
+  rider_kyc_documents                        rider_kyc_documents[]
+  riders                                     riders?
+  user_roles_user_roles_granted_byToprofiles user_roles[]                @relation("user_roles_granted_byToprofiles")
+  user_roles_user_roles_user_idToprofiles    user_roles[]                @relation("user_roles_user_idToprofiles")
+  zones                                      zones[]
+
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model promo_redemptions {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  promo_id          String   @db.Uuid
+  user_id           String   @db.Uuid
+  order_id          String   @unique @db.Uuid
+  discount_centavos Int
+  created_at        DateTime @default(now()) @db.Timestamptz(6)
+  orders            orders   @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  promos            promos   @relation(fields: [promo_id], references: [id], onUpdate: NoAction)
+  profiles          profiles @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([promo_id, user_id], map: "promo_redemptions_promo_user_idx")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model promos {
+  id                    String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code                  String              @unique
+  type                  promo_type
+  discount_bps          Int?
+  discount_centavos     Int?
+  max_discount_centavos Int?
+  min_subtotal_centavos Int                 @default(0)
+  starts_at             DateTime            @db.Timestamptz(6)
+  ends_at               DateTime            @db.Timestamptz(6)
+  max_redemptions       Int?
+  per_user_limit        Int                 @default(1)
+  zone_id               String?             @db.Uuid
+  merchant_id           String?             @db.Uuid
+  funded_by             String              @default("platform")
+  is_active             Boolean             @default(true)
+  created_at            DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime            @default(now()) @db.Timestamptz(6)
+  promo_redemptions     promo_redemptions[]
+  merchants             merchants?          @relation(fields: [merchant_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  zones                 zones?              @relation(fields: [zone_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model ratings {
+  id           String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  order_id     String        @db.Uuid
+  from_user_id String        @db.Uuid
+  target_type  rating_target
+  target_id    String        @db.Uuid
+  score        Int           @db.SmallInt
+  tags         String[]      @default([])
+  comment      String?
+  created_at   DateTime      @default(now()) @db.Timestamptz(6)
+  profiles     profiles      @relation(fields: [from_user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  orders       orders        @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([order_id, from_user_id, target_type])
+  @@index([target_type, target_id, created_at(sort: Desc)], map: "ratings_target_idx")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model referrals {
+  id                                       String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  referrer_id                              String    @db.Uuid
+  referee_id                               String    @unique @db.Uuid
+  code                                     String
+  status                                   String    @default("pending")
+  qualifying_order_id                      String?   @db.Uuid
+  reward_centavos                          Int       @default(0)
+  created_at                               DateTime  @default(now()) @db.Timestamptz(6)
+  qualified_at                             DateTime? @db.Timestamptz(6)
+  orders                                   orders?   @relation(fields: [qualifying_order_id], references: [id], onUpdate: NoAction)
+  profiles_referrals_referee_idToprofiles  profiles  @relation("referrals_referee_idToprofiles", fields: [referee_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  profiles_referrals_referrer_idToprofiles profiles  @relation("referrals_referrer_idToprofiles", fields: [referrer_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([referrer_id], map: "referrals_referrer_idx")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model rider_kyc_documents {
+  id               String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  rider_id         String            @db.Uuid
+  type             kyc_document_type
+  storage_path     String            @unique
+  status           kyc_status        @default(pending)
+  reviewed_by      String?           @db.Uuid
+  reviewed_at      DateTime?         @db.Timestamptz(6)
+  rejection_reason String?
+  created_at       DateTime          @default(now()) @db.Timestamptz(6)
+  profiles         profiles?         @relation(fields: [reviewed_by], references: [id], onUpdate: NoAction)
+  riders           riders            @relation(fields: [rider_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([rider_id], map: "rider_kyc_documents_rider_idx")
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model rider_location_breadcrumbs {
+  id          BigInt                   @id @default(autoincrement())
+  rider_id    String                   @db.Uuid
+  order_id    String?                  @db.Uuid
+  location    Unsupported("geography")
+  recorded_at DateTime                 @default(now()) @db.Timestamptz(6)
+  orders      orders?                  @relation(fields: [order_id], references: [id], onUpdate: NoAction, map: "rider_location_breadcrumbs_order_fk")
+  riders      riders                   @relation(fields: [rider_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([rider_id, recorded_at(sort: Desc)], map: "rider_location_breadcrumbs_rider_time_idx")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model rider_locations {
+  rider_id   String                   @id @db.Uuid
+  location   Unsupported("geography")
+  heading    Int?                     @db.SmallInt
+  speed_kph  Decimal?                 @db.Decimal(5, 1)
+  accuracy_m Decimal?                 @db.Decimal(7, 1)
+  updated_at DateTime                 @default(now()) @db.Timestamptz(6)
+  riders     riders                   @relation(fields: [rider_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([location], map: "rider_locations_location_gix", type: Gist)
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model riders {
+  id                         String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id                    String                       @unique @db.Uuid
+  zone_id                    String                       @db.Uuid
+  vehicle_type               vehicle_type
+  plate_no                   String?
+  status                     rider_status                 @default(pending_kyc)
+  is_online                  Boolean                      @default(false)
+  cash_limit_centavos        Int                          @default(300000)
+  rating_avg                 Decimal                      @default(0) @db.Decimal(3, 2)
+  rating_count               Int                          @default(0)
+  created_at                 DateTime                     @default(now()) @db.Timestamptz(6)
+  updated_at                 DateTime                     @default(now()) @db.Timestamptz(6)
+  dispatch_offers            dispatch_offers[]
+  orders                     orders[]
+  rider_kyc_documents        rider_kyc_documents[]
+  rider_location_breadcrumbs rider_location_breadcrumbs[]
+  rider_locations            rider_locations?
+  profiles                   profiles                     @relation(fields: [user_id], references: [id], onUpdate: NoAction)
+  zones                      zones                        @relation(fields: [zone_id], references: [id], onUpdate: NoAction)
+
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model user_roles {
+  id                                       String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id                                  String     @db.Uuid
+  role                                     app_role
+  merchant_id                              String?    @db.Uuid
+  zone_id                                  String?    @db.Uuid
+  granted_by                               String?    @db.Uuid
+  created_at                               DateTime   @default(now()) @db.Timestamptz(6)
+  profiles_user_roles_granted_byToprofiles profiles?  @relation("user_roles_granted_byToprofiles", fields: [granted_by], references: [id], onUpdate: NoAction)
+  merchants                                merchants? @relation(fields: [merchant_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  profiles_user_roles_user_idToprofiles    profiles   @relation("user_roles_user_idToprofiles", fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  zones                                    zones?     @relation(fields: [zone_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([user_id, role, merchant_id, zone_id], map: "user_roles_unique")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model webhook_events {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  gateway      String
+  event_id     String
+  type         String
+  payload      Json
+  received_at  DateTime  @default(now()) @db.Timestamptz(6)
+  processed_at DateTime? @db.Timestamptz(6)
+  error        String?
+
+  @@unique([gateway, event_id])
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model zones {
+  id                   String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                 String
+  slug                 String                   @unique
+  zone_type            zone_type                @default(barangay)
+  area                 Unsupported("geography")
+  base_fee_centavos    Int
+  per_km_centavos      Int                      @default(0)
+  surge_multiplier_bps Int                      @default(10000)
+  max_radius_km        Decimal                  @db.Decimal(4, 1)
+  is_active            Boolean                  @default(false)
+  service_hours        Json                     @default("{}")
+  coordinator_id       String?                  @db.Uuid
+  created_at           DateTime                 @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime                 @default(now()) @db.Timestamptz(6)
+  fee_rules            fee_rules[]
+  invites              invites[]
+  merchants            merchants[]
+  orders               orders[]
+  promos               promos[]
+  riders               riders[]
+  user_roles           user_roles[]
+  profiles             profiles?                @relation(fields: [coordinator_id], references: [id], onUpdate: NoAction)
+
+  @@index([area], map: "zones_area_gix", type: Gist)
+  @@index([coordinator_id], map: "zones_coordinator_idx")
+  @@schema("public")
+}
+
+enum app_role {
+  customer
+  rider
+  merchant_owner
+  merchant_staff
+  coordinator
+  admin
+
+  @@schema("public")
+}
+
+enum dispatch_offer_status {
+  offered
+  accepted
+  declined
+  expired
+
+  @@schema("public")
+}
+
+enum dispatch_status {
+  unassigned
+  offered
+  assigned
+  at_store
+  picked_up
+
+  @@schema("public")
+}
+
+enum fee_rule_kind {
+  delivery_distance_band
+  small_order_fee
+  service_fee
+
+  @@schema("public")
+}
+
+enum kyc_document_type {
+  government_id
+  drivers_license
+  vehicle_registration
+  selfie_with_id
+
+  @@schema("public")
+}
+
+enum kyc_status {
+  pending
+  approved
+  rejected
+
+  @@schema("public")
+}
+
+enum ledger_account {
+  gateway_clearing
+  rider_cash_on_hand
+  merchant_payable
+  rider_payable
+  platform_revenue
+  gateway_fees
+  promo_expense
+  customer_refunds
+
+  @@schema("public")
+}
+
+enum ledger_party {
+  platform
+  merchant
+  rider
+  customer
+
+  @@schema("public")
+}
+
+enum merchant_category {
+  food
+  grocery
+  pharmacy
+
+  @@schema("public")
+}
+
+enum merchant_status {
+  pending
+  active
+  suspended
+
+  @@schema("public")
+}
+
+enum notification_channel {
+  push
+  sms
+  in_app
+  email
+
+  @@schema("public")
+}
+
+enum order_status {
+  awaiting_payment
+  placed
+  accepted
+  preparing
+  ready
+  picked_up
+  delivered
+  rejected
+  cancelled
+  failed_delivery
+
+  @@schema("public")
+}
+
+enum payment_method {
+  gcash
+  maya
+  card
+  qrph
+  cod
+
+  @@schema("public")
+}
+
+enum payment_status {
+  pending
+  processing
+  paid
+  failed
+  refunded
+  partially_refunded
+
+  @@schema("public")
+}
+
+enum payout_status {
+  draft
+  approved
+  paid
+  failed
+
+  @@schema("public")
+}
+
+enum profile_status {
+  active
+  suspended
+  deleted
+
+  @@schema("public")
+}
+
+enum promo_type {
+  percent_off
+  fixed_off
+  free_delivery
+
+  @@schema("public")
+}
+
+enum rating_target {
+  merchant
+  rider
+  customer
+
+  @@schema("public")
+}
+
+enum rider_status {
+  pending_kyc
+  active
+  suspended
+
+  @@schema("public")
+}
+
+enum vehicle_type {
+  motorcycle
+  bicycle
+  tricycle
+
+  @@schema("public")
+}
+
+enum zone_type {
+  barangay
+  city
+  provincial
+
+  @@schema("public")
 }

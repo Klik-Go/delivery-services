@@ -81,6 +81,11 @@ export function createConfig({ tsconfigRootDir, next = false, react = false, lay
       },
     },
     {
+      // Command-line scripts report to the terminal; app code logs through the Logger port.
+      files: ["**/scripts/**"],
+      rules: { "no-console": "off" },
+    },
+    {
       files: ["**/*.test.ts", "**/*.test.tsx", "**/e2e/**", "**/features/**"],
       rules: {
         "@typescript-eslint/explicit-module-boundary-types": "off",
