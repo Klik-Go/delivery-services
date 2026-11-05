@@ -107,6 +107,37 @@ Merchant SLA escalation: alert at 0 s, SMS at 60 s, coordinator call at 120 s, a
 
 Every transition records `order_events(from_status, to_status, actor_id, actor_role, meta)`. Cancellations require a reason and an actor.
 
+## 4b. Data model and security in the database (Phase 1)
+
+Full diagram and policy list: `docs/ERD.md` (generated from the database). Source of truth: `supabase/migrations`.
+
+- **33 tables, 21 enums.** Enums mirror `packages/types/src/domain.ts`; a test fails if they drift. Money is `integer` centavos with `>= 0` checks; locations are `geography(…, 4326)` with GiST indexes.
+- **Integrity lives in SQL**, so no code path (BFF, admin SQL, a future NestJS service) can corrupt data:
+  - `orders_total_adds_up`, `order_items_line_total`: totals must add up to the centavo.
+  - `order_status_transitions` + trigger `orders_status_guard`: only the transitions in §4 are allowed; status timestamps are stamped automatically.
+  - Trigger `orders_log_status`: every status change writes `order_events` with the actor from `klikgo.actor_id` / `klikgo.actor_role` (set by the server per transaction) or the JWT user.
+  - `ledger_entries_balanced` (deferred constraint trigger): each ledger transaction balances at commit.
+  - `order_events`, `ledger_entries`, `audit_logs` are append-only (update/delete raise).
+  - A merchant must sit inside its zone; a zone's radius must fit its type (barangay 3–5 km, city 8–15 km, provincial 20–40 km).
+  - One accepted dispatch offer per order; one default address per user.
+- **RLS on every table**, written for the `authenticated` / `anon` roles. Role checks use SECURITY DEFINER helpers in the unexposed `private` schema (`has_role`, `is_admin`, `is_merchant_member`, `is_merchant_owner`, `coordinates_zone`, `current_rider_id`, …) so policies never recurse. Child tables (order items/events, payments, menus) reuse the parent's policy with `exists (select 1 from parent …)`.
+- **Grants complement RLS**: API roles get `select` everywhere (RLS filters rows) and write only specific tables/columns: own profile name/locale, own addresses, menu tables for merchant members, store settings (not commission/status), rider online flag and location, KYC uploads, ratings for own delivered orders, push subscriptions, notification read flag. Orders, payments, ledger, payouts, roles, approvals: server only.
+- **Who sees what** (tested in `packages/db/test/rls-visibility.db.test.ts`):
+
+| Role | Sees |
+|---|---|
+| anonymous | active zones, live merchants and their menus, active fee rules |
+| customer | own profile, roles, addresses, orders (+ items, events, payments), ratings, redemptions, referrals, stamps, push subscriptions, notifications; the rider delivering their active order (row + live location) |
+| merchant staff | their store (any status), its menu and orders, ratings of the store |
+| merchant owner | staff view + invites, ledger entries and payouts of the store, roles of their team |
+| rider | own rider row, location, breadcrumbs, offers, orders offered/assigned to them, own ledger and payouts; never their KYC files back |
+| coordinator | their zone (even if paused), its merchants, riders (+ profiles, locations, breadcrumbs), orders and offers |
+| admin | everything, including KYC documents and the audit log; webhook events stay server-only |
+
+- **Storage**: `menu-photos` (public read; merchant members write `menu-photos/<merchant_id>/…`) and `rider-kyc` (private; riders write `rider-kyc/<rider_id>/…`, only admins read; the BFF will serve short-lived signed URLs and audit each view).
+- **Geo helpers**: `zone_for_point(point)` returns the smallest active zone covering a pin; `nearest_available_riders(point, limit, max_m)` returns approved, online riders seen in the last 2 minutes and not on an unfinished order, nearest first (KNN `<->` on GiST), as SECURITY INVOKER so callers only see what RLS allows.
+- **Prisma** mirrors the database via `pnpm --filter @klikgo/db db:pull` (introspection + normalisation: minimal `auth.users`, partial indexes dropped). Model and field names stay snake_case, exactly as in SQL.
+
 ## 5. Folder map
 
 ```
@@ -125,6 +156,9 @@ packages/
     src/testing/            Fakes for ports (FakeClock, MemoryLogger, …)
   adapters/                 port implementations (pino logger, system clock, later gateways)
   db/                       Prisma 7 schema + client (mirrors supabase/migrations); prisma.config.ts
+    scripts/                pull-schema.mjs (db:pull/db:check), generate-erd.mjs (db:erd)
+    src/testing/            DbFixtures + asUser() for DB tests and Cucumber
+    test/                   DB integration tests (*.db.test.ts): RLS, geo, integrity, seed
   types/                    shared zod schemas (API envelope, request/response DTOs)
   config/                   tsconfig bases, ESLint flat config (+ boundary rules), Prettier, design tokens
   ui/                       shared shadcn/ui-style components (Button, BrandLogo, cn)
@@ -168,9 +202,9 @@ Package names are `@klikgo/<name>`. Workspace packages export TypeScript source 
 | Route handlers | Vitest | `src/app/api/**/route.test.ts` | container with real adapters, no network |
 | Business scenarios | Cucumber.js (Gherkin) | `features/` | running server (`next start`) + local Supabase for `@db` |
 | UI flows | Playwright | `apps/web/e2e/` | production build, Pixel 7 + desktop Chrome, axe a11y |
-| Database / RLS | Cucumber `@db` now; pgTAP or Vitest-against-DB from Phase 1 | `features/`, `supabase/tests` | `supabase start` |
+| Database / RLS | Vitest against the local DB (`pnpm test:db`) + Cucumber `@db` | `packages/db/test`, `features/` | `supabase start`; each test in a rolled-back transaction |
 
-CI (`.github/workflows/ci.yml`) runs on Node 26 with pnpm 12 installed from npm by `.github/actions/setup` (first-party actions only): job **static** (format, lint, typecheck, unit + coverage) and job **e2e** (supabase start → db reset → build → start server → Cucumber → Playwright, reports uploaded as artifacts). CodeQL runs on every PR and weekly.
+CI (`.github/workflows/ci.yml`) runs on Node 26 with pnpm 12 installed from npm by `.github/actions/setup` (first-party actions only): job **static** (format, lint, typecheck, unit + coverage) and job **e2e** (supabase start → db reset → DB integration tests → Prisma/ERD drift checks → build → start server → Cucumber → Playwright, reports uploaded as artifacts). CodeQL runs on every PR and weekly.
 
 ## 8. Deployment
 
@@ -189,4 +223,9 @@ CI (`.github/workflows/ci.yml`) runs on Node 26 with pnpm 12 installed from npm 
 | 2026-11-05 | Prisma 7: CLI URL in `packages/db/prisma.config.ts` (`DIRECT_URL`), runtime via `@prisma/adapter-pg` (`DATABASE_URL`) | Prisma 7 removed `url`/`directUrl` from the schema |
 | 2026-11-05 | pnpm 12 supply-chain defaults kept: `allowBuilds` allowlist, `minimumReleaseAge` (1 day) | Blocks freshly published (possibly hijacked) versions; Dependabot cooldown is 2 days |
 | 2026-11-05 | KGo brand (blue `#228be6`, yellow `#ffd43b`, Lilita One) | Owner-supplied logo (OPEN_QUESTIONS Q7); see docs/BRAND.md |
+| 2026-11-05 | Order transitions and event logging enforced by DB triggers | Defence in depth: no path can skip a step or change status without an `order_events` row; Phase 6 OrderStateMachine uses the same table |
+| 2026-11-05 | Clients get column-level write grants only; orders/payments/ledger are server-written | Least privilege on top of RLS; a leaked anon/user JWT cannot alter money or order state |
+| 2026-11-05 | SECURITY DEFINER helpers live in schema `private` | Not exposed by PostgREST; avoids RLS recursion; tested |
+| 2026-11-05 | Prisma schema generated by introspection (`db:pull`), not hand-written | SQL is the source of truth; CI drift check keeps them equal |
+| 2026-11-05 | DB tests run as real roles via `asUser()` (role + `request.jwt.claims`) in rolled-back transactions | Proves RLS exactly as clients hit it; tests never change the seed |
 | 2026-11-04 | Cookie-based locale (no `/fil/...` URLs) | short shareable links; SEO not a pilot goal |

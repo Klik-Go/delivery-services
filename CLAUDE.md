@@ -53,7 +53,11 @@ If the docs conflict, `docs/BUILD_PLAN.md` wins on tech choices and `docs/BUSINE
 - Always handle loading, error and empty states.
 
 ### Database rules
-- Schema changes are Supabase CLI SQL migrations in `supabase/migrations` (RLS, PostGIS and pg_cron live in SQL). Mirror them in `packages/db/prisma/schema.prisma` in the same PR.
+- Schema changes are Supabase CLI SQL migrations in `supabase/migrations` (RLS, PostGIS and pg_cron live in SQL). After `pnpm db:reset`, regenerate the mirrors in the same PR: `pnpm --filter @klikgo/db db:pull` (Prisma schema) and `pnpm --filter @klikgo/db db:erd` (docs/ERD.md). CI fails if either drifts.
+- Every new table: RLS enabled, policies per role, column-level grants for any client write, a row in `packages/db/test/world.ts` and assertions in `rls-visibility.db.test.ts` (who sees it) and `rls-writes.db.test.ts` (who may change it), and its domain in `scripts/generate-erd.mjs`. `rls-coverage.db.test.ts` fails if RLS or policies are missing.
+- SECURITY DEFINER functions go in schema `private` with `set search_path = ''`; never in `public`.
+- Order status changes: set `klikgo.actor_id` / `klikgo.actor_role` (and optionally `klikgo.event_meta`) with `set_config(…, true)` in the transaction; the database validates the transition and writes `order_events`.
+- New enums: add the Postgres enum and the matching list in `packages/types/src/domain.ts` (`POSTGRES_ENUMS`); the parity test enforces it.
 - Never string-interpolate user input into SQL.
 - Runtime uses pooled `DATABASE_URL`; the Prisma CLI uses `DIRECT_URL`.
 

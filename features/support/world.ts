@@ -1,6 +1,7 @@
 import {
   After,
   AfterAll,
+  Before,
   BeforeAll,
   setDefaultTimeout,
   setWorldConstructor,
@@ -10,6 +11,7 @@ import {
 import { chromium, type Browser, type BrowserContext, type Page } from "@playwright/test";
 import { ApiClient, type ApiResponse } from "./api-client";
 import { DbHelper } from "./db-helper";
+import { ScenarioData } from "./scenario-data";
 
 export const BASE_URL = process.env.BASE_URL ?? "http://localhost:3000";
 
@@ -23,6 +25,8 @@ export class KlikWorld extends World {
   readonly db = new DbHelper(process.env.DATABASE_URL);
   lastResponse: ApiResponse | undefined;
   responses: ApiResponse[] = [];
+  /** Named people, places and orders created by @db steps. */
+  readonly data = new ScenarioData();
   private context: BrowserContext | undefined;
   private currentPage: Page | undefined;
 
@@ -58,6 +62,10 @@ setWorldConstructor(KlikWorld);
 
 BeforeAll(function () {
   console.log(`Cucumber is testing ${BASE_URL}`);
+});
+
+Before({ tags: "@db" }, async function (this: KlikWorld) {
+  await this.db.begin();
 });
 
 After(async function (this: KlikWorld) {

@@ -14,6 +14,7 @@ Klik Go is a delivery platform for the Philippines, built for barangays and prov
 | `docs/ARCHITECTURE.md` | BFF diagram, request flow, roles, order state machine, folder map, testing strategy |
 | `docs/OPEN_QUESTIONS.md` | Blocked decisions, doc conflicts, proposals, and the owner checklist for GitHub/Vercel settings |
 | `docs/BRAND.md` | KGo logo files, colours, typography and contrast rules |
+| `docs/ERD.md` | Entity relationship diagram + RLS policy list, generated from the database |
 | `docs/CLAUDE_PROMPTS.md` | Prompts for coding agents: a master kickoff prompt and a per-phase continuation template |
 | `docs/PROGRESS.md` | Phase checklist, updated in every PR |
 | `CLAUDE.md` | Standing instructions for AI coding agents |
@@ -61,7 +62,25 @@ pnpm db:start
 pnpm db:reset
 ```
 
-`db:reset` reapplies every migration in `supabase/migrations` plus `supabase/seed.sql`. Get the local URLs and keys with `pnpm exec supabase status -o env`. The local database URL is `postgresql://postgres:postgres@127.0.0.1:54322/postgres`.
+`db:reset` reapplies every migration in `supabase/migrations` plus `supabase/seed.sql` (placeholder pilot zone, 5 merchants with menus, 3 riders, test customers; no passwords).
+
+Database tests and generated files (need the local DB running):
+
+```bash
+export DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres DIRECT_URL=$DATABASE_URL
+```
+
+```bash
+pnpm test:db                              # RLS isolation, PostGIS, integrity, seed (rolled-back transactions)
+```
+
+```bash
+pnpm --filter @klikgo/db db:pull          # regenerate prisma/schema.prisma after a migration
+```
+
+```bash
+pnpm --filter @klikgo/db db:erd           # regenerate docs/ERD.md after a migration
+``` Get the local URLs and keys with `pnpm exec supabase status -o env`. The local database URL is `postgresql://postgres:postgres@127.0.0.1:54322/postgres`.
 
 ### Checks (the same ones CI runs)
 

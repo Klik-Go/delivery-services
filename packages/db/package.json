@@ -5,14 +5,21 @@
   "type": "module",
   "description": "Prisma client for Supabase Postgres (pooled DATABASE_URL at runtime, DIRECT_URL for migrations/introspection).",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./testing": "./src/testing/index.ts"
   },
   "scripts": {
     "db:generate": "prisma generate",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:db": "vitest run --config vitest.integration.config.ts",
+    "db:pull": "node scripts/pull-schema.mjs",
+    "db:check": "node scripts/pull-schema.mjs --check",
+    "db:erd": "node scripts/generate-erd.mjs",
+    "db:erd:check": "node scripts/generate-erd.mjs --check"
   },
   "dependencies": {
+    "@klikgo/types": "workspace:*",
     "@prisma/adapter-pg": "7.10.1",
     "@prisma/client": "7.10.1",
     "pg": "8.23.1"

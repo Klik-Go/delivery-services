@@ -60,6 +60,13 @@ jobs:
       - name: Supabase migrate (db reset applies every migration + seed)
         run: pnpm exec supabase db reset
 
+      - name: Database tests (RLS isolation, PostGIS, integrity)
+        run: pnpm test:db
+      - name: Prisma schema and ERD match the migrated database
+        run: |
+          pnpm --filter @klikgo/db db:check
+          pnpm --filter @klikgo/db db:erd:check
+
       - name: Build
         run: pnpm build
 

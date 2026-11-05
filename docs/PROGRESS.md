@@ -6,8 +6,8 @@ Phases are defined in `docs/BUILD_PLAN.md` §6. Agents update this file in every
 |---|---|---|---|---|
 | — | Docs: BUSINESS, BUILD_PLAN, CLAUDE.md, prompts | ✅ Done | initial commit | |
 | 0 | Foundations (monorepo, rules, CI) | ✅ Done (merged) | [Klik-Go/delivery-services#1](https://github.com/Klik-Go/delivery-services/pull/1) | Vercel linked 2026-11-05 (preview deploys from #3) |
-| 0.1 | Follow-up: latest toolchain + KGo brand | 🟡 In progress (PR open) | [Klik-Go/delivery-services#3](https://github.com/Klik-Go/delivery-services/pull/3) | Owner answers to Q2, Q5, Q6, Q7 |
-| 1 | Data model, migrations, RLS, seed | ⬜ Not started | | |
+| 0.1 | Follow-up: latest toolchain + KGo brand | ✅ Done (merged) | [Klik-Go/delivery-services#3](https://github.com/Klik-Go/delivery-services/pull/3) | Owner answers to Q2, Q5, Q6, Q7 |
+| 1 | Data model, migrations, RLS, seed | 🟡 In progress (PR open) | PR_LINK | Placeholder pilot zone until Q8 is answered |
 | 2 | Auth and RBAC per role | ⬜ Not started | | |
 | 3 | Merchant onboarding and menu (+ AI import) | ⬜ Not started | | |
 | 4 | Customer discovery, store page, cart (PWA) | ⬜ Not started | | |
@@ -53,7 +53,23 @@ Deliverables:
 - [x] Vercel linked; the preview for this PR deploys (Vercel bot: Ready).
 - [ ] Owner: GitHub settings (Q6), pilot barangay (Q8).
 
-Next: Phase 1, data model, migrations, RLS and seed (after this PR is reviewed and merged).
+### Phase 1 — Data model, migrations, RLS, seed (branch `phase-1-data-model`)
+Acceptance (docs/BUILD_PLAN.md §6):
+- [x] `supabase db reset` applies all 10 migrations and seeds cleanly (local; CI step "Supabase migrate").
+- [x] RLS tests prove isolation per role: `packages/db/test/rls-visibility.db.test.ts` (who sees which rows, every table × customer, merchant owner/staff, rider, coordinator, admin, anonymous), `rls-writes.db.test.ts` (what each role may change) and `rls-coverage.db.test.ts` (RLS on for every table, a policy on every client-facing table, no anon write policy, no SECURITY DEFINER in `public`). Business scenarios in `features/privacy.feature`.
+- [x] PostGIS "zone containing point" and "nearest available riders" return correct results: `packages/db/test/geo.db.test.ts`, `features/zones.feature`, `features/dispatch.feature`.
+
+Deliverables:
+- [x] SQL migrations (Supabase CLI) for every table in the plan: 33 tables, 21 enums, helper functions `zone_for_point`, `nearest_available_riders`, `private.has_role` (+ `is_admin`, `is_merchant_member`, `coordinates_zone`, `current_rider_id`).
+- [x] Integrity in the database: order totals and line totals add up, legal status transitions only (+ `order_events` written for every change), balanced double-entry ledger, append-only history/ledger/audit, merchant inside its zone, zone radius per type, one accepted offer per order.
+- [x] RLS policies per role + column-level grants (clients write only what they own; orders, payments, ledger and roles change through the server).
+- [x] Storage: public `menu-photos`, private `rider-kyc` with folder-scoped policies.
+- [x] Prisma schema mirrors the database (`db:pull`, drift check in CI).
+- [x] Seed: placeholder pilot zone, 5 merchants with menus and options, 3 riders, customers, coordinator, admin, fee rules, feature flags.
+- [x] ERD in `docs/ERD.md`, generated from the database (freshness check in CI).
+- [ ] CI green on the PR.
+
+Next: Phase 2, auth and RBAC per role (after this PR is reviewed and merged).
 
 ## Business validation (parallel, doc §8)
 - [ ] 20–30 customer interviews in the pilot barangay
