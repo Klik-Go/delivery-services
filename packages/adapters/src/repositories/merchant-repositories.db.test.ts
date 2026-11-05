@@ -14,8 +14,8 @@ if (process.env.CI && !process.env.DATABASE_URL) {
 }
 const describeDb = describe.skipIf(!process.env.DATABASE_URL);
 
-/** Inside the seeded "Pilot Zone (placeholder)" and far outside every zone. */
-const PILOT = { lat: 14.6001, lng: 120.9851 };
+/** Ayala Avenue (inside the Makati launch zone) and Cebu (outside every zone). */
+const PILOT = { lat: 14.5547, lng: 121.0244 };
 const CEBU = { lat: 10.3157, lng: 123.8854 };
 
 /**
@@ -95,7 +95,7 @@ describeDb("merchant repositories (local Supabase)", () => {
   });
 
   it("finds the zone that covers a pin, or none", async () => {
-    expect((await zones.zoneAt(PILOT))?.name).toBe("Pilot Zone (placeholder)");
+    expect((await zones.zoneAt(PILOT))?.name).toBe("Makati City");
     expect(await zones.zoneAt(CEBU)).toBeNull();
   });
 
@@ -110,7 +110,7 @@ describeDb("merchant repositories (local Supabase)", () => {
 
     expect(found).toMatchObject({
       businessName: `Inside ${tag}`,
-      zoneName: "Pilot Zone (placeholder)",
+      zoneName: "Makati City",
       status: "pending",
     });
     expect(found?.location.lat).toBeCloseTo(PILOT.lat, 6);
@@ -188,7 +188,7 @@ describeDb("merchant repositories (local Supabase)", () => {
       defaultPrepMinutes: 25,
       acceptsCod: false,
       serviceRadiusKm: 2.5,
-      zoneMaxRadiusKm: 5,
+      zoneMaxRadiusKm: 8,
       isOpen: true,
       closures: [{ closedOn: "2099-12-25", reason: "Pasko" }],
     });

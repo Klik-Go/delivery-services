@@ -9,7 +9,8 @@ import { BASE_URL, type KlikWorld } from "../support/world";
 
 // ---------- helpers ----------
 
-const PILOT_PIN = { lat: 14.6001, lng: 120.9851 };
+/** Ayala Avenue, Makati (a launch zone). */
+const PILOT_PIN = { lat: 14.5547, lng: 121.0244 };
 const CEBU_PIN = { lat: 10.3157, lng: 123.8854 };
 
 interface MenuOption {
@@ -195,7 +196,7 @@ function nextChristmas(): string {
 // ---------- onboarding ----------
 
 When(
-  "{string} applies to become a partner with a pin inside the pilot zone",
+  "{string} applies to become a partner with a pin inside Makati",
   async function (this: KlikWorld, name: string) {
     await apply(this, this.api, name, PILOT_PIN);
   },
@@ -209,7 +210,7 @@ When(
 );
 
 Given(
-  "{string} has applied to become a partner with a pin inside the pilot zone",
+  "{string} has applied to become a partner with a pin inside Makati",
   async function (this: KlikWorld, name: string) {
     const visitor = new ApiClient(BASE_URL);
     visitor.headers.set("x-forwarded-for", randomIp());
@@ -223,7 +224,7 @@ Then("the application is accepted for review", function (this: KlikWorld) {
 });
 
 Then(
-  "an admin sees {string} waiting for review in the {string}",
+  "an admin sees {string} waiting for review in {string}",
   async function (this: KlikWorld, name: string, zone: string) {
     const id = applicationId(this, name);
     const found = (await pendingApplications(this)).find((a) => a.id === id);

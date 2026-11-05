@@ -1,8 +1,8 @@
 -- Klik Go local development seed, applied by `supabase db reset` after the migrations.
 --
--- PLACEHOLDER PILOT ZONE: the real pilot barangay is still open (docs/OPEN_QUESTIONS.md Q8). The
--- zone below is a 4 km × 4 km square centred on 14.5995° N, 120.9842° E, used only so local
--- development and tests have a realistic zone. Replace it in a migration once the barangay is chosen.
+-- The launch zones (Makati City, San Fernando Pampanga, San Marcelino Zambales) come from the
+-- migration 20261108100000_launch_zones.sql; this seed puts its stores, riders and customers in
+-- Makati (pins checked against the PSA barangay boundaries).
 --
 -- No real personal data and no secrets: users are fake (@seed.klikgo.test, +63917000xxxx) and have
 -- no passwords. Tests sign in by setting request.jwt.claims; Phase 2 adds test OTP numbers.
@@ -10,7 +10,7 @@
 
 do $seed$
 declare
-  v_zone uuid := '5eed0000-0000-4000-8000-000000000001';
+  v_zone uuid;
   -- people
   v_admin uuid := '5eed0000-0000-4000-8000-0000000000a1';
   v_coordinator uuid := '5eed0000-0000-4000-8000-0000000000c1';
@@ -69,15 +69,9 @@ begin
     );
   end loop;
 
-  -- Placeholder pilot zone (see header). Lunch and dinner peaks only (docs/BUILD_PLAN.md §4E).
-  insert into public.zones (id, name, slug, zone_type, area, base_fee_centavos, per_km_centavos, max_radius_km,
-                            is_active, service_hours, coordinator_id)
-  values (
-    v_zone, 'Pilot Zone (placeholder)', 'pilot-zone', 'barangay',
-    'SRID=4326;POLYGON((120.965635 14.581534, 121.002765 14.581534, 121.002765 14.617466, 120.965635 14.617466, 120.965635 14.581534))',
-    3900, 1000, 5, true,
-    '{"lunch":["10:00","14:00"],"dinner":["17:00","21:00"]}', v_coordinator
-  );
+  -- Makati City (from the launch-zones migration) gets the seeded coordinator.
+  select id into strict v_zone from public.zones where slug = 'makati';
+  update public.zones set coordinator_id = v_coordinator where id = v_zone;
 
   insert into public.user_roles (user_id, role, zone_id) values (v_admin, 'admin', null), (v_coordinator, 'coordinator', v_zone);
 
@@ -85,11 +79,11 @@ begin
   -- Appendix A).
   for v_merchant in
     select * from (values
-      (v_nena, v_owner_nena, 'Aling Nena''s Karinderya', 'aling-nenas-karinderya', 'Lutong bahay: ulam, rice and kakanin.', 14.5995, 120.9842),
-      (v_kape, v_owner_kape, 'Kape''t Tinapay', 'kapet-tinapay', 'Fresh pandesal every morning and barako coffee.', 14.6040, 120.9880),
-      (v_tea, v_owner_tea, 'Milk Tea ni Juan', 'milk-tea-ni-juan', 'Milk tea and fruit tea, sugar level your way.', 14.5950, 120.9800),
-      (v_silog, v_owner_silog, 'Silog Express', 'silog-express', 'All-day silog meals.', 14.6070, 120.9790),
-      (v_merienda, v_owner_merienda, 'Merienda Corner', 'merienda-corner', 'Turon, banana cue, pancit and halo-halo.', 14.5900, 120.9910)
+      (v_nena, v_owner_nena, 'Aling Nena''s Karinderya', 'aling-nenas-karinderya', 'Lutong bahay: ulam, rice and kakanin.', 14.5653, 121.0298),
+      (v_kape, v_owner_kape, 'Kape''t Tinapay', 'kapet-tinapay', 'Fresh pandesal every morning and barako coffee.', 14.5583, 121.0187),
+      (v_tea, v_owner_tea, 'Milk Tea ni Juan', 'milk-tea-ni-juan', 'Milk tea and fruit tea, sugar level your way.', 14.5615, 121.0236),
+      (v_silog, v_owner_silog, 'Silog Express', 'silog-express', 'All-day silog meals.', 14.5730, 121.0200),
+      (v_merienda, v_owner_merienda, 'Merienda Corner', 'merienda-corner', 'Turon, banana cue, pancit and halo-halo.', 14.5520, 121.0050)
     ) as m(id, owner_id, name, slug, description, lat, lng)
   loop
     insert into public.merchants (id, zone_id, owner_id, name, slug, description, category, location, commission_bps,
@@ -162,17 +156,17 @@ begin
     ('5eed0000-0000-4000-8000-000000000202', v_rider_rosa, v_zone, 'motorcycle', 'NAC 5678', 'active', true),
     ('5eed0000-0000-4000-8000-000000000203', v_rider_rey, v_zone, 'tricycle', 'TRY 9012', 'pending_kyc', false);
   insert into public.rider_locations (rider_id, location) values
-    ('5eed0000-0000-4000-8000-000000000201', 'SRID=4326;POINT(120.9860 14.6010)'),
-    ('5eed0000-0000-4000-8000-000000000202', 'SRID=4326;POINT(120.9820 14.5970)');
+    ('5eed0000-0000-4000-8000-000000000201', 'SRID=4326;POINT(121.0280 14.5640)'),
+    ('5eed0000-0000-4000-8000-000000000202', 'SRID=4326;POINT(121.0220 14.5590)');
 
   -- Customers' saved addresses (pin + landmark, as PH addresses need).
   insert into public.addresses (user_id, label, location, street, landmark, barangay, city, notes, contact_phone, is_default) values
-    (v_customer_carmen, 'Home', 'SRID=4326;POINT(120.9900 14.6030)', 'Purok 3', 'Beside the sari-sari store with a blue gate',
-     'Poblacion (placeholder)', 'Placeholder City', 'Call when outside', '+639170000031', true),
-    (v_customer_diego, 'Office', 'SRID=4326;POINT(120.9780 14.5930)', 'Rizal St.', 'Across the barangay hall',
-     'Poblacion (placeholder)', 'Placeholder City', null, '+639170000032', true),
-    (v_customer_liza, 'Home', 'SRID=4326;POINT(120.9950 14.6090)', null, 'Near the chapel, green house',
-     'Poblacion (placeholder)', 'Placeholder City', 'Dog at the gate', '+639170000033', true);
+    (v_customer_carmen, 'Home', 'SRID=4326;POINT(121.0330 14.5680)', 'P. Burgos St.', 'Beside the sari-sari store with a blue gate',
+     'Poblacion', 'Makati City', 'Call when outside', '+639170000031', true),
+    (v_customer_diego, 'Office', 'SRID=4326;POINT(121.0200 14.5520)', 'Pasay Road', 'Across the barangay hall',
+     'San Lorenzo', 'Makati City', null, '+639170000032', true),
+    (v_customer_liza, 'Home', 'SRID=4326;POINT(121.0100 14.5700)', null, 'Near the chapel, green house',
+     'Singkamas', 'Makati City', 'Dog at the gate', '+639170000033', true);
 
   -- Flat zone fee in distance bands + a small-order fee (docs/BUILD_PLAN.md §4D, §4F).
   insert into public.fee_rules (zone_id, name, kind, min_distance_m, max_distance_m, min_subtotal_centavos, fee_centavos, priority) values

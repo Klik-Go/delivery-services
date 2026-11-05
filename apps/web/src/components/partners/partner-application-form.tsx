@@ -16,8 +16,8 @@ import { TextField } from "@/components/auth/text-field";
 import { PinMap } from "@/components/map/pin-map";
 import { postJson } from "@/lib/post-json";
 
-/** Where the map starts: the pilot zone (docs/OPEN_QUESTIONS.md Q8). */
-const PILOT_CENTRE = { lat: 14.5995, lng: 120.9842 };
+/** Where the map starts: Ayala Avenue, Makati, the first launch zone (docs/OPEN_QUESTIONS.md Q8). */
+const PILOT_CENTRE = { lat: 14.5547, lng: 121.0244 };
 
 /** The public "Become a partner" form with a pin on the map (docs/BUSINESS.md §5.4). */
 export function PartnerApplicationForm(): JSX.Element {
