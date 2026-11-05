@@ -40,11 +40,17 @@ The Phase 3 prompt says the partner form "creates merchants(status=pending)". `m
 2. Check the key is set for both **Production and Preview** in Vercel; `GEMINI_MODEL` is optional (default `gemini-flash-latest`).
 3. Never set `MENU_PARSER=fake` in Vercel (ignored on production anyway).
 
-### Q17. Map tiles — OpenStreetMap for now
-The partner pin map uses OpenStreetMap's public tiles (attribution shown). Their usage policy is fine for a low-traffic pilot but not for heavy use. When the customer address picker arrives (Phase 4), choose a provider (e.g. MapTiler or Google Maps, both have free tiers) and switch the tile URL behind the maps adapter; the CSP allows `https://tile.openstreetmap.org` only.
+### Q17. Maps — tiles and address search (owner, optional before launch)
+Phase 4 status: the pin maps (partner form, customer address) use Leaflet with OpenStreetMap's public tiles (attribution shown), and the tile URL is now an env var.
+1. **Tiles.** OpenStreetMap's usage policy is fine for a low-traffic pilot but not for heavy use. Before marketing pushes traffic, pick an OSM-based provider with a free tier (e.g. MapTiler, Stadia) and set `NEXT_PUBLIC_MAP_TILE_URL` in Vercel to its https template (`…/{z}/{x}/{y}.png?key=…`; a browser key restricted to the Klik Go domains). The CSP picks up its origin automatically.
+2. **Address search (autocomplete).** Optional. Create a Google Maps Platform key with only **Places API (New)** enabled, restrict it by API (it is used server-side, so no referrer restriction), set a daily quota, and add it to Vercel as `GOOGLE_MAPS_API_KEY`. Until then the search box is hidden and customers use GPS or move the map.
+3. Deviation recorded: BUILD_PLAN asks for MapLibre GL; Leaflet is used instead (much smaller on the address screen, raster tiles are enough to drop a pin). See ARCHITECTURE decision log.
 
 ### Q18. Default commission
 BUILD_PLAN says the default commission comes "from fee_rules", but `fee_rules` only holds delivery, small-order and service fees. The approval form defaults to **20%** (`DEFAULT_COMMISSION_BPS`, Appendix A's example) and the admin can change it per store. If you want a per-zone default, a `commission_default_bps` column on `zones` is a small follow-up.
+
+### Q19. Phase 4 library deviations from BUILD_PLAN (decision taken, recorded)
+BUILD_PLAN §6 Phase 4 names vaul for the item sheet and next-pwa/Serwist for the service worker. vaul is unmaintained, so the sheet is a native `<dialog>` (focus trap, Esc, backdrop built in). next-pwa and Serwist need webpack plugins while the app builds with Turbopack, so `public/sw.js` is hand-written and versioned. Lighthouse 12+ no longer has a PWA category, so "PWA installable" is checked with Chrome's own installability API in Playwright. No owner action needed.
 
 ### Q11. Prisma model names stay snake_case — decision to confirm
 `db:pull` keeps the database names (`prisma.orders`, `order.total_centavos`). Renaming to PascalCase/camelCase with `@@map`/`@map` would need a hand-maintained mapping layer that drifts. Repositories map rows to domain objects anyway (CLAUDE.md), so I propose keeping snake_case inside `packages/adapters`/`packages/db` only.

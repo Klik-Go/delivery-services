@@ -175,6 +175,12 @@ begin
     (v_zone, 'Over 4 km', 'delivery_distance_band', 4000, null, null, 5900, 30),
     (v_zone, 'Small order under ₱150', 'small_order_fee', null, null, 15000, 2000, 10);
 
+  -- Featured promos for the home carousel (codes validated by the server in Phase 5).
+  insert into public.promos (code, type, discount_centavos, min_subtotal_centavos, starts_at, ends_at, zone_id, is_featured) values
+    ('KAINTAYO', 'fixed_off', 5000, 30000, now() - interval '1 day', now() + interval '60 days', v_zone, true);
+  insert into public.promos (code, type, min_subtotal_centavos, starts_at, ends_at, zone_id, is_featured) values
+    ('LIBREHATID', 'free_delivery', 20000, now() - interval '1 day', now() + interval '60 days', v_zone, true);
+
   insert into public.feature_flags (key, description, enabled) values
     ('pabili_mode', 'Pabili (buy-for-me) orders from any store (docs/BUILD_PLAN.md §4C)', false),
     ('merchant_auto_accept', 'Auto-accept orders for reliable merchants (docs/BUILD_PLAN.md §4E)', false),

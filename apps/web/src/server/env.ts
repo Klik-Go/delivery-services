@@ -35,6 +35,8 @@ const ServerEnvSchema = z
         .regex(/^[a-z0-9.-]+$/)
         .default("gemini-flash-latest"),
     ),
+    // Address autocomplete (Phase 4): Google Places API (New), server-side key only.
+    GOOGLE_MAPS_API_KEY: optionalString,
     // "fake" uses the deterministic test menu reader (local dev, Cucumber, Playwright only).
     MENU_PARSER: z.preprocess(
       (value) => (value === "" ? undefined : value),

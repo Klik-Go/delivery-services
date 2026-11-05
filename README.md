@@ -4,7 +4,7 @@
 
 Klik Go is a delivery platform for the Philippines, built for barangays and provincial towns, on a Hybrid Aggregator + Managed Logistics model. It starts with food delivery in one pilot zone, then grows into groceries, parcels, pharmacy and B2B.
 
-> Status: Phase 0 (foundations) done; Phase 0.1 (latest toolchain + KGo brand) in review. See `docs/PROGRESS.md`.
+> Status: Phases 0–3 merged; Phase 3.1 (launch zones) and Phase 4 (customer discovery, store page, cart) in review. See `docs/PROGRESS.md`.
 
 ## Docs
 | File | What it is |
@@ -94,7 +94,9 @@ pnpm --filter @klikgo/db db:pull          # regenerate prisma/schema.prisma afte
 
 ```bash
 pnpm --filter @klikgo/db db:erd           # regenerate docs/ERD.md after a migration
-``` Get the local URLs and keys with `pnpm exec supabase status -o env`. The local database URL is `postgresql://postgres:postgres@127.0.0.1:54322/postgres`.
+```
+
+Get the local URLs and keys with `pnpm exec supabase status -o env`. The local database URL is `postgresql://postgres:postgres@127.0.0.1:54322/postgres`.
 
 ### Checks (the same ones CI runs)
 
@@ -114,8 +116,13 @@ DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres pnpm test:b
 pnpm test:e2e
 ```
 
+```bash
+pnpm lighthouse
+```
+
 - `test:bdd` runs Cucumber against `BASE_URL` (default `http://localhost:3000`) and starts `next start` itself if nothing is listening. `@db` scenarios run only when `DATABASE_URL` is set.
 - `test:e2e` runs Playwright on the `mobile-pixel-7` and `desktop-chrome` projects. The first time, install the browser with `pnpm --filter @klikgo/web exec playwright install chromium`. To reuse a Chromium you already have, set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` (used by Playwright and Cucumber).
+- `lighthouse` audits the store page and Home on Lighthouse's mobile profile against a running server (`BASE_URL`), takes the median of 3 runs (`LIGHTHOUSE_RUNS`) and fails below the budget (performance 85, accessibility 95, best practices 90). HTML reports go to `lighthouse-report/`. Set `CHROME_PATH` to use a specific Chromium.
 
 ## Working agreement
 One phase per pull request, from a `phase-N-short-name` branch. Tests are written first (BDD/TDD). Secrets never go in code. Every table has RLS. See `CLAUDE.md`.

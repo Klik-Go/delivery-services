@@ -108,6 +108,8 @@ jobs:
         run: pnpm test:bdd
       - name: Playwright (Pixel 7 + desktop)
         run: pnpm test:e2e
+      - name: Lighthouse budget (mobile; store page performance >= 85)
+        run: pnpm lighthouse
 
       - name: Upload Playwright report
         if: always()
@@ -117,6 +119,7 @@ jobs:
           path: |
             apps/web/playwright-report/
             apps/web/test-results/
+            lighthouse-report/
           retention-days: 14
       - name: Upload Cucumber report
         if: always()

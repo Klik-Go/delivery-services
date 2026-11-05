@@ -262,4 +262,13 @@ describeDb("row-level security: who can see which rows", () => {
     expect(await seen("ownerB", q, [both])).toEqual(sorted(w.merchantA, w.pendingMerchant));
     expect(await seen("admin", q, [both])).toEqual(sorted(w.merchantA, w.pendingMerchant));
   });
+
+  it("waitlist signups: admins only; anonymous visitors have no access at all", async () => {
+    const q = `select id from public.waitlist_signups where phone = '+639170000998'`;
+    expect(await seen("admin", q)).toHaveLength(1);
+    for (const viewer of ["customer1", "ownerA", "coordA", "riderA1"] as const)
+      expect(await seen(viewer, q), viewer).toEqual([]);
+    const anon = await asUser(db(), null, () => failureOf(db(), () => db().query(q)));
+    expect(anon).toMatch(/permission denied/);
+  });
 });

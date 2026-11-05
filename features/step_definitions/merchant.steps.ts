@@ -286,7 +286,7 @@ Then(
         open: false,
       },
     );
-    const page = await new ApiClient(BASE_URL).request("GET", `/stores/${store?.slug ?? ""}`);
+    const page = await new ApiClient(BASE_URL).request("GET", `/s/${store?.slug ?? ""}`);
     expectStatus(page, 200);
     assert.match(page.bodyText, new RegExp(name));
   },
@@ -632,7 +632,7 @@ Then(
       .menu.flatMap((c) => c.items)
       .find((candidate) => candidate.id === id);
     assert.equal(item?.isAvailable, false);
-    const page = await visitor.request("GET", `/stores/${store?.slug ?? ""}`);
+    const page = await visitor.request("GET", `/s/${store?.slug ?? ""}`);
     assert.match(page.bodyText, /Sold out/);
   },
 );

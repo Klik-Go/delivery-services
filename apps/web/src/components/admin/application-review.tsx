@@ -83,7 +83,7 @@ export function ApplicationReview({
           <code className="text-ink rounded-xl bg-white p-2 text-sm break-all">
             {outcome.inviteUrl}
           </code>
-          <a className="text-brand-800 font-semibold underline" href={`/stores/${outcome.slug}`}>
+          <a className="text-brand-800 font-semibold underline" href={`/s/${outcome.slug}`}>
             {t("storePage")}
           </a>
         </div>

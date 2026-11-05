@@ -166,6 +166,16 @@ Full diagram and policy list: `docs/ERD.md` (generated from the database). Sourc
 - **AI menu import.** `/api/merchant/:id/menu/import` (multipart photo) → `MenuImportService` (type/size checks, 10 photos/hour/store) → `IMenuParser`. Production uses `GeminiMenuParser` (REST `generateContent`, `responseSchema` JSON, zod-validated, prices parsed to centavos); only the photo and a fixed prompt are sent. Tests and demos use `FakeMenuParser` (`MENU_PARSER=fake`, ignored on Vercel production); with no key the import page says it isn't set up. Drafts are never saved by this call: the merchant edits them and `/import/confirm` saves them through `MenuService.importReviewedItems`.
 - **TanStack Query** holds the menu manager's server state (mutations invalidate the menu query).
 
+## 4e. Customer discovery and cart (Phase 4)
+
+- **Where is the customer?** `/address` sends the pin to `PUT /api/location`, which asks `IServiceArea` (`public.zone_for_point`) for the zone and stores `{location,label}` in the httpOnly `kg_loc` cookie, so guests can browse without an account. Signed-in customers also save the address (`POST /api/addresses`, landmark and contact number required, one default). No zone → `WaitlistForm` → `POST /api/waitlist` (`ServiceabilityService`, 5/hour/network; `waitlist_signups` readable by admins only).
+- **Address search** is optional: `PlaceSearchService` → `IPlaceSearch` → `GooglePlaceSearch` (Places API (New), server key, session tokens, 10-minute cache, 60/min/IP). Without `GOOGLE_MAPS_API_KEY` the search box is hidden and the pin map + GPS still work. Map tiles come from `NEXT_PUBLIC_MAP_TILE_URL` (default OpenStreetMap); `proxy.ts` adds its origin to the CSP `img-src`.
+- **Feed.** `FeedService` reads stores in the zone (`ICatalogReadRepository`), builds cards (distance by haversine × 1.3 road factor, ETA from prep time + 20 km/h, delivery fee from the pricing strategies, opening status in Asia/Manila incl. closures) and rails; results are cached per zone for 60 s in an `ICache` (`TtlMemoryCache`; one per server instance, fine at pilot scale).
+- **Search.** `SearchService` → `PrismaSearchRepository`: `to_tsvector('simple', …)` full text OR `word_similarity` (pg_trgm) on store and dish names, then grouped by store and ranked by relevance or distance.
+- **Pricing (OCP).** `PricingService.quote` re-reads prices, options and availability from the DB (`IPricingCatalog`), validates modifier rules, and applies `FeeRule`s: delivery fee strategies tried in order (`DistanceBandFee` → `ZoneBaseFee`) plus surcharges (`SmallOrderFee`, `ServiceFee`). A new fee rule is a new class wired in `container.ts`. The cart UI never computes money; it renders the quote.
+- **Cart** is device state only (`lib/cart-store.ts`, Zustand `persist`): store, item ids, option ids, quantities. Adding from another store returns `"replace"` and the sheet asks before clearing.
+- **PWA.** `app/manifest.ts`, hand-written `public/sw.js` (versioned caches; cache-first for `/_next/static` and `/brand`, network-first for navigations and `/api/feed`, `/offline` fallback; never caches auth, cart, addresses, merchant or admin responses), registered in production only. `OfflineBanner` listens to `online`/`offline`.
+
 ## 5. Folder map
 
 ```
@@ -263,5 +273,13 @@ CI (`.github/workflows/ci.yml`) runs on Node 26 with pnpm 12 installed from npm 
 | 2026-11-05 | Partner applications in their own table, not `merchants(status=pending)` | An applicant has no account yet and `merchants.owner_id` is required; approval creates both in one transaction (OPEN_QUESTIONS Q15) |
 | 2026-11-05 | Photos uploaded browser → Storage via a BFF-issued signed URL; bucket enforces WebP ≤ 200 KB | No image bytes through Vercel functions; the size rule cannot be bypassed |
 | 2026-11-05 | Leaflet + OpenStreetMap tiles for the pin map | No API key for the MVP; swap behind the Phase 4 maps adapter if tile usage grows (Q17) |
+| 2026-11-05 | Leaflet (not MapLibre GL) for the customer address map | ~40 KB vs ~250 KB of JS on the address screen; raster tiles are enough for dropping a pin; the tile URL is configurable (Q17) |
+| 2026-11-05 | Native `<dialog>` bottom sheet (not vaul) | vaul is unmaintained; `<dialog>` gives focus trapping, Esc and the backdrop for free |
+| 2026-11-05 | Hand-written service worker (not next-pwa / Serwist) | Both need webpack plugins and the app builds with Turbopack; the worker is ~60 lines and versioned |
+| 2026-11-05 | Guest delivery pin in an httpOnly cookie; addresses saved only for signed-in customers | Browse before sign-up (lower friction); Server Components can read the pin to price the feed |
+| 2026-11-05 | Featured promos opt-in (`promos.is_featured`) | Codes stay private unless marketing chooses to show them on Home |
+| 2026-11-05 | Search in Postgres (FTS + pg_trgm), no search service | Tens of stores per zone; one less paid service; typo-tolerant enough |
+| 2026-11-05 | Blocking (non-streamed) metadata for all clients (`htmlLimitedBots: /.*/`) | Streamed metadata lands in `<body>`, where Chrome ignores the manifest link, so store pages were not installable; link previews also need `<head>` tags |
+| 2026-11-05 | Lighthouse budget in CI = median of 3 mobile runs | Simulated-throttling scores swing ±5 between runs; one bad run should not fail a PR |
 | 2026-11-05 | Launch zones loaded by migration from PSA/PSGC boundaries (simplified ~5 m) | Zones are reference data every environment needs; one source of truth, reviewable in a PR; the seed only adds fake people and stores |
 | 2026-11-04 | Cookie-based locale (no `/fil/...` URLs) | short shareable links; SEO not a pilot goal |

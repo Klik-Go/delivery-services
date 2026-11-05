@@ -33,6 +33,7 @@ const DOMAINS = [
   [
     "Engagement and operations",
     [
+      "waitlist_signups",
       "ratings",
       "promos",
       "promo_redemptions",

@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { mapTileOrigin } from "./lib/map-tiles";
 import { buildContentSecurityPolicy, generateNonce } from "./security/csp";
 import { REQUEST_ID_HEADER, resolveRequestId } from "./server/http/request-id";
 
@@ -19,6 +20,7 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     nonce,
     isDev: process.env.NODE_ENV === "development",
     supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    tileOrigin: mapTileOrigin(process.env.NEXT_PUBLIC_MAP_TILE_URL),
   });
   const requestId = resolveRequestId(request.headers.get(REQUEST_ID_HEADER));
 

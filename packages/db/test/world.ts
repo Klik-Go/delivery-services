@@ -246,6 +246,12 @@ export async function buildWorld(db: pg.ClientBase, fx: DbFixtures): Promise<Wor
     outside: await application("Malayong Kainan", offsetLatLng(CENTRE_A, 60_000), null),
   };
   await db.query(
+    `insert into public.waitlist_signups (name, phone, barangay, location)
+     values ('Far Customer', '+639170000998', 'Somewhere',
+             extensions.st_setsrid(extensions.st_makepoint($1, $2), 4326)::extensions.geography)`,
+    [CENTRE_A.lng + 1, CENTRE_A.lat + 1],
+  );
+  await db.query(
     `insert into public.merchant_closures (merchant_id, closed_on, reason) values ($1, current_date + 7, 'Fiesta'), ($2, current_date + 7, 'Fiesta')`,
     [merchantA, pendingMerchant],
   );

@@ -43,6 +43,15 @@ export interface MerchantScenario {
   cleanups: (() => Promise<void>)[];
 }
 
+/** State for customer discovery, search and cart steps. */
+export interface DiscoveryScenario {
+  location?: { lat: number; lng: number };
+  feed?: unknown;
+  search?: unknown;
+  quote?: unknown;
+  itemIds?: Map<string, string>;
+}
+
 export const BASE_URL = process.env.BASE_URL ?? "http://localhost:3000";
 
 setDefaultTimeout(30_000);
@@ -58,6 +67,7 @@ export class KlikWorld extends World {
   /** Named people, places and orders created by @db steps. */
   readonly data = new ScenarioData();
   readonly auth: AuthScenario = {};
+  readonly discovery: DiscoveryScenario = {};
   readonly merchant: MerchantScenario = { applications: new Map(), items: new Map(), cleanups: [] };
   private context: BrowserContext | undefined;
   private currentPage: Page | undefined;
