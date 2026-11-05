@@ -85,7 +85,7 @@ Deliverables:
 - [x] Postgres-backed `IRateLimiter` (`private.hit_rate_limit`, pg_cron cleanup).
 - [x] `pnpm bootstrap:admin` (idempotent; `bootstrap-admin.feature`).
 - [x] Auth screens: phone entry, 6-box OTP with resend timer, staff sign-in, set password, MFA enrol (QR + manual key) and verify; en + fil.
-- [ ] CI green on the PR.
+- [x] CI green on the PR: [CI run 41984983782](https://github.com/Klik-Go/delivery-services/actions/runs/41984983782) on `36ee8c5` (lint, typecheck, unit, Supabase + build + Cucumber + Playwright) and CodeQL clean.
 - [ ] Owner: hosted Supabase auth settings and Vercel env vars (OPEN_QUESTIONS Q12, Q13).
 
 Next: Phase 3, merchant onboarding and menu manager (+ AI menu import), after this PR is reviewed and merged.
