@@ -7,8 +7,8 @@ Phases are defined in `docs/BUILD_PLAN.md` §6. Agents update this file in every
 | — | Docs: BUSINESS, BUILD_PLAN, CLAUDE.md, prompts | ✅ Done | initial commit | |
 | 0 | Foundations (monorepo, rules, CI) | ✅ Done (merged) | [Klik-Go/delivery-services#1](https://github.com/Klik-Go/delivery-services/pull/1) | Vercel linked 2026-11-05 (preview deploys from #3) |
 | 0.1 | Follow-up: latest toolchain + KGo brand | ✅ Done (merged) | [Klik-Go/delivery-services#3](https://github.com/Klik-Go/delivery-services/pull/3) | Owner answers to Q2, Q5, Q6, Q7 |
-| 1 | Data model, migrations, RLS, seed | 🟡 In progress (PR open) | [Klik-Go/delivery-services#6](https://github.com/Klik-Go/delivery-services/pull/6) | Placeholder pilot zone until Q8 is answered |
-| 2 | Auth and RBAC per role | ⬜ Not started | | |
+| 1 | Data model, migrations, RLS, seed | ✅ Done (merged) | [Klik-Go/delivery-services#6](https://github.com/Klik-Go/delivery-services/pull/6) | Placeholder pilot zone until Q8 is answered |
+| 2 | Auth and RBAC per role | 🟡 In progress (PR open) | PR_LINK | Owner: hosted Supabase auth settings (OPEN_QUESTIONS Q12, Q13) |
 | 3 | Merchant onboarding and menu (+ AI import) | ⬜ Not started | | |
 | 4 | Customer discovery, store page, cart (PWA) | ⬜ Not started | | |
 | 5 | Checkout and payments (PayMongo + COD) | ⬜ Not started | | |
@@ -67,9 +67,28 @@ Deliverables:
 - [x] Prisma schema mirrors the database (`db:pull`, drift check in CI).
 - [x] Seed: placeholder pilot zone, 5 merchants with menus and options, 3 riders, customers, coordinator, admin, fee rules, feature flags.
 - [x] ERD in `docs/ERD.md`, generated from the database (freshness check in CI).
-- [ ] CI green on the PR.
+- [x] CI green on the PR: [CI run 41977868740](https://github.com/Klik-Go/delivery-services/actions/runs/41977868740) on `f3dd370` (merged as Klik-Go/delivery-services#6).
 
-Next: Phase 2, auth and RBAC per role (after this PR is reviewed and merged).
+### Phase 2 — Auth and RBAC per role (branch `phase-2-auth-rbac`)
+Acceptance (docs/BUILD_PLAN.md §6, Gherkin in `features/auth/`):
+- [x] A customer signs up with a phone OTP and lands on Home (`customer-otp.feature`, browser; `e2e/auth.spec.ts` on Pixel 7 + desktop).
+- [x] A merchant invite → set password → enrol TOTP → `/merchant` (`staff-invite.feature`, browser; `e2e/auth.spec.ts`).
+- [x] A rider can't open `/merchant` or `/admin` (403) (`access.feature`; `e2e/auth.spec.ts`).
+- [x] OTP sends are rate-limited: 5/hour/phone and 20/hour/network (`otp-rate-limit.feature`; unit + DB tests).
+- [x] Session refresh works (expired access token rotated by the proxy) and logout revokes (old cookies → 401, old refresh token rejected) (`session.feature`).
+
+Deliverables:
+- [x] Phone OTP via the Supabase Send-SMS hook (`/api/hooks/send-sms`, Standard Webhooks signature) → `SemaphoreSmsSender` (`ISmsSender`), `DevSmsSender` without a key; Supabase test OTP numbers for dev/tests.
+- [x] Staff email + password + mandatory TOTP (AAL2 for `/merchant`, `/admin` and staff APIs).
+- [x] Invite-only staff onboarding (`/api/admin/invites`, `/auth/confirm` token-hash links, `/auth/set-password`, `/auth/mfa`).
+- [x] `AuthorizationService` in core; layout guards per surface; `requireUser` / `requireAction` for APIs; roles re-read from the database.
+- [x] Postgres-backed `IRateLimiter` (`private.hit_rate_limit`, pg_cron cleanup).
+- [x] `pnpm bootstrap:admin` (idempotent; `bootstrap-admin.feature`).
+- [x] Auth screens: phone entry, 6-box OTP with resend timer, staff sign-in, set password, MFA enrol (QR + manual key) and verify; en + fil.
+- [ ] CI green on the PR.
+- [ ] Owner: hosted Supabase auth settings and Vercel env vars (OPEN_QUESTIONS Q12, Q13).
+
+Next: Phase 3, merchant onboarding and menu manager (+ AI menu import), after this PR is reviewed and merged.
 
 ## Business validation (parallel, doc §8)
 - [ ] 20–30 customer interviews in the pilot barangay

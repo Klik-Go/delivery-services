@@ -38,3 +38,15 @@ describe("domain errors", () => {
     expect(isAppError("boom")).toBe(false);
   });
 });
+
+describe("RateLimitedError", () => {
+  it("carries how long to wait before retrying", async () => {
+    const { RateLimitedError } = await import("./errors");
+    const error = new RateLimitedError(
+      "Too many codes requested for this number. Try again later.",
+      1800,
+    );
+    expect(error.code).toBe("RATE_LIMITED");
+    expect(error.retryAfterSeconds).toBe(1800);
+  });
+});

@@ -30,6 +30,10 @@
   --color-accent-800: #f08c00;
   --color-accent-900: #e67700;
 
+  /* Errors (Open Color red 0 / 9): text on the tint is 5:1. */
+  --color-danger-50: #fff5f5;
+  --color-danger-900: #c92a2a;
+
   --color-ink: #0b1f33;
   --color-ink-muted: #4a5a6a;
   --color-surface: #ffffff;

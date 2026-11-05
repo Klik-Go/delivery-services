@@ -1,7 +1,10 @@
 import { BrandLogo } from "@klikgo/ui";
 import { Bike, HeartHandshake, MapPin, Receipt } from "lucide-react";
 import { getTranslations } from "next-intl/server";
+import Link from "next/link";
 import type { JSX } from "react";
+import { SignOutButton } from "@/components/auth/sign-out-button";
+import { getSessionUser } from "@/server/auth/session";
 
 const VALUES = [
   { key: "speed", Icon: Bike },
@@ -11,9 +14,26 @@ const VALUES = [
 
 /** Customer landing page. Phase 4 replaces it with the discovery feed. */
 export default async function HomePage(): Promise<JSX.Element> {
-  const t = await getTranslations("Home");
+  const [t, user] = await Promise.all([getTranslations("Home"), getSessionUser()]);
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-screen-sm flex-col px-4 pt-6 pb-6">
+      <nav aria-label="Account" className="min-h-tap flex items-center justify-end gap-3 pb-3">
+        {user ? (
+          <>
+            <span className="text-ink-muted text-sm">
+              {t("signedInAs", { who: user.phone ?? user.email ?? "" })}
+            </span>
+            <SignOutButton label={t("signOut")} />
+          </>
+        ) : (
+          <Link
+            href="/auth/sign-in"
+            className="text-brand-800 min-h-tap inline-flex items-center px-2 font-semibold underline"
+          >
+            {t("signIn")}
+          </Link>
+        )}
+      </nav>
       <main className="flex flex-1 flex-col gap-8">
         {/* Hero on brand-800: white text 5.0:1, yellow wordmark 3.5:1 as large display text. */}
         <header className="bg-brand-800 rounded-card flex flex-col items-start gap-4 p-6 text-white">

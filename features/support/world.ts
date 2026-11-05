@@ -13,6 +13,18 @@ import { ApiClient, type ApiResponse } from "./api-client";
 import { DbHelper } from "./db-helper";
 import { ScenarioData } from "./scenario-data";
 
+/** State for @auth steps. */
+export interface AuthScenario {
+  phone?: string;
+  userId?: string;
+  invitePath?: string;
+  accessToken?: string;
+  refreshToken?: string;
+  oldSession?: ApiClient;
+  adminEmail?: string;
+  scriptOutput?: string;
+}
+
 export const BASE_URL = process.env.BASE_URL ?? "http://localhost:3000";
 
 setDefaultTimeout(30_000);
@@ -27,6 +39,7 @@ export class KlikWorld extends World {
   responses: ApiResponse[] = [];
   /** Named people, places and orders created by @db steps. */
   readonly data = new ScenarioData();
+  readonly auth: AuthScenario = {};
   private context: BrowserContext | undefined;
   private currentPage: Page | undefined;
 

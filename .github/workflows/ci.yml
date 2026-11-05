@@ -54,11 +54,31 @@ jobs:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
 
+      - name: Generate a throwaway Send-SMS hook secret
+        # Shared by Supabase Auth (config.toml env(SEND_SMS_HOOK_SECRET)) and the web app for this run only.
+        run: |
+          secret="v1,whsec_$(openssl rand -base64 32)"
+          echo "::add-mask::$secret"
+          echo "SEND_SMS_HOOK_SECRET=$secret" >> "$GITHUB_ENV"
       - name: Supabase start
         # Services we do not use yet are excluded to keep CI fast; add them back as phases need them.
         run: pnpm exec supabase start -x studio,imgproxy,mailpit,edge-runtime,logflare,vector,supavisor,postgres-meta
       - name: Supabase migrate (db reset applies every migration + seed)
         run: pnpm exec supabase db reset
+      - name: Export the local Supabase URL and keys
+        # The local stack's keys are the CLI's fixed development defaults; masked anyway.
+        run: |
+          pnpm exec supabase status -o env > "$RUNNER_TEMP/supabase.env"
+          value() { grep "^$1=" "$RUNNER_TEMP/supabase.env" | cut -d= -f2- | tr -d '"'; }
+          service="$(value SERVICE_ROLE_KEY)"
+          echo "::add-mask::$service"
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=$(value API_URL)"
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$(value ANON_KEY)"
+            echo "SUPABASE_SERVICE_ROLE_KEY=$service"
+            echo "NEXT_PUBLIC_APP_URL=http://localhost:3000"
+          } >> "$GITHUB_ENV"
+          rm "$RUNNER_TEMP/supabase.env"
 
       - name: Database tests (RLS isolation, PostGIS, integrity)
         run: pnpm test:db
@@ -82,7 +102,7 @@ jobs:
           done
           echo "Server did not become healthy" && cat web-server.log && exit 1
 
-      - name: Cucumber (BDD)
+      - name: Cucumber (BDD, incl. @db and @auth against Supabase Auth)
         run: pnpm test:bdd
       - name: Playwright (Pixel 7 + desktop)
         run: pnpm test:e2e

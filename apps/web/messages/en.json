@@ -10,7 +10,10 @@
     "status": "Launching soon in our pilot zone",
     "valuesHeading": "Why Klik Go",
     "values": {
-      "speed": { "title": "Fast", "body": "Short distances, local riders, hot food." },
+      "speed": {
+        "title": "Fast",
+        "body": "Short distances, local riders, hot food."
+      },
       "reliability": {
         "title": "Reliable",
         "body": "Clear prices before you order and live tracking after."
@@ -20,6 +23,81 @@
         "body": "Lower fees for local merchants, fair pay for local riders."
       }
     },
-    "footer": "Klik Go · Made in the Philippines"
+    "footer": "Klik Go · Made in the Philippines",
+    "signIn": "Sign in",
+    "signedInAs": "Signed in as {who}",
+    "signOut": "Sign out"
+  },
+  "Auth": {
+    "signInTitle": "Sign in or sign up",
+    "signInLead": "We'll text a 6-digit code to your mobile number.",
+    "mobileNumber": "Mobile number",
+    "mobilePlaceholder": "0917 123 4567",
+    "sendCode": "Send code",
+    "sending": "Sending…",
+    "staffLink": "Merchant or staff? Sign in with email",
+    "customerLink": "Customer or rider? Sign in with your phone",
+    "verifyTitle": "Enter your code",
+    "verifyLead": "We sent a 6-digit code to {phone}.",
+    "verify": "Verify",
+    "verifying": "Checking…",
+    "digit": "Digit {n}",
+    "resendIn": "Resend code in {seconds}s",
+    "resend": "Resend code",
+    "codeSent": "New code sent.",
+    "changeNumber": "Use a different number",
+    "staffTitle": "Staff sign in",
+    "staffLead": "For merchants, coordinators and admins. You'll need your authenticator app.",
+    "email": "Email",
+    "password": "Password",
+    "signIn": "Sign in",
+    "linkExpired": "That link is invalid or has expired. Ask your admin for a new invite.",
+    "setPasswordTitle": "Choose your password",
+    "setPasswordLead": "Use at least 12 characters. A short sentence is easy to remember and hard to guess.",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm new password",
+    "savePassword": "Save password",
+    "passwordsDiffer": "The passwords do not match.",
+    "mfaEnrollTitle": "Set up your authenticator app",
+    "mfaEnrollLead": "Staff accounts need a second step. Use Google Authenticator, Microsoft Authenticator or any TOTP app.",
+    "startEnroll": "Set up authenticator app",
+    "scanQr": "Scan this QR code with your app, or enter the setup key:",
+    "qrAlt": "QR code for your authenticator app",
+    "setupKey": "Setup key",
+    "enterAppCode": "Then enter the 6-digit code from the app.",
+    "mfaVerifyTitle": "Enter your authenticator code",
+    "mfaVerifyLead": "Open your authenticator app and enter the 6-digit code for Klik Go.",
+    "genericError": "Something went wrong. Please try again."
+  },
+  "Surfaces": {
+    "merchantTitle": "Merchant dashboard",
+    "merchantLead": "Your order board and menu manager arrive in Phases 3 and 6.",
+    "riderTitle": "Rider app",
+    "riderLead": "Job offers, navigation and earnings arrive in Phase 7.",
+    "adminTitle": "Admin console",
+    "adminLead": "Live map, approvals and finance arrive in Phase 8. For now: invite staff.",
+    "forbiddenTitle": "You can't open this page",
+    "forbiddenLead": "Your account doesn't have access here. If you think it should, ask your Klik Go admin.",
+    "goHome": "Go to Home"
+  },
+  "Admin": {
+    "inviteTitle": "Invite staff",
+    "inviteLead": "Invited staff set a password and an authenticator app. Share the link if no email provider is set up yet.",
+    "email": "Email",
+    "role": "Role",
+    "merchant": "Store",
+    "zone": "Zone",
+    "choose": "Choose…",
+    "invite": "Create invite",
+    "inviting": "Creating…",
+    "roles": {
+      "merchant_owner": "Merchant owner",
+      "merchant_staff": "Merchant staff",
+      "coordinator": "Zone coordinator",
+      "admin": "Admin"
+    },
+    "created": "Invite created. Share this one-time link (valid 7 days):",
+    "copy": "Copy link",
+    "copied": "Copied"
   }
 }

@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Implementations of packages/core ports for external services (logging, clock, later PayMongo, SMS, maps\u2026).",
+  "description": "Implementations of packages/core ports for external services (logging, clock, later PayMongo, SMS, maps…).",
   "exports": {
     ".": "./src/index.ts"
   },
@@ -13,6 +13,9 @@
   },
   "dependencies": {
     "@klikgo/core": "workspace:*",
+    "@klikgo/db": "workspace:*",
+    "@klikgo/types": "workspace:*",
+    "@supabase/supabase-js": "2.118.0",
     "pino": "10.4.0"
   },
   "devDependencies": {
