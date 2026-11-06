@@ -56,4 +56,7 @@ jobs:
         run: pnpm exec supabase db push --remote="$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD" --skip-vault --dry-run
       - name: Apply migrations
         if: steps.secrets.outputs.ready == 'true'
-        run: pnpm exec supabase db push --remote="$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD" --skip-vault
+        # CLI 3 asks before changing a hosted project and cannot ask in CI; --yes answers it.
+        # The dry run above lists exactly what is applied; require a reviewer on the
+        # "production" environment (Settings → Environments) to approve each run by hand.
+        run: pnpm exec supabase db push --remote="$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD" --skip-vault --yes
