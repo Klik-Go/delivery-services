@@ -49,7 +49,7 @@ const defaultDelivery: PushDelivery = async (subscription, payload, options) => 
 
 function statusOf(error: unknown): number | null {
   if (typeof error === "object" && error !== null && "statusCode" in error) {
-    const code = (error as { statusCode: unknown }).statusCode;
+    const code = error.statusCode;
     return typeof code === "number" ? code : null;
   }
   return null;

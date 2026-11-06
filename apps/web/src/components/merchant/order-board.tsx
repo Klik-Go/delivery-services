@@ -282,7 +282,7 @@ function OrderCard({
       {isNew && !rejecting ? (
         <div className="flex flex-col gap-2">
           <p className="text-ink text-sm font-semibold">{t("acceptWith")}</p>
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-4 gap-2 lg:grid-cols-2">
             {PREP_TIME_CHIPS.map((minutes) => (
               <Button
                 key={minutes}

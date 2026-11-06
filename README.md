@@ -4,7 +4,7 @@
 
 Klik Go is a delivery platform for the Philippines, built for barangays and provincial towns, on a Hybrid Aggregator + Managed Logistics model. It starts with food delivery in one pilot zone, then grows into groceries, parcels, pharmacy and B2B.
 
-> Status: Phases 0–4.1 merged; Phase 5 (checkout and payments: PayMongo + cash on delivery) in review. See `docs/PROGRESS.md`.
+> Status: Phases 0–5 merged; Phase 6 (order lifecycle, store board, live updates, SLA) in review. See `docs/PROGRESS.md`.
 
 ## Docs
 | File | What it is |
@@ -79,6 +79,8 @@ ADMIN_EMAIL=you@example.com pnpm bootstrap:admin
 For the hosted project, use GitHub Actions → **Bootstrap first admin** instead (needs the `SUPABASE_PROJECT_REF`, `SUPABASE_SERVICE_ROLE_KEY` and `DATABASE_URL` repository secrets; see `docs/OPEN_QUESTIONS.md` Q13 step 8). It prints a one-time link: open it straight away, then delete the run's logs.
 
 Payments work locally without PayMongo: add `PAYMENT_GATEWAY=fake` to `apps/web/.env.local` and online payments (GCash, Maya, card, QR Ph) open the local test checkout at `/dev/pay`, which sends the same signed webhook PayMongo would (set `PAYMONGO_WEBHOOK_SECRET` to any test value if Cucumber should sign webhooks too). Unpaid online orders are cancelled after 15 minutes by pg_cron. The real PayMongo API in test mode: `PAYMONGO_TEST_SECRET_KEY=sk_test_… pnpm --filter @klikgo/adapters test:paymongo`.
+
+Live order updates need Supabase Realtime, so start Supabase without excluding `realtime`. The store board is at `/merchant/orders`. Background jobs (queued texts, unfinished refunds) run when something calls `POST /api/internal/jobs` with `Authorization: Bearer $CRON_SECRET`; production uses pg_cron + pg_net (docs/OPEN_QUESTIONS.md Q25). Web Push needs `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` and `VAPID_SUBJECT`; without them, in-app and SMS still work.
 
 AI menu import works locally without a Gemini key: add `MENU_PARSER=fake` to `apps/web/.env.local` to use the built-in sample menu reader. Menu photo uploads need Storage, so start Supabase without excluding `storage-api`.
 

@@ -4,8 +4,23 @@ Agents add items here when a decision is blocked, docs conflict, or the plan cou
 
 ## Open
 
-### Q22. PayMongo account, keys and webhook — owner checklist (Phase 5)
-Until these are set, production checkout offers **cash on delivery only** (online methods are hidden, nothing breaks).
+### Q25. Order alerts and background jobs in production — owner checklist (Phase 6)
+Without these, the board still updates live and in-app messages work, but there are no phone alerts or SLA texts, and refunds a crash left unfinished are not retried.
+1. **Background jobs.** Make a random secret (e.g. `openssl rand -hex 32`). Put it in Vercel as `CRON_SECRET`. In Supabase → SQL Editor, run once (replace the two values; they are stored encrypted in Vault and never shown in logs):
+   `select vault.create_secret('https://<your production domain>', 'klikgo_app_url');`
+   `select vault.create_secret('<the same secret>', 'klikgo_cron_secret');`
+   The `app-jobs` job then calls `/api/internal/jobs` every 30 seconds. Check it under Supabase → Integrations → Cron (job runs) and `net._http_response`.
+2. **Web Push.** Run `npx web-push generate-vapid-keys` once. In Vercel set `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` and `VAPID_SUBJECT` (e.g. `mailto:ops@your-domain`). Keep the keys: changing them turns everyone's alerts off. On iPhone, Web Push works only after "Add to Home Screen".
+3. **SLA texts** use the same Semaphore account as sign-in codes (`SEMAPHORE_API_KEY`, Q13). Until it is set they are only logged. Please add each store's phone number (store settings, Phase 8 editor; for now in Supabase `merchants.phone`), because owners sign in by email.
+
+### Q26. Penalty for stores that miss the 3-minute confirmation (decision needed)
+docs/BUSINESS.md §5.4 says an unconfirmed order is "auto-cancelled with penalty". Phase 6 cancels it, refunds the customer and records `merchant_timeout` on the order, but charges nothing yet. **Question:** what is the penalty (a fee per miss, a strike count before suspension, a lower ranking in the feed)? Phase 10 (finance) can apply it from these records.
+
+### Q27. Phase 6 timing and Phase 7 hand-off (recorded)
+Stores confirm at 60/120/180 seconds as BUILD_PLAN says. Orders can reach "ready" now; "picked up" and "delivered" need the rider app (Phase 7), so the board's Picked up column stays empty until then. Customers can cancel only until the store accepts; after that, support (coordinator/admin) cancels (Phase 8 console).
+
+### Q22. PayMongo account, keys and webhook — owner checklist (Phase 5; later, by owner decision)
+Owner 2026-11-06: no PayMongo account yet; launch testing starts with **cash on delivery**. Until these are set, production checkout offers cash on delivery only (online methods are hidden, nothing breaks).
 1. Create the PayMongo account (dashboard.paymongo.com). Test keys work at once; live keys need PayMongo's business verification. In **Settings → Payment methods**, make sure GCash, Maya, cards and QR Ph are on.
 2. Vercel → Settings → Environment Variables: `PAYMONGO_SECRET_KEY` = the **test** secret key (`sk_test_…`) for Preview; the **live** key (`sk_live_…`) for Production only after you have tested on Preview. Never put either key in chat, code or GitHub issues.
 3. PayMongo → **Developers → Webhooks → Add endpoint**: URL `https://<your production domain>/api/webhooks/paymongo`, events `checkout_session.payment.paid` and `payment.refund.updated` (adding `payment.failed` is harmless). Copy the endpoint's signing secret (`whsk_…`) into Vercel as `PAYMONGO_WEBHOOK_SECRET`. Test mode and live mode have separate webhooks and secrets: use the test one for Preview. If Vercel Deployment Protection is on for Preview, PayMongo cannot reach it; use a protection bypass or test on a stable staging domain.

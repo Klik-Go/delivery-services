@@ -34,8 +34,8 @@ export default async function MerchantPage({
   const links = [
     {
       href: `/merchant/orders${query}`,
-      title: t("orders"),
-      lead: t("ordersLead"),
+      title: t("ordersLink"),
+      lead: t("ordersLinkLead"),
       Icon: ClipboardList,
     },
     {

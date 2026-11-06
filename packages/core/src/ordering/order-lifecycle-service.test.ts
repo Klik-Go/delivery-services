@@ -117,6 +117,14 @@ describe("OrderLifecycleService", () => {
     expect(await w.store.refundsDue(10)).toEqual([]);
   });
 
+  it("counts refunds the job could not start and logs them for a later run", async () => {
+    const { w, orderId } = await paid();
+    w.online.failRefund = true;
+    await w.lifecycle.reject(orderId, w.owner, { reason: "Closing early" });
+    expect(await w.jobs.run()).toEqual({ notifications: 0, refundsStarted: 0, refundsFailed: 1 });
+    expect(w.logger.lines.map((l) => l.message)).toContain("jobs.refund_failed");
+  });
+
   it("lets the customer cancel until the store accepts, then explains why not", async () => {
     const first = await placed();
     expect(await first.w.lifecycle.cancel(first.orderId, first.w.customer, {})).toEqual({

@@ -234,15 +234,24 @@ describeDb("order lifecycle: SLA escalation, realtime topics, notification queue
       db(),
       customer,
       async () =>
-        (await db().query("select id from public.notifications where order_id = $1", [id])).rows,
+        (
+          await db().query<{ id: string }>(
+            "select id from public.notifications where order_id = $1",
+            [id],
+          )
+        ).rows,
     );
     expect(mine).toHaveLength(2);
     const theirs = await asUser(
       db(),
       owner,
       async () =>
-        (await db().query("select id from public.notifications where user_id = $1", [customer]))
-          .rows,
+        (
+          await db().query<{ id: string }>(
+            "select id from public.notifications where user_id = $1",
+            [customer],
+          )
+        ).rows,
     );
     expect(theirs).toHaveLength(0);
   });

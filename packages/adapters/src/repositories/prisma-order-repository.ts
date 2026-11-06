@@ -431,9 +431,9 @@ export class PrismaOrderRepository
     return rows.map((row) => ({
       id: row.id,
       code: row.code,
-      status: row.status as OrderStatus,
-      paymentMethod: row.payment_method as PaymentMethod,
-      paymentStatus: row.payment_status as PaymentStatus,
+      status: row.status,
+      paymentMethod: row.payment_method,
+      paymentStatus: row.payment_status,
       totalCentavos: row.total_centavos,
       placedAt: row.placed_at ?? row.created_at,
       acceptedAt: row.accepted_at,

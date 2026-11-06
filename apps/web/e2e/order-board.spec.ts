@@ -1,5 +1,12 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
+import {
+  devices,
+  expect,
+  test,
+  type APIRequestContext,
+  type Page,
+  type TestInfo,
+} from "@playwright/test";
 import {
   authStackConfigured,
   E2E_PHONES,
@@ -52,6 +59,13 @@ async function placeCodOrder(
   return { id: placed.data.orderId, code: placed.data.code };
 }
 
+/** The store's browser uses the same device as the project (phone or desktop). */
+function deviceOf(testInfo: TestInfo): (typeof devices)[string] {
+  return testInfo.project.name === "mobile-pixel-7"
+    ? devices["Pixel 7"]
+    : devices["Desktop Chrome"];
+}
+
 test.beforeAll(async () => {
   // Checkout runs at any hour: keep the seeded store open all day for this run.
   const allDay = [{ open: "00:00", close: "23:59" }];
@@ -75,7 +89,7 @@ test.describe("Feature: merchant order board and live tracking", () => {
     baseURL,
   }, testInfo) => {
     const merchantId = await merchantIdByName("Kape't Tinapay");
-    const store = await browser.newContext({ ...testInfo.project.use, baseURL: baseURL ?? "" });
+    const store = await browser.newContext({ ...deviceOf(testInfo), baseURL: baseURL ?? "" });
     await store.addCookies(
       (await (await signedInMerchant(baseURL ?? "", merchantId)).storageState()).cookies,
     );
@@ -125,7 +139,7 @@ test.describe("Feature: merchant order board and live tracking", () => {
     baseURL,
   }, testInfo) => {
     const merchantId = await merchantIdByName("Kape't Tinapay");
-    const store = await browser.newContext({ ...testInfo.project.use, baseURL: baseURL ?? "" });
+    const store = await browser.newContext({ ...deviceOf(testInfo), baseURL: baseURL ?? "" });
     await store.addCookies(
       (await (await signedInMerchant(baseURL ?? "", merchantId)).storageState()).cookies,
     );
