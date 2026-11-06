@@ -66,3 +66,21 @@ export interface IRecipientDirectory {
   /** The store's owners and staff (user ids). */
   merchantTeam(merchantId: string): Promise<string[]>;
 }
+
+/** A browser's Web Push subscription. */
+export interface PushSubscriptionRecord {
+  readonly endpoint: string;
+  readonly keys: { readonly p256dh: string; readonly auth: string };
+}
+
+/** device_push_subscriptions: one row per browser, owned by the user who subscribed last. */
+export interface IPushSubscriptionStore {
+  forUser(userId: string): Promise<PushSubscriptionRecord[]>;
+  save(
+    userId: string,
+    subscription: PushSubscriptionRecord,
+    userAgent: string | null,
+  ): Promise<void>;
+  /** Only removes the endpoint when it belongs to `userId` (null: the push service said it is gone). */
+  remove(endpoint: string, userId: string | null): Promise<void>;
+}

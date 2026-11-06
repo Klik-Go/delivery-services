@@ -6,8 +6,8 @@ import pg from "pg";
 
 /** Supabase test OTP numbers reserved for Playwright (Cucumber uses 101–104 and 110). */
 export const E2E_PHONES = {
-  "mobile-pixel-7": { customer: "+639170000105", rider: "+639170000107" },
-  "desktop-chrome": { customer: "+639170000106", rider: "+639170000108" },
+  "mobile-pixel-7": { customer: "+639170000105", rider: "+639170000107", tracker: "+639170000111" },
+  "desktop-chrome": { customer: "+639170000106", rider: "+639170000108", tracker: "+639170000112" },
 } as const;
 export const TEST_OTP_CODE = "123456";
 

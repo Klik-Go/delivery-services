@@ -143,7 +143,8 @@ export class NotificationService implements IOrderNotifier {
         id,
         sent.ok ? { ok: true } : { ok: false, error: sent.error.code },
       );
-      if (!sent.ok) {
+      // NOT_FOUND: nowhere to deliver (no device subscribed, no phone): expected, not a failure.
+      if (!sent.ok && sent.error.code !== "NOT_FOUND") {
         this.deps.logger.warn("notification.failed", {
           notificationId: id,
           channel: sender.channel,

@@ -10,6 +10,8 @@ import {
 import type {
   INotificationLog,
   INotificationSender,
+  IPushSubscriptionStore,
+  PushSubscriptionRecord,
   IRecipientDirectory,
   NotificationMessage,
   QueuedNotification,
@@ -675,5 +677,36 @@ export class InMemoryRecipients implements IRecipientDirectory {
 
   merchantTeam(merchantId: string): Promise<string[]> {
     return Promise.resolve([...(this.teams[merchantId] ?? [])]);
+  }
+}
+
+/** device_push_subscriptions in memory (unique per endpoint). */
+export class InMemoryPushSubscriptions implements IPushSubscriptionStore {
+  readonly rows: {
+    userId: string;
+    subscription: PushSubscriptionRecord;
+    userAgent: string | null;
+  }[] = [];
+
+  forUser(userId: string): Promise<PushSubscriptionRecord[]> {
+    return Promise.resolve(this.rows.filter((r) => r.userId === userId).map((r) => r.subscription));
+  }
+
+  save(
+    userId: string,
+    subscription: PushSubscriptionRecord,
+    userAgent: string | null,
+  ): Promise<void> {
+    const keep = this.rows.filter((r) => r.subscription.endpoint !== subscription.endpoint);
+    this.rows.splice(0, this.rows.length, ...keep, { userId, subscription, userAgent });
+    return Promise.resolve();
+  }
+
+  remove(endpoint: string, userId: string | null): Promise<void> {
+    const keep = this.rows.filter(
+      (r) => r.subscription.endpoint !== endpoint || (userId !== null && r.userId !== userId),
+    );
+    this.rows.splice(0, this.rows.length, ...keep);
+    return Promise.resolve();
   }
 }

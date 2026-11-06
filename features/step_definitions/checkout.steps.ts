@@ -51,14 +51,17 @@ Before({ tags: "@payments or @ledger" }, function () {
 
 // The seeded store keeps lunch and dinner hours; checkout scenarios run at any time of day, so
 // the store is open all day for them (and restored afterwards).
-Before({ tags: "@checkout or @payments or @ledger" }, async function (this: KlikWorld) {
-  const id = await keepStore(this, STORE);
-  const days = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
-  await this.db.query(`update public.merchants set hours = $2, is_open = true where id = $1`, [
-    id,
-    JSON.stringify(Object.fromEntries(days.map((day) => [day, [ALL_DAY]]))),
-  ]);
-});
+Before(
+  { tags: "@checkout or @payments or @ledger or @lifecycle or @sla" },
+  async function (this: KlikWorld) {
+    const id = await keepStore(this, STORE);
+    const days = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+    await this.db.query(`update public.merchants set hours = $2, is_open = true where id = $1`, [
+      id,
+      JSON.stringify(Object.fromEntries(days.map((day) => [day, [ALL_DAY]]))),
+    ]);
+  },
+);
 
 Given("a signed-in customer delivering to Ayala Avenue, Makati", async function (this: KlikWorld) {
   this.api.headers.set("x-forwarded-for", randomIp());

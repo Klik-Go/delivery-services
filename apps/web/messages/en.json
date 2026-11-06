@@ -167,7 +167,9 @@
     "importLead": "Snap your printed menu and review the items",
     "storePage": "See your store page",
     "back": "Back to dashboard",
-    "failed": "That didn't work. Please try again."
+    "failed": "That didn't work. Please try again.",
+    "orders": "Orders",
+    "ordersLead": "Accept new orders and mark them ready"
   },
   "StoreSettings": {
     "title": "Store settings",
@@ -496,7 +498,23 @@
         "refunded": "Refunded",
         "partially_refunded": "Partly refunded"
       },
-      "refunded": "Refunded {amount}"
+      "refunded": "Refunded {amount}",
+      "live": "Live",
+      "progress": "Order progress",
+      "readyBy": "Ready around {time} (about {minutes} minutes)",
+      "cancel": "Cancel order",
+      "step": {
+        "placed": "Order sent",
+        "accepted": "Accepted by the store",
+        "preparing": "Being prepared",
+        "ready": "Ready for pickup",
+        "picked_up": "On the way",
+        "delivered": "Delivered"
+      },
+      "reason": {
+        "merchant_timeout": "The store didn't confirm in time. Any payment is refunded.",
+        "payment_timeout": "The payment wasn't finished in time."
+      }
     },
     "devPay": {
       "title": "Test checkout",
@@ -508,5 +526,10 @@
       "done": "This order is already {status}.",
       "failed": "The test payment didn't go through."
     }
+  },
+  "Push": {
+    "on": "Get alerts on this device",
+    "off": "Turn off alerts",
+    "blocked": "Alerts are blocked in this browser's settings."
   }
 }
