@@ -1,5 +1,7 @@
+export * from "./background-jobs";
 export * from "./gateway-registry";
 export * from "./ledger-service";
+export * from "./order-lifecycle-service";
 export * from "./order-service";
 export * from "./order-state-machine";
 export * from "./payment-event-service";

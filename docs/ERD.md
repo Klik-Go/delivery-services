@@ -343,6 +343,9 @@ erDiagram
     timestamptz updated_at
     text idempotency_key
     text request_hash
+    text reject_reason
+    timestamptz sla_sms_at
+    timestamptz sla_flagged_at
   }
   order_items {
     uuid id PK

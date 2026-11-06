@@ -424,6 +424,9 @@ model orders {
   updated_at                                              DateTime                     @default(now()) @db.Timestamptz(6)
   idempotency_key                                         String?
   request_hash                                            String?
+  reject_reason                                           String?
+  sla_sms_at                                              DateTime?                    @db.Timestamptz(6)
+  sla_flagged_at                                          DateTime?                    @db.Timestamptz(6)
   dispatch_offers                                         dispatch_offers[]
   ledger_entries                                          ledger_entries[]
   loyalty_stamps_loyalty_stamps_order_idToorders          loyalty_stamps?              @relation("loyalty_stamps_order_idToorders")
