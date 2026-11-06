@@ -130,7 +130,8 @@ async function placeOrder(
   return response;
 }
 
-const ORDER = /^they order (\d+) "([^"]+)"(?: with "([^"]+)")? from "([^"]+)" paying "([^"]+)"(?: with promo "([^"]+)")?(?: with a (\d+) centavo tip)?$/;
+const ORDER =
+  /^they order (\d+) "([^"]+)"(?: with "([^"]+)")? from "([^"]+)" paying "([^"]+)"(?: with promo "([^"]+)")?(?: with a (\d+) centavo tip)?$/;
 const ORDERED = new RegExp(ORDER.source.replace("^they order ", "^they ordered "));
 
 async function orderStep(
@@ -154,19 +155,22 @@ async function orderStep(
 }
 
 When(ORDER, orderStep);
-Given(ORDERED, async function (
-  this: KlikWorld,
-  quantity: string,
-  item: string,
-  option: string | undefined,
-  store: string,
-  method: string,
-  promo: string | undefined,
-  tip: string | undefined,
-) {
-  await orderStep.call(this, quantity, item, option, store, method, promo, tip);
-  assert.equal(this.response().status, 201, this.response().bodyText);
-});
+Given(
+  ORDERED,
+  async function (
+    this: KlikWorld,
+    quantity: string,
+    item: string,
+    option: string | undefined,
+    store: string,
+    method: string,
+    promo: string | undefined,
+    tip: string | undefined,
+  ) {
+    await orderStep.call(this, quantity, item, option, store, method, promo, tip);
+    assert.equal(this.response().status, 201, this.response().bodyText);
+  },
+);
 
 async function orderRow(world: KlikWorld) {
   assert.ok(world.checkout.orderId, "No order in this scenario");

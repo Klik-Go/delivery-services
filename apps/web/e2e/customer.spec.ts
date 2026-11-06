@@ -121,7 +121,7 @@ test.describe("Feature: store page and cart", () => {
       peso("179.00"),
     );
     await expect(page.getByText("Less sugar")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Checkout" })).toBeDisabled();
+    await expect(page.getByRole("link", { name: "Checkout" })).toBeVisible();
     expect(await seriousViolations(page)).toEqual([]);
   });
 

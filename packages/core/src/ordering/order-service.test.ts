@@ -163,8 +163,9 @@ describe("OrderService.placeOrder", () => {
     );
     expect(!far.ok && far.error).toMatchObject({ issues: [{ path: "dropoff" }] });
 
-    const kape = w.catalog.stores.find((s) => s.merchantId === "kape");
-    if (kape) kape.isOpen = false;
+    const at = w.catalog.stores.findIndex((s) => s.merchantId === "kape");
+    const kape = w.catalog.stores[at];
+    if (kape) w.catalog.stores[at] = { ...kape, isOpen: false };
     const closed = await w.orders.placeOrder(barakoOrder(), context("closed-key-00000001"));
     expect(!closed.ok && closed.error.code).toBe("CONFLICT");
     expect(w.store.orders).toEqual([]);

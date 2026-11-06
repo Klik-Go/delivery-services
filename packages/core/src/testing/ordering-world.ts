@@ -1,14 +1,16 @@
 import type { PlaceOrderRequest } from "@klikgo/types";
 import { AuthorizationService } from "../auth/authorization-service";
+import type { SessionUser } from "../auth/session-user";
 import { DistanceBandFee, ServiceFee, SmallOrderFee, ZoneBaseFee } from "../catalog/fee-strategies";
 import { PricingService } from "../catalog/pricing-service";
 import { PaymentGatewayRegistry } from "../ordering/gateway-registry";
 import { LedgerService } from "../ordering/ledger-service";
-import { OrderService } from "../ordering/order-service";
+import { OrderService, type PaymentReturnUrls } from "../ordering/order-service";
 import { OrderStateMachine } from "../ordering/order-state-machine";
 import { PaymentEventService } from "../ordering/payment-event-service";
 import { PromoService } from "../ordering/promo-service";
 import { RefundService } from "../ordering/refund-service";
+import type { InMemoryCatalog } from "./catalog-fakes";
 import { AYALA, catalogWorld } from "./catalog-world";
 import { FakeClock } from "./fake-clock";
 import { MemoryLogger } from "./memory-logger";
@@ -34,8 +36,26 @@ export function barakoOrder(overrides: Partial<PlaceOrderRequest> = {}): PlaceOr
   };
 }
 
+/** The checkout services and fakes {@link orderingWorld} wires together. */
+export interface OrderingWorld {
+  readonly catalog: InMemoryCatalog;
+  readonly clock: FakeClock;
+  readonly logger: MemoryLogger;
+  readonly store: InMemoryOrderStore;
+  readonly promoRepo: InMemoryPromos;
+  readonly online: FakePaymentGateway;
+  readonly cod: FakePaymentGateway;
+  readonly gateways: PaymentGatewayRegistry;
+  readonly webhooks: InMemoryWebhookEvents;
+  readonly orders: OrderService;
+  readonly refunds: RefundService;
+  readonly events: PaymentEventService;
+  readonly customer: SessionUser;
+  readonly urls: PaymentReturnUrls;
+}
+
 /** Every checkout service wired with in-memory fakes (the composition root, for unit tests). */
-export function orderingWorld(now = new Date("2026-11-02T03:00:00Z")) {
+export function orderingWorld(now = new Date("2026-11-02T03:00:00Z")): OrderingWorld {
   const { area, catalog } = catalogWorld();
   const clock = new FakeClock(now);
   const logger = new MemoryLogger();

@@ -244,7 +244,7 @@ export class PrismaOrderRepository implements IOrderRepository, IPaymentReposito
         where: { id: input.orderId },
         select: { status: true },
       });
-      return { alreadyPaid: captured.length === 0, orderStatus: order.status as OrderStatus };
+      return { alreadyPaid: captured.length === 0, orderStatus: order.status };
     });
   }
 

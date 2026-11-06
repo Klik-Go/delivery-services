@@ -49,7 +49,7 @@ describe("PayMongoGateway", () => {
     expect(new Headers(init.headers).get("authorization")).toBe(
       `Basic ${Buffer.from("sk_test_abc:").toString("base64")}`,
     );
-    expect(JSON.parse(String(init.body))).toEqual({
+    expect(JSON.parse(init.body as string)).toEqual({
       data: {
         attributes: {
           line_items: [
@@ -137,7 +137,7 @@ describe("PayMongoGateway", () => {
       value: { ref: "ref_9", status: "pending" },
     });
     const body = JSON.parse(
-      String((fetcher.mock.calls[0] as unknown as [string, RequestInit])[1].body),
+      (fetcher.mock.calls[0] as unknown as [string, RequestInit])[1].body as string,
     ) as unknown;
     expect(body).toEqual({
       data: {
