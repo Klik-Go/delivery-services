@@ -4,6 +4,24 @@ Agents add items here when a decision is blocked, docs conflict, or the plan cou
 
 ## Open
 
+### Q28. Demo data for showing Klik Go — how to load it and run a demo (owner, 2026-11-06)
+Owner request: "Fill out all the data needed for a test demo." The hosted database only gets migrations (never the local seed), so demo stores are loaded on purpose with **Actions → Load demo data**.
+- **What it adds** (safe to run again; nothing is duplicated):
+  - 9 open stores (6 AM–11 PM daily, cash on delivery, normal prices) with full menus and choices:
+    Makati: Lutong Bahay ni Lola Ising, Kape at Pandesal Salcedo, Inasal Grill Poblacion.
+    San Fernando: Kusinang Kapampangan, Tibok-Tibok at Kakanin, Pancit at Lomi House.
+    San Marcelino: Mangga ng Zambales, Pares at Mami ni Mang Lito, Sari-Sari Plus San Marcelino (grocery).
+  - Delivery fees for zones with none yet: ₱39 up to 2 km, ₱49 to 4 km, ₱59 beyond (₱69 in San Marcelino), ₱20 small-order fee under ₱150.
+  - Promo codes on Home: **DEMOKAIN** (₱50 off ₱300+), **DEMOHATID** (free delivery on ₱200+), **DEMO10** (10% off ₱150+, up to ₱60), valid 90 days.
+  - One store owner account (`owner_email`) that manages all 9 stores. Use an inbox you control (a `+demo` alias works, e.g. `you+demo@gmail.com`); nothing is emailed.
+- **Run it:** GitHub → Actions → **Load demo data** → Run workflow → action `load`, your `owner_email`, optionally a `store_phone` for the 1-minute texts (needs Semaphore, Q13) → approve the `production` gate. Open the one-time link from the log, set a password, enrol an authenticator app, then delete the run's logs. Needs the same secrets as **Bootstrap first admin** and a deployed migration (`/api/health/ready` = ready).
+- **Demo walkthrough (two phones or two browser windows):**
+  1. *Store:* sign in at `/auth/staff` with the owner account, open **Orders** (`/merchant/orders`), tap **Turn on sound** (and **Get alerts on this device** if VAPID keys are set, Q25). Use `?store=<id>` or the dashboard to switch stores.
+  2. *Customer:* open the app, set the pin in the store's town (e.g. San Fernando), browse, add items, **Checkout** → sign in with any mobile number and the placeholder code (Q20) → landmark, contact number → **Cash on delivery** → **Place order**. Try **DEMOKAIN** on ₱300+.
+  3. *Store:* the order appears within 2 seconds with the 3-minute countdown; accept with a prep time, then **Mark ready**. The customer's tracker updates live. Leave one order unaccepted to show the 3-minute auto-cancel (needs the jobs setup in Q25 for the text; the cancel itself always runs).
+  4. Riders ("picked up", "delivered") arrive in Phase 7.
+- **Remove it:** run the workflow with action `hide`: the stores are suspended and the codes switched off; orders and history stay. Running `load` again brings them back. Fee bands stay (real orders need them too).
+
 ### Q25. Order alerts and background jobs in production — owner checklist (Phase 6)
 Without these, the board still updates live and in-app messages work, but there are no phone alerts or SLA texts, and refunds a crash left unfinished are not retried.
 1. **Background jobs.** Make a random secret (e.g. `openssl rand -hex 32`). Put it in Vercel as `CRON_SECRET`. In Supabase → SQL Editor, run once (replace the two values; they are stored encrypted in Vault and never shown in logs):
