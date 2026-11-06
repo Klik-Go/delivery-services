@@ -15,7 +15,7 @@ Phases are defined in `docs/BUILD_PLAN.md` §6. Agents update this file in every
 | 4.1 | Follow-up: deploy fixes (readiness, migration deploy) + placeholder sign-in code | ✅ Done (merged) | [Klik-Go/delivery-services#11](https://github.com/Klik-Go/delivery-services/pull/11), [#12](https://github.com/Klik-Go/delivery-services/pull/12), [#13](https://github.com/Klik-Go/delivery-services/pull/13) | 4.1.1 readiness fix, 4.1.2 bootstrap-admin workflow; owner confirmed sign-in works on production |
 | 5 | Checkout and payments (PayMongo + COD) | ✅ Done (merged) | [Klik-Go/delivery-services#14](https://github.com/Klik-Go/delivery-services/pull/14) | Owner: PayMongo keys + webhook (Q22), BSP/legal check on holding payments (Q23) |
 | 6 | Order lifecycle, merchant queue, SLA | ✅ Done (merged) | [Klik-Go/delivery-services#15](https://github.com/Klik-Go/delivery-services/pull/15) | Owner: Vault secrets + `CRON_SECRET`, VAPID keys, store phones (Q25); SLA penalty (Q26) |
-| 6.1 | Follow-up: demo data for the hosted app | 🟡 In progress (PR open) | branch `phase-6.1-demo-data` | Owner: run **Load demo data** (Q28) |
+| 6.1 | Follow-up: demo data for the hosted app | 🟡 In progress (PR open) | [Klik-Go/delivery-services#16](https://github.com/Klik-Go/delivery-services/pull/16) | Owner: run **Load demo data** (Q28) |
 | 7 | Rider app, dispatch, live tracking | ⬜ Not started | | |
 | 8 | Coordinator and Admin console | ⬜ Not started | | |
 | 9 | Ratings, reorder, promos, referrals, loyalty | ⬜ Not started | | |
