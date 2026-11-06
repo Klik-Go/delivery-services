@@ -415,7 +415,6 @@
       "total": "Total",
       "remove": "Remove",
       "checkout": "Checkout",
-      "checkoutSoon": "Checkout and payment arrive in the next update.",
       "pricing": "Checking prices…",
       "priceNote": "Prices are checked by Klik Go each time you open your cart.",
       "issue": {
@@ -426,6 +425,88 @@
       },
       "notDeliverable": "This store doesn't deliver to your pin.",
       "needAddress": "Set your delivery address to see delivery fees."
+    },
+    "checkout": {
+      "title": "Checkout",
+      "back": "Back to cart",
+      "deliverTo": "Deliver to",
+      "changePin": "Change pin",
+      "label": "Label",
+      "landmark": "Landmark for the rider",
+      "landmarkHint": "e.g. blue gate beside the sari-sari store",
+      "contactPhone": "Contact number",
+      "notes": "Notes for the rider (optional)",
+      "when": "When",
+      "asap": "As soon as possible",
+      "schedule": "Schedule for later today",
+      "slot": "Delivery time",
+      "noSlots": "No later times today.",
+      "payment": "Payment",
+      "method": {
+        "gcash": "GCash",
+        "maya": "Maya",
+        "card": "Credit or debit card",
+        "qrph": "QR Ph",
+        "cod": "Cash on delivery"
+      },
+      "codNote": "Pay the rider in cash when your food arrives.",
+      "onlineNote": "You'll pay on PayMongo's secure page, then come back here.",
+      "promo": "Promo code",
+      "apply": "Apply",
+      "removePromo": "Remove",
+      "promoApplied": "{code} applied",
+      "tip": "Tip your rider",
+      "noTip": "No tip",
+      "tipNote": "100% of the tip goes to your rider.",
+      "discount": "Discount",
+      "tipLine": "Rider tip",
+      "place": "Place order · {total}",
+      "placing": "Placing your order…",
+      "failed": "We couldn't place your order. Please try again.",
+      "signIn": "Sign in to check out",
+      "closed": "This store is closed right now. You can schedule for later today."
+    },
+    "order": {
+      "title": "Order {code}",
+      "loading": "Loading your order…",
+      "failed": "We couldn't load this order.",
+      "total": "Total",
+      "payment": "Payment",
+      "payNow": "Pay {total}",
+      "paymentCancelled": "Your payment wasn't finished. You can pay again within 15 minutes, or the order is cancelled.",
+      "confirming": "Confirming your payment…",
+      "home": "Back to stores",
+      "status": {
+        "awaiting_payment": "Waiting for your payment",
+        "placed": "Sent to the store",
+        "accepted": "Accepted by the store",
+        "preparing": "Being prepared",
+        "ready": "Ready for pickup",
+        "picked_up": "On the way",
+        "delivered": "Delivered",
+        "rejected": "The store couldn't take this order",
+        "cancelled": "Cancelled",
+        "failed_delivery": "Delivery failed"
+      },
+      "paymentStatus": {
+        "pending": "Not paid yet",
+        "processing": "Processing",
+        "paid": "Paid",
+        "failed": "Not paid",
+        "refunded": "Refunded",
+        "partially_refunded": "Partly refunded"
+      },
+      "refunded": "Refunded {amount}"
+    },
+    "devPay": {
+      "title": "Test checkout",
+      "banner": "Test mode: no real money moves. This page stands in for PayMongo.",
+      "amount": "Amount",
+      "pay": "Pay {total}",
+      "cancel": "Cancel payment",
+      "missing": "This checkout session doesn't exist.",
+      "done": "This order is already {status}.",
+      "failed": "The test payment didn't go through."
     }
   }
 }

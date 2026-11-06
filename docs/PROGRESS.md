@@ -12,8 +12,8 @@ Phases are defined in `docs/BUILD_PLAN.md` §6. Agents update this file in every
 | 3 | Merchant onboarding and menu (+ AI import) | ✅ Done (merged) | [Klik-Go/delivery-services#8](https://github.com/Klik-Go/delivery-services/pull/8) | Owner: Gemini key + paid tier (Q16); 20-items UAT |
 | 3.1 | Follow-up: launch zones (Makati, San Fernando, San Marcelino) + owner answers | ✅ Done (merged) | [Klik-Go/delivery-services#9](https://github.com/Klik-Go/delivery-services/pull/9) | Owner: `main` ruleset target (Q6), Gemini paid tier (Q16) |
 | 4 | Customer discovery, store page, cart (PWA) | ✅ Done (merged) | [Klik-Go/delivery-services#10](https://github.com/Klik-Go/delivery-services/pull/10) | Owner: `GOOGLE_MAPS_API_KEY` for address search (optional, Q17) |
-| 4.1 | Follow-up: deploy fixes (readiness, migration deploy) + placeholder sign-in code | ✅ Done (merged) | [Klik-Go/delivery-services#11](https://github.com/Klik-Go/delivery-services/pull/11) | Owner: GitHub secrets for migrations (Q13 step 7), `PLACEHOLDER_OTP_CODE` in Vercel (Q20) |
-| 5 | Checkout and payments (PayMongo + COD) | ⬜ Not started | | |
+| 4.1 | Follow-up: deploy fixes (readiness, migration deploy) + placeholder sign-in code | ✅ Done (merged) | [Klik-Go/delivery-services#11](https://github.com/Klik-Go/delivery-services/pull/11), [#12](https://github.com/Klik-Go/delivery-services/pull/12), [#13](https://github.com/Klik-Go/delivery-services/pull/13) | 4.1.1 readiness fix, 4.1.2 bootstrap-admin workflow; owner confirmed sign-in works on production |
+| 5 | Checkout and payments (PayMongo + COD) | 🟡 In progress (PR open) | [Klik-Go/delivery-services#14](https://github.com/Klik-Go/delivery-services/pull/14) | Owner: PayMongo keys + webhook (Q22), BSP/legal check on holding payments (Q23) |
 | 6 | Order lifecycle, merchant queue, SLA | ⬜ Not started | | |
 | 7 | Rider app, dispatch, live tracking | ⬜ Not started | | |
 | 8 | Coordinator and Admin console | ⬜ Not started | | |
@@ -134,11 +134,30 @@ Owner report 2026-11-05: "Something went wrong" when saving a delivery address o
 - [x] `.github/workflows/deploy-migrations.yml`: `supabase db push` to the hosted project on merge to `main` (dry run first; never the seed). Skips with a warning until the owner adds the secrets (OPEN_QUESTIONS Q13 step 7).
 - [x] Placeholder sign-in code for customers while SMS is off (`PLACEHOLDER_OTP_CODE`; riders/staff refused; switches off when `SEMAPHORE_API_KEY` is set): `placeholder-otp.feature`, `PlaceholderPhoneSignIn` tests, Supabase adapter tests against local Auth (OPEN_QUESTIONS Q20).
 - [x] Any Philippine mobile accepted (09xx and 08xx incl. DITO 0895–0898), with matching database checks (migration `20261110100000_ph_mobile_prefixes.sql`, `phone.db.test.ts`).
-- [ ] Owner: GitHub secrets + run "Deploy database migrations"; check `/api/health/ready`; set `PLACEHOLDER_OTP_CODE` in Vercel.
+- [x] Owner: GitHub secrets + run "Deploy database migrations"; check `/api/health/ready`; set `PLACEHOLDER_OTP_CODE` in Vercel (owner confirmed 2026-11-06: "it worked").
 - [x] Phase 4.1.1 fix (branch `phase-4.1.1-readiness-fix`): a database that has never been migrated now reads `outdated`, not `unreachable`. Production showed `42P01 relation "supabase_migrations.schema_migrations" does not exist`: the connection worked, but Postgres resolves every table name before running a query, so the single "if the table exists" query failed. Reproduced in `prisma-database-probe.db.test.ts` (table hidden in a rolled-back transaction).
 - [x] Phase 4.1.2 (branch `phase-4.1.2-bootstrap-admin-workflow`): manual **Bootstrap first admin** workflow (`.github/workflows/bootstrap-admin.yml`) runs `pnpm bootstrap:admin` against the hosted project; validates inputs and secrets, masks the email, `production` environment gate. Owner: add `SUPABASE_SERVICE_ROLE_KEY` and `DATABASE_URL` GitHub secrets, run it, open the link, delete the run logs (OPEN_QUESTIONS Q13 step 8).
 
-Next: Phase 5, checkout and payments, after this PR is reviewed and merged.
+### Phase 5 — Checkout and payments (PayMongo + COD) (branch `phase-5-checkout-payments`)
+Acceptance (docs/BUILD_PLAN.md §6, Gherkin in `features/checkout/`):
+- [x] Double-tapping "Place order" creates one order: the browser sends one `Idempotency-Key` per checkout attempt; `orders(customer_id, idempotency_key)` is unique and the request hash refuses a reused key for a different cart (`CONFLICT`). Proven by `checkout.feature` (two parallel requests → same order, one row), `order-service.test.ts`, `order-repositories.db.test.ts`, `checkout.db.test.ts` and `e2e/checkout.spec.ts` (real double-click on Pixel 7 and desktop → 1 order).
+- [x] A replayed webhook doesn't double-credit: every event is stored once in `webhook_events` before it is applied, and capture is conditional on the payment still being unpaid (`payments-webhooks.feature` "A replayed confirmation changes nothing": one capture in the ledger, answer `duplicate`; `payments.test.ts`; repository DB test).
+- [x] A failed or expired payment leaves the order `awaiting_payment`; `pg_cron` job `cancel-unpaid-orders` (every minute) cancels it after 15 minutes as the system (`reason: payment_timeout`), marks the payment failed and releases the promo (`checkout.db.test.ts`, `payments-webhooks.feature`). A payment that arrives after that is refunded in full automatically (Cucumber + unit + DB tests). PayMongo's `payment.failed` is acknowledged and ignored on purpose (OPEN_QUESTIONS Q21).
+- [ ] An e2e test in PayMongo test mode passes (ready, waiting for a test key): `packages/adapters/src/payments/paymongo.external.test.ts` and the **PayMongo test mode** workflow call PayMongo's real API with a test key (hosted GCash checkout for the exact total, page loads, status pending, refund refusal). It needs the `PAYMONGO_TEST_SECRET_KEY` secret (Q22) and has not run yet. The full browser flow runs on every PR against the local test checkout (`/dev/pay`), which sends PayMongo-format signed webhooks through the real verifier.
+- [x] The ledger balances for every order: `LedgerService` refuses unbalanced transactions, a deferred DB trigger checks every `txn_id`, and `ledger.feature` / `payments-webhooks.feature` check each order's transactions sum to zero after capture, partial refund and late-payment refund.
+
+Deliverables:
+- [x] Single-screen checkout `/checkout`: address (label, landmark, contact number, notes; saved default prefilled), ASAP or a slot later today (30-minute slots in the store's Manila hours), payment method (only what the store and the configured gateways take), promo code, tip chips (₱10/20/50), server totals, sticky "Place order · ₱X". Order page `/orders/[id]` (status, payment, "Pay" again while unpaid; refreshes every 4 s until Phase 6 Realtime). Cart "Checkout" button enabled.
+- [x] `OrderService.placeOrder` / `quoteCheckout` / `view` (re-price on the server, promo + tip, store open or valid slot, COD only where accepted, idempotent, payment started after the order row exists; a gateway outage answers `UNAVAILABLE` and the same key resumes).
+- [x] `IPaymentGateway` with `PayMongoGateway` (hosted Checkout Sessions: GCash, Maya, card, QR Ph; refunds) and `CashOnDeliveryGateway`, chosen through `PaymentGatewayRegistry` (no switch on method names); `FakePaymentGateway` for tests and local dev.
+- [x] Signed, idempotent webhook `POST /api/webhooks/paymongo`: HMAC-SHA256 over `t.rawBody` compared in constant time (`te` test / `li` live), 5-minute replay window, livemode must match, 401 on a bad signature, 503 while the secret is missing so PayMongo retries.
+- [x] Ledger entries: capture = Dr gateway clearing (net) + Dr gateway fees, Cr customer deposits; refunds reverse from deposits. Settlement to merchant/rider/platform at delivery is Phase 7/10.
+- [x] Refunds: `POST /api/admin/orders/[id]/refunds` (admin, or the zone's coordinator, with TOTP), full or partial, reserved before calling PayMongo so two clicks can never refund more than was paid; cash refunds are by hand. `refunds` table with RLS.
+- [x] Migration `20261111100000_checkout_payments.sql` (order codes, idempotency, payment fields, refunds, `customer_deposits`, timeout job) with DB tests; Prisma schema + ERD regenerated.
+- [x] Tests: Cucumber 94/94 (20 new), unit 378 (ordering services 94–100% lines), DB 150, Playwright 60/60 on Pixel 7 + desktop (8 new checkout runs with axe), Lighthouse store page 97 / Home 100. Screenshots: `docs/screenshots/phase-5-*`.
+- [ ] Owner: PayMongo account, keys and webhook (Q22); legal/BSP check (Q23).
+
+Next: Phase 6, order lifecycle and the merchant queue, after this PR is reviewed and merged.
 
 ## Business validation (parallel, doc §8)
 - [ ] 20–30 customer interviews in the pilot barangay

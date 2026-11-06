@@ -10,7 +10,8 @@
   "scripts": {
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test:db": "vitest run --config vitest.integration.config.ts"
+    "test:db": "vitest run --config vitest.integration.config.ts",
+    "test:paymongo": "vitest run src/payments/paymongo.external.test.ts"
   },
   "dependencies": {
     "@klikgo/core": "workspace:*",

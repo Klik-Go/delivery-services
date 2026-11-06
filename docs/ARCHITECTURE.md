@@ -176,6 +176,34 @@ Full diagram and policy list: `docs/ERD.md` (generated from the database). Sourc
 - **Cart** is device state only (`lib/cart-store.ts`, Zustand `persist`): store, item ids, option ids, quantities. Adding from another store returns `"replace"` and the sheet asks before clearing.
 - **PWA.** `app/manifest.ts`, hand-written `public/sw.js` (versioned caches; cache-first for `/_next/static` and `/brand`, network-first for navigations and `/api/feed`, `/offline` fallback; never caches auth, cart, addresses, merchant or admin responses), registered in production only. `OfflineBanner` listens to `online`/`offline`.
 
+## 4f. Checkout and payments (Phase 5)
+
+```mermaid
+sequenceDiagram
+  participant B as Browser (/checkout)
+  participant API as BFF /api/orders
+  participant OS as OrderService
+  participant DB as Postgres
+  participant PM as PayMongo
+  B->>API: POST (Idempotency-Key, ids + choices only)
+  API->>OS: placeOrder
+  OS->>DB: re-price, promo, insert order (unique customer + key)
+  OS->>PM: create Checkout Session (exact total)
+  API-->>B: { orderId, checkoutUrl }
+  B->>PM: pay on PayMongo's hosted page
+  PM->>API: POST /api/webhooks/paymongo (signed)
+  API->>DB: webhook_events (once) → payment paid, order placed, ledger capture
+```
+
+- **Placing an order.** `OrderService.placeOrder` hashes the request (`IContentHasher`, canonical JSON), returns the existing order for a known `Idempotency-Key` (or `CONFLICT` if the cart differs), re-prices through `PricingService.quoteWithStore`, applies `PromoService` and the tip, then checks: cart issues, deliverable pin, promo, method accepted by the store (COD only where `accepts_cod`), store open now or a valid slot. Online orders start `awaiting_payment`, COD orders `placed`; the database writes the first `order_events` row. The payment starts after the order exists; if PayMongo is down the order waits and the same key resumes.
+- **Gateways (OCP).** `PaymentGatewayRegistry` holds `IPaymentGateway`s chosen in `container.ts`: `PayMongoGateway` (when `PAYMONGO_SECRET_KEY` is set) or `FakePaymentGateway` (`PAYMENT_GATEWAY=fake`, never on Vercel production) plus `CashOnDeliveryGateway`. Without a key checkout offers cash only. Services ask the registry by method; nothing switches on method names.
+- **Hosted checkout.** PayMongo Checkout Sessions (one line item = the Klik Go total, `reference_number` = order code, `metadata.order_id`). Card numbers never touch Klik Go.
+- **Webhooks.** `PaymentWebhookService` → `PayMongoWebhookVerifier` (HMAC-SHA256 of `t.rawBody`, constant-time compare, `te`/`li` by key mode, 5-minute window, `livemode` must match) → `PaymentEventService`: record the event id in `webhook_events` (unique) first, apply, mark processed. Capture is a conditional update (only an unpaid payment), so replays and races credit once. Wrong amount or unknown session: noted on the event, answered 200 (a retry cannot fix it). Paid after the order was cancelled: refunded in full automatically.
+- **Timeout.** `pg_cron` runs `private.cancel_unpaid_orders()` every minute: orders still `awaiting_payment` after 15 minutes are cancelled by the system (`order_events.meta = {reason: payment_timeout, by: system}`), the payment is marked failed and the promo redemption released.
+- **Ledger.** `LedgerService` builds balanced transactions; the repository writes them under one `txn_id` and a deferred trigger rejects any unbalanced one. Capture: Dr `gateway_clearing` (net) + Dr `gateway_fees`, Cr `customer_deposits`. Refund: Dr `customer_deposits`, Cr `gateway_clearing`. Settlement to merchant, rider and platform accounts happens at delivery (Phase 7/10) because the rider is unknown at capture.
+- **Refunds.** `RefundService` (admin, or the zone's coordinator, TOTP): reserve the amount on the payment first (`refunded_centavos` capped by a check constraint), call PayMongo, then complete (ledger) or release the reservation. Status updates arrive as `payment.refund.updated` webhooks.
+- **Local and CI.** `/dev/pay` is a stand-in for the hosted page: "Pay" sends a PayMongo-format event signed with `PAYMONGO_WEBHOOK_SECRET` through the real verifier. The real API is exercised by `paymongo.external.test.ts` with a test key (workflow **PayMongo test mode**).
+
 ## 5. Folder map
 
 ```
@@ -286,4 +314,11 @@ CI (`.github/workflows/ci.yml`) runs on Node 26 with pnpm 12 installed from npm 
 | 2026-11-05 | Placeholder sign-in code (env, customers only, auto-off with SMS) via admin find-or-create + random one-time password | Owner wants testing before SMS is paid for; Supabase still issues the session and real OTP stays the default path (OPEN_QUESTIONS Q20) |
 | 2026-11-05 | Philippine mobiles validated by pattern (+63 then 10 digits starting 8/9), not libphonenumber | The library rejected new real prefixes (e.g. DITO 0895–0898); DB checks match |
 | 2026-11-05 | Launch zones loaded by migration from PSA/PSGC boundaries (simplified ~5 m) | Zones are reference data every environment needs; one source of truth, reviewable in a PR; the seed only adds fake people and stores |
+| 2026-11-06 | PayMongo hosted Checkout Sessions, not Payment Intents + our own card form | Card data never reaches Klik Go (smaller PCI scope); one integration covers GCash, Maya, cards and QR Ph |
+| 2026-11-06 | One PayMongo line item equal to the Klik Go total | Fees, promos and tips are computed by Klik Go; the amount charged must match the order exactly |
+| 2026-11-06 | Online payments are held as `customer_deposits` until delivery | The rider and final split are unknown at capture; settlement moves the deposit (Phase 7/10) |
+| 2026-11-06 | Unpaid orders cancelled after 15 minutes by pg_cron; late payments refunded automatically | PayMongo sends no event when a session expires; the store should not wait 30 minutes for an unpaid order |
+| 2026-11-06 | `payment.failed` is acknowledged and ignored | It names a payment intent, not the checkout session Klik Go stores; the customer can still retry on the same session (OPEN_QUESTIONS Q21) |
+| 2026-11-06 | Order codes (`KG-XXXXXX`) generated by the database | Every writer gets a unique, readable code without a round trip |
+| 2026-11-06 | Idempotency in the database (unique customer + key, request hash) | Survives server restarts and parallel requests; the same answer for a retry |
 | 2026-11-04 | Cookie-based locale (no `/fil/...` URLs) | short shareable links; SEO not a pilot goal |

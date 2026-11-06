@@ -41,7 +41,11 @@ export class InMemoryServiceArea implements IServiceArea {
 
 /** Stores, menus, fees and promos in memory (feed and pricing reads). */
 export class InMemoryCatalog implements ICatalogReadRepository, IPricingCatalog {
-  readonly stores: (StoreSummary & { zoneId: string; items: PricedItem[] })[] = [];
+  readonly stores: (StoreSummary & {
+    zoneId: string;
+    items: PricedItem[];
+    acceptsCod?: boolean;
+  })[] = [];
   readonly fees = new Map<string, ZoneFees>();
   readonly promos = new Map<string, FeaturedPromo[]>();
   readonly recent = new Map<string, string[]>();
@@ -80,6 +84,7 @@ export class InMemoryCatalog implements ICatalogReadRepository, IPricingCatalog 
         closedDates: store.closedDates,
         prepMinutes: store.prepMinutes,
         radiusKm: store.radiusKm,
+        acceptsCod: store.acceptsCod ?? true,
       },
       fees: await this.zoneFees(store.zoneId),
       items: store.items.filter((item) => itemIds.includes(item.id)),

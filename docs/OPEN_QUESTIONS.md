@@ -4,6 +4,23 @@ Agents add items here when a decision is blocked, docs conflict, or the plan cou
 
 ## Open
 
+### Q22. PayMongo account, keys and webhook — owner checklist (Phase 5)
+Until these are set, production checkout offers **cash on delivery only** (online methods are hidden, nothing breaks).
+1. Create the PayMongo account (dashboard.paymongo.com). Test keys work at once; live keys need PayMongo's business verification. In **Settings → Payment methods**, make sure GCash, Maya, cards and QR Ph are on.
+2. Vercel → Settings → Environment Variables: `PAYMONGO_SECRET_KEY` = the **test** secret key (`sk_test_…`) for Preview; the **live** key (`sk_live_…`) for Production only after you have tested on Preview. Never put either key in chat, code or GitHub issues.
+3. PayMongo → **Developers → Webhooks → Add endpoint**: URL `https://<your production domain>/api/webhooks/paymongo`, events `checkout_session.payment.paid` and `payment.refund.updated` (adding `payment.failed` is harmless). Copy the endpoint's signing secret (`whsk_…`) into Vercel as `PAYMONGO_WEBHOOK_SECRET`. Test mode and live mode have separate webhooks and secrets: use the test one for Preview. If Vercel Deployment Protection is on for Preview, PayMongo cannot reach it; use a protection bypass or test on a stable staging domain.
+4. GitHub → Settings → Secrets → Actions: add `PAYMONGO_TEST_SECRET_KEY` (the `sk_test_…` key), then run **Actions → PayMongo test mode**. This is the Phase 5 "e2e in PayMongo test mode" check; it can only use a test key.
+5. Redeploy, then on Preview: place a GCash order, pay with PayMongo's test page, and check the order turns "Sent to the store". In Supabase, `ledger_entries` for that order should sum to zero.
+
+### Q21. Failed payments and the 15-minute timeout (decision taken; please confirm the minutes)
+PayMongo's `payment.failed` event names a payment intent, not the checkout session Klik Go stores, and the customer can still retry on the same session, so Klik Go acknowledges and ignores it. PayMongo sends no event when a session expires. Instead, `pg_cron` cancels any order still awaiting payment after **15 minutes** (PayMongo's own session lasts 30), so a store never sees an unpaid order and the promo is released. If a payment still arrives later, Klik Go refunds it in full automatically and the customer sees it as refunded. **Question:** is 15 minutes right for the pilot? It is one value in `private.cancel_unpaid_orders` (a migration to change).
+
+### Q23. Holding customer payments before paying merchants — legal check (owner)
+Online payments go to Klik Go's PayMongo account and are paid out to merchants and riders later (Phase 10). Collecting money on behalf of merchants may bring rules on payment systems and e-money (BSP, Republic Act 11127 National Payment Systems Act), on official receipts and VAT (BIR), and PayMongo's own marketplace terms. This is not legal advice: please ask a Philippine lawyer or accountant before taking live payments, and tell us if payouts should instead go through a PayMongo split/marketplace product (that would be one more `IPaymentGateway`).
+
+### Q24. Promo limits under heavy use (recorded)
+Per-customer limits and `max_redemptions` are checked by `PromoService` when the order is placed, not by a database constraint, so two orders placed at the same instant could both use the last redemption. Acceptable for the pilot (small volumes, promos funded by Klik Go); a counter row with a conditional update can close it in Phase 9 (promos).
+
 ### Q6. GitHub repository settings — almost done (owner, re-checked 2026-11-05 from screenshots)
 Already correct: Actions permissions (Klik-Go + GitHub actions only, no SHA pinning, read-only token, no PR creation), CodeQL on **Advanced setup**, Secret Protection + push protection, Dependabot alerts + security updates, private vulnerability reporting, the `main` ruleset's rules (restrict deletions, require a PR, require status checks, block force pushes, require CodeQL results at High or higher / Errors). Still to do:
 1. **The `main` ruleset targets nothing yet.** GitHub shows "This ruleset does not target any resources and will not be applied". Settings → Rules → Rulesets → `main` → **Target branches → Add target → Include default branch** → Save changes. Until then `main` is not protected.

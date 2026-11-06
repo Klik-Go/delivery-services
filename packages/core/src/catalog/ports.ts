@@ -107,6 +107,7 @@ export interface QuoteCatalog {
     readonly closedDates: readonly string[];
     readonly prepMinutes: number;
     readonly radiusKm: number;
+    readonly acceptsCod: boolean;
   };
   readonly fees: ZoneFees;
   readonly items: readonly PricedItem[];

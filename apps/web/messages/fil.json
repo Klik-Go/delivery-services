@@ -415,7 +415,6 @@
       "total": "Kabuuan",
       "remove": "Alisin",
       "checkout": "Checkout",
-      "checkoutSoon": "Darating ang checkout at bayad sa susunod na update.",
       "pricing": "Sinusuri ang presyo…",
       "priceNote": "Sinusuri ng Klik Go ang presyo tuwing bubuksan mo ang cart.",
       "issue": {
@@ -426,6 +425,88 @@
       },
       "notDeliverable": "Hindi naghahatid ang tindahang ito sa pin mo.",
       "needAddress": "Itakda ang delivery address para makita ang delivery fee."
+    },
+    "checkout": {
+      "title": "Checkout",
+      "back": "Bumalik sa cart",
+      "deliverTo": "Ihatid sa",
+      "changePin": "Palitan ang pin",
+      "label": "Pangalan ng lugar",
+      "landmark": "Palatandaan para sa rider",
+      "landmarkHint": "hal. asul na gate katabi ng sari-sari store",
+      "contactPhone": "Numero ng telepono",
+      "notes": "Bilin sa rider (opsyonal)",
+      "when": "Kailan",
+      "asap": "Sa lalong madaling panahon",
+      "schedule": "Mamaya ngayong araw",
+      "slot": "Oras ng hatid",
+      "noSlots": "Wala nang ibang oras ngayong araw.",
+      "payment": "Bayad",
+      "method": {
+        "gcash": "GCash",
+        "maya": "Maya",
+        "card": "Credit o debit card",
+        "qrph": "QR Ph",
+        "cod": "Cash on delivery"
+      },
+      "codNote": "Magbayad ng cash sa rider pagdating ng pagkain.",
+      "onlineNote": "Magbabayad ka sa secure na page ng PayMongo, saka babalik dito.",
+      "promo": "Promo code",
+      "apply": "Gamitin",
+      "removePromo": "Alisin",
+      "promoApplied": "Nagamit ang {code}",
+      "tip": "Tip para sa rider",
+      "noTip": "Walang tip",
+      "tipNote": "Buong tip ay mapupunta sa rider mo.",
+      "discount": "Diskwento",
+      "tipLine": "Tip sa rider",
+      "place": "I-order · {total}",
+      "placing": "Inilalagay ang order mo…",
+      "failed": "Hindi namin nailagay ang order mo. Pakisubukang muli.",
+      "signIn": "Mag-sign in para mag-checkout",
+      "closed": "Sarado ang tindahan ngayon. Puwede kang mag-schedule mamaya."
+    },
+    "order": {
+      "title": "Order {code}",
+      "loading": "Kinukuha ang order mo…",
+      "failed": "Hindi namin makuha ang order na ito.",
+      "total": "Kabuuan",
+      "payment": "Bayad",
+      "payNow": "Magbayad ng {total}",
+      "paymentCancelled": "Hindi natapos ang bayad mo. Puwede kang magbayad ulit sa loob ng 15 minuto, o makakansela ang order.",
+      "confirming": "Kinukumpirma ang bayad mo…",
+      "home": "Bumalik sa mga tindahan",
+      "status": {
+        "awaiting_payment": "Hinihintay ang bayad mo",
+        "placed": "Naipadala na sa tindahan",
+        "accepted": "Tinanggap ng tindahan",
+        "preparing": "Inihahanda",
+        "ready": "Handa nang kunin",
+        "picked_up": "Papunta na",
+        "delivered": "Naihatid na",
+        "rejected": "Hindi matanggap ng tindahan ang order",
+        "cancelled": "Kinansela",
+        "failed_delivery": "Hindi naihatid"
+      },
+      "paymentStatus": {
+        "pending": "Hindi pa bayad",
+        "processing": "Pinoproseso",
+        "paid": "Bayad na",
+        "failed": "Hindi nabayaran",
+        "refunded": "Na-refund",
+        "partially_refunded": "Bahagyang na-refund"
+      },
+      "refunded": "Na-refund ang {amount}"
+    },
+    "devPay": {
+      "title": "Test checkout",
+      "banner": "Test mode: walang totoong perang gagalaw. Kapalit ito ng PayMongo.",
+      "amount": "Halaga",
+      "pay": "Magbayad ng {total}",
+      "cancel": "Kanselahin ang bayad",
+      "missing": "Walang ganitong checkout session.",
+      "done": "Ang order na ito ay {status} na.",
+      "failed": "Hindi natuloy ang test na bayad."
     }
   }
 }

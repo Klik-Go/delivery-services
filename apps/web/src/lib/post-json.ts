@@ -8,16 +8,20 @@ export async function requestJson<T>(
   path: string,
   body: unknown,
   fallbackMessage: string,
+  headers: Readonly<Record<string, string>> = {},
 ): Promise<PostResult<T>> {
   try {
     const isForm = body instanceof FormData;
     const response = await fetch(path, {
       method,
       ...(body === undefined
-        ? {}
+        ? { headers }
         : isForm
-          ? { body }
-          : { headers: { "content-type": "application/json" }, body: JSON.stringify(body) }),
+          ? { headers, body }
+          : {
+              headers: { ...headers, "content-type": "application/json" },
+              body: JSON.stringify(body),
+            }),
     });
     const envelope = (await response.json().catch(() => ({}))) as {
       data?: T;

@@ -117,6 +117,8 @@ export const LEDGER_ACCOUNTS = [
   "gateway_fees",
   "promo_expense",
   "customer_refunds",
+  // Phase 5: online payments held for the customer until the order is delivered or refunded.
+  "customer_deposits",
 ] as const;
 export const LedgerAccountSchema = z.enum(LEDGER_ACCOUNTS);
 export type LedgerAccount = z.infer<typeof LedgerAccountSchema>;
@@ -149,6 +151,10 @@ export const MERCHANT_APPLICATION_STATUSES = ["pending", "approved", "rejected"]
 export const MerchantApplicationStatusSchema = z.enum(MERCHANT_APPLICATION_STATUSES);
 export type MerchantApplicationStatus = z.infer<typeof MerchantApplicationStatusSchema>;
 
+export const REFUND_STATUSES = ["pending", "succeeded", "failed"] as const;
+export const RefundStatusSchema = z.enum(REFUND_STATUSES);
+export type RefundStatus = z.infer<typeof RefundStatusSchema>;
+
 /** Every enum above, keyed by its Postgres type name (used by the DB parity test). */
 export const POSTGRES_ENUMS: Readonly<Record<string, readonly string[]>> = {
   app_role: APP_ROLES,
@@ -173,6 +179,7 @@ export const POSTGRES_ENUMS: Readonly<Record<string, readonly string[]>> = {
   notification_channel: NOTIFICATION_CHANNELS,
   fee_rule_kind: FEE_RULE_KINDS,
   merchant_application_status: MERCHANT_APPLICATION_STATUSES,
+  refund_status: REFUND_STATUSES,
 };
 
 /**

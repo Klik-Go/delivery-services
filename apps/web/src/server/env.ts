@@ -46,6 +46,16 @@ const ServerEnvSchema = z
     ),
     // Address autocomplete (Phase 4): Google Places API (New), server-side key only.
     GOOGLE_MAPS_API_KEY: optionalString,
+    // Payments (Phase 5): PayMongo hosted checkout. Secret key (sk_test_… / sk_live_…) and the
+    // webhook endpoint's signing secret (whsk_…), both server only.
+    PAYMONGO_SECRET_KEY: optionalString,
+    PAYMONGO_WEBHOOK_SECRET: optionalString,
+    // "fake" pays through the local /dev/pay page instead of PayMongo (local dev, Cucumber,
+    // Playwright only; ignored on Vercel production).
+    PAYMENT_GATEWAY: z.preprocess(
+      (value) => (value === "" ? undefined : value),
+      z.enum(["paymongo", "fake"]).optional(),
+    ),
     // "fake" uses the deterministic test menu reader (local dev, Cucumber, Playwright only).
     MENU_PARSER: z.preprocess(
       (value) => (value === "" ? undefined : value),

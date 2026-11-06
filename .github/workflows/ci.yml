@@ -55,6 +55,8 @@ jobs:
       # Turns on the pre-launch placeholder sign-in for features/auth/placeholder-otp.feature.
       # A test-only value: production's code lives only in Vercel (OPEN_QUESTIONS Q20).
       PLACEHOLDER_OTP_CODE: "424242"
+      # Online payments go to the local /dev/pay page; PayMongo is never called from CI.
+      PAYMENT_GATEWAY: fake
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
@@ -65,6 +67,12 @@ jobs:
           secret="v1,whsec_$(openssl rand -base64 32)"
           echo "::add-mask::$secret"
           echo "SEND_SMS_HOOK_SECRET=$secret" >> "$GITHUB_ENV"
+      - name: Generate a throwaway payment webhook secret
+        # Signs the fake checkout's webhooks and the Cucumber webhook scenarios, for this run only.
+        run: |
+          secret="whsk_test_$(openssl rand -hex 24)"
+          echo "::add-mask::$secret"
+          echo "PAYMONGO_WEBHOOK_SECRET=$secret" >> "$GITHUB_ENV"
       - name: Supabase start
         # Services we do not use yet are excluded to keep CI fast; add them back as phases need them.
         run: pnpm exec supabase start -x studio,imgproxy,mailpit,edge-runtime,logflare,vector,supavisor,postgres-meta

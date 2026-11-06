@@ -5,3 +5,5 @@ export * from "./merchant-fakes";
 export * from "./session-users";
 export * from "./catalog-fakes";
 export * from "./catalog-world";
+export * from "./ordering-fakes";
+export * from "./ordering-world";

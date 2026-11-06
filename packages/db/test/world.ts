@@ -172,6 +172,13 @@ export async function buildWorld(db: pg.ClientBase, fx: DbFixtures): Promise<Wor
   await db.query(
     `insert into public.webhook_events (gateway, event_id, type, payload) values ('paymongo', 'evt_test_1', 'payment.paid', '{}')`,
   );
+  for (const orderId of [order1, order2]) {
+    await db.query(
+      `insert into public.refunds (order_id, payment_id, amount_centavos, reason, status)
+       select $1, p.id, 1000, 'Missing item', 'succeeded' from public.payments p where p.order_id = $1`,
+      [orderId],
+    );
+  }
 
   const ledger = `insert into public.ledger_entries (txn_id, account, party_type, party_id, debit_centavos, credit_centavos, order_id)
     values ($1, 'rider_cash_on_hand', 'rider', $2, 23900, 0, $4),

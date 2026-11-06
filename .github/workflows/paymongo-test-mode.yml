@@ -1,0 +1,52 @@
+name: PayMongo test mode
+
+# Calls PayMongo's real API with a TEST key (never live): hosted checkout, status and refunds.
+# Needs the repository secret PAYMONGO_TEST_SECRET_KEY (sk_test_…); docs/OPEN_QUESTIONS.md Q22.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 3 * * 1" # Mondays 11:17 Asia/Manila
+  push:
+    branches: [main]
+    paths:
+      - "packages/adapters/src/payments/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: paymongo-test-mode
+  cancel-in-progress: false
+
+jobs:
+  paymongo:
+    name: PayMongo API (test mode)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PAYMONGO_TEST_SECRET_KEY: ${{ secrets.PAYMONGO_TEST_SECRET_KEY }}
+    steps:
+      - name: Check the test key
+        id: key
+        run: |
+          if [ -z "$PAYMONGO_TEST_SECRET_KEY" ]; then
+            # Manual runs fail loudly; scheduled and push runs skip until the secret exists.
+            if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+              echo "::error::Add the repository secret PAYMONGO_TEST_SECRET_KEY (an sk_test_ key) first."
+              exit 1
+            fi
+            echo "::notice::PAYMONGO_TEST_SECRET_KEY is not set; skipping the PayMongo test-mode run."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          case "$PAYMONGO_TEST_SECRET_KEY" in
+            sk_test_*) ;;
+            *) echo "::error::PAYMONGO_TEST_SECRET_KEY must be a test key (sk_test_…)."; exit 1 ;;
+          esac
+          echo "run=true" >> "$GITHUB_OUTPUT"
+      - if: steps.key.outputs.run == 'true'
+        uses: actions/checkout@v7
+      - if: steps.key.outputs.run == 'true'
+        uses: ./.github/actions/setup
+      - if: steps.key.outputs.run == 'true'
+        run: pnpm --filter @klikgo/adapters test:paymongo

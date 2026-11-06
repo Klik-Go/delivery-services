@@ -4,8 +4,8 @@ import type { RoleGrant, SessionUser } from "./session-user";
 
 const authz = new AuthorizationService();
 
-function user(roles: RoleGrant[], aal: "aal1" | "aal2" = "aal1"): SessionUser {
-  return { id: "u-1", phone: null, email: null, roles, aal };
+function user(roles: RoleGrant[], aal: "aal1" | "aal2" = "aal1", id = "u-1"): SessionUser {
+  return { id, phone: null, email: null, roles, aal };
 }
 const customer: RoleGrant = { role: "customer", merchantId: null, zoneId: null };
 const rider: RoleGrant = { role: "rider", merchantId: null, zoneId: null };
@@ -71,6 +71,46 @@ describe("AuthorizationService", () => {
     expect(
       authz.can(user([customer, owner], "aal1"), { type: "surface.open", surface: "customer" }),
     ).toBe(true);
+  });
+
+  it("lets customers place orders, without the second factor", () => {
+    expect(authz.can(user([customer]), { type: "order.place" })).toBe(true);
+    expect(authz.decide(user([rider]), { type: "order.place" })).toEqual({
+      allowed: false,
+      reason: "forbidden",
+    });
+  });
+
+  it("lets admins refund any order and coordinators only their zone's, both with AAL2", () => {
+    const refund = (zoneId: string) => ({ type: "order.refund", zoneId }) as const;
+    expect(authz.can(user([admin], "aal2"), refund("z-9"))).toBe(true);
+    expect(authz.can(user([coordinator], "aal2"), refund("z-1"))).toBe(true);
+    expect(authz.can(user([coordinator], "aal2"), refund("z-9"))).toBe(false);
+    expect(authz.decide(user([admin]), refund("z-1"))).toEqual({
+      allowed: false,
+      reason: "mfa_required",
+    });
+    expect(authz.can(user([customer, owner], "aal2"), refund("z-1"))).toBe(false);
+  });
+
+  it("shows an order to its customer, its store's staff, its zone's coordinator and admins", () => {
+    const view = {
+      type: "order.view",
+      customerId: "u-1",
+      merchantId: "m-1",
+      zoneId: "z-1",
+    } as const;
+    expect(authz.can(user([customer]), view)).toBe(true);
+    expect(authz.can(user([customer], "aal1", "u-2"), view)).toBe(false);
+    expect(authz.can(user([admin], "aal2", "u-2"), view)).toBe(true);
+    expect(authz.can(user([coordinator], "aal2", "u-2"), view)).toBe(true);
+    expect(authz.can(user([owner], "aal2", "u-2"), view)).toBe(true);
+    expect(authz.decide(user([owner], "aal1", "u-2"), view)).toEqual({
+      allowed: false,
+      reason: "mfa_required",
+    });
+    expect(authz.can(user([owner], "aal2", "u-2"), { ...view, merchantId: "m-9" })).toBe(false);
+    expect(authz.can(user([coordinator], "aal2", "u-2"), { ...view, zoneId: "z-9" })).toBe(false);
   });
 
   it("only lets admins (with AAL2) invite staff", () => {
