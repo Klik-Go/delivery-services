@@ -1,3 +1,4 @@
+import type { IOrderNotifier } from "../notifications/notification-service";
 import type { Logger } from "../ports/logger";
 import type { AppError } from "../shared/errors";
 import { ok, type Result } from "../shared/result";
@@ -24,6 +25,7 @@ export class PaymentEventService {
       ledger: LedgerService;
       states: OrderStateMachine;
       refunds: RefundService;
+      notifier: IOrderNotifier;
       logger: Logger;
     },
   ) {}
@@ -121,6 +123,7 @@ export class PaymentEventService {
       }
       return "late payment refunded";
     }
+    if (captured.orderStatus === "placed") await this.deps.notifier.statusChanged(order, "placed");
     return null;
   }
 }

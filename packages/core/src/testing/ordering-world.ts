@@ -4,7 +4,9 @@ import type { SessionUser } from "../auth/session-user";
 import { DistanceBandFee, ServiceFee, SmallOrderFee, ZoneBaseFee } from "../catalog/fee-strategies";
 import { PricingService } from "../catalog/pricing-service";
 import { PaymentGatewayRegistry } from "../ordering/gateway-registry";
+import { BackgroundJobs } from "../ordering/background-jobs";
 import { LedgerService } from "../ordering/ledger-service";
+import { OrderLifecycleService } from "../ordering/order-lifecycle-service";
 import { OrderService, type PaymentReturnUrls } from "../ordering/order-service";
 import { OrderStateMachine } from "../ordering/order-state-machine";
 import { PaymentEventService } from "../ordering/payment-event-service";
@@ -20,6 +22,7 @@ import {
   InMemoryOrderStore,
   InMemoryPromos,
   InMemoryWebhookEvents,
+  RecordingNotifier,
 } from "./ordering-fakes";
 import { sessionUser } from "./session-users";
 
@@ -52,6 +55,11 @@ export interface OrderingWorld {
   readonly events: PaymentEventService;
   readonly customer: SessionUser;
   readonly urls: PaymentReturnUrls;
+  readonly notifier: RecordingNotifier;
+  readonly lifecycle: OrderLifecycleService;
+  readonly jobs: BackgroundJobs;
+  /** Kape't Tinapay's owner, signed in with TOTP. */
+  readonly owner: SessionUser;
 }
 
 /** Every checkout service wired with in-memory fakes (the composition root, for unit tests). */
@@ -60,7 +68,11 @@ export function orderingWorld(now = new Date("2026-11-02T03:00:00Z")): OrderingW
   const clock = new FakeClock(now);
   const logger = new MemoryLogger();
   const authz = new AuthorizationService();
-  const store = new InMemoryOrderStore();
+  const store = new InMemoryOrderStore({
+    now: () => clock.now(),
+    merchantNames: { kape: "Kape't Tinapay" },
+  });
+  const notifier = new RecordingNotifier();
   const promoRepo = new InMemoryPromos(store);
   const online = new FakePaymentGateway();
   const cod = new FakePaymentGateway({ name: "cod", methods: ["cod"], paysUpfront: false });
@@ -85,6 +97,7 @@ export function orderingWorld(now = new Date("2026-11-02T03:00:00Z")): OrderingW
     authz,
     clock,
     logger,
+    notifier,
   });
   const refunds = new RefundService({
     orders: store,
@@ -100,8 +113,25 @@ export function orderingWorld(now = new Date("2026-11-02T03:00:00Z")): OrderingW
     ledger,
     states,
     refunds,
+    notifier,
     logger,
   });
+  const lifecycle = new OrderLifecycleService({
+    orders: store,
+    lifecycle: store,
+    states,
+    authz,
+    refunds,
+    notifier,
+    logger,
+  });
+  const jobs = new BackgroundJobs({
+    notifications: { deliverQueued: () => Promise.resolve(0) },
+    lifecycle: store,
+    refunds,
+    logger,
+  });
+  const owner = sessionUser("owner-kape", [{ role: "merchant_owner", merchantId: "kape" }], "aal2");
   const customer = sessionUser("customer-1", [{ role: "customer" }], "aal1");
   const urls = {
     success: (id: string) => `https://klikgo.test/orders/${id}?paid=1`,
@@ -122,5 +152,9 @@ export function orderingWorld(now = new Date("2026-11-02T03:00:00Z")): OrderingW
     events,
     customer,
     urls,
+    notifier,
+    lifecycle,
+    jobs,
+    owner,
   };
 }

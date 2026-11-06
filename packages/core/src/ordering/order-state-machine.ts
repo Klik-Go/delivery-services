@@ -39,6 +39,16 @@ export class OrderStateMachine {
     return ACTORS[`${from}->${to}`] ?? [];
   }
 
+  /** Statuses an order never leaves. */
+  isTerminal(status: OrderStatus): boolean {
+    return ORDER_STATUS_TRANSITIONS[status].length === 0;
+  }
+
+  /** Where this actor may move an order next, in the lifecycle's order. */
+  nextFor(from: OrderStatus, actor: OrderActor): OrderStatus[] {
+    return ORDER_STATUS_TRANSITIONS[from].filter((to) => this.actorsFor(from, to).includes(actor));
+  }
+
   check(from: OrderStatus, to: OrderStatus, actor: OrderActor): Result<void, AppError> {
     if (!ORDER_STATUS_TRANSITIONS[from].includes(to)) {
       return err(new ConflictError(`An order that is ${from} cannot become ${to}.`));

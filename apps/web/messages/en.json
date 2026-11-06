@@ -167,7 +167,57 @@
     "importLead": "Snap your printed menu and review the items",
     "storePage": "See your store page",
     "back": "Back to dashboard",
-    "failed": "That didn't work. Please try again."
+    "failed": "That didn't work. Please try again.",
+    "orders": {
+      "title": "Orders",
+      "back": "Dashboard",
+      "noStore": "You don't manage a store yet.",
+      "loading": "Loading orders…",
+      "failed": "Something went wrong. Please try again.",
+      "live": "Live",
+      "polling": "Refreshing",
+      "soundOn": "Sound on",
+      "soundOff": "Turn on sound",
+      "turnOnSound": "New order! Turn on sound so you never miss one.",
+      "column": {
+        "new": "New",
+        "preparing": "Preparing",
+        "ready": "Ready",
+        "pickedUp": "Picked up"
+      },
+      "empty": {
+        "new": "No new orders.",
+        "preparing": "Nothing cooking.",
+        "ready": "Nothing waiting for a rider.",
+        "pickedUp": "Nothing on the road."
+      },
+      "orderLabel": "Order {code}",
+      "scheduled": "Scheduled for {time}",
+      "confirmWithin": "Accept within {time}",
+      "readyBy": "Ready by {time}",
+      "soldOut": "Sold out",
+      "markedSoldOut": "Marked sold out",
+      "collectCash": "collect cash",
+      "paid": "paid online",
+      "acceptWith": "Accept · prep time",
+      "acceptMinutes": "Accept, ready in {minutes} minutes",
+      "minutes": "{minutes} min",
+      "reject": "Can't take it",
+      "rejectWhy": "Why can't you take this order?",
+      "rejectReason": {
+        "0": "Too busy right now",
+        "1": "An item is sold out",
+        "2": "Closing soon",
+        "3": "Can't deliver to this address"
+      },
+      "otherReason": "Other reason",
+      "rejectConfirm": "Reject order",
+      "keep": "Keep order",
+      "markReady": "Mark ready",
+      "waitingRider": "Waiting for the rider."
+    },
+    "ordersLink": "Orders",
+    "ordersLinkLead": "Accept new orders and mark them ready"
   },
   "StoreSettings": {
     "title": "Store settings",
@@ -496,7 +546,23 @@
         "refunded": "Refunded",
         "partially_refunded": "Partly refunded"
       },
-      "refunded": "Refunded {amount}"
+      "refunded": "Refunded {amount}",
+      "live": "Live",
+      "progress": "Order progress",
+      "readyBy": "Ready around {time} (about {minutes} minutes)",
+      "cancel": "Cancel order",
+      "step": {
+        "placed": "Order sent",
+        "accepted": "Accepted by the store",
+        "preparing": "Being prepared",
+        "ready": "Ready for pickup",
+        "picked_up": "On the way",
+        "delivered": "Delivered"
+      },
+      "reason": {
+        "merchant_timeout": "The store didn't confirm in time. Any payment is refunded.",
+        "payment_timeout": "The payment wasn't finished in time."
+      }
     },
     "devPay": {
       "title": "Test checkout",
@@ -508,5 +574,10 @@
       "done": "This order is already {status}.",
       "failed": "The test payment didn't go through."
     }
+  },
+  "Push": {
+    "on": "Get alerts on this device",
+    "off": "Turn off alerts",
+    "blocked": "Alerts are blocked in this browser's settings."
   }
 }

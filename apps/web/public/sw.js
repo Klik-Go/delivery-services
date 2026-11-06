@@ -4,7 +4,7 @@
 // - pages: network-first, falling back to the last copy, then to /offline;
 // - home feed API: network-first with the last answer as the offline fallback.
 // Never caches auth, cart pricing, merchant or admin traffic.
-const VERSION = "klikgo-v1";
+const VERSION = "klikgo-v2";
 const SHELL = ["/offline", "/brand/icon-192.png", "/brand/icon-512.png", "/icon.svg"];
 
 self.addEventListener("install", (event) => {
@@ -65,4 +65,37 @@ self.addEventListener("fetch", (event) => {
   } else if (request.mode === "navigate") {
     event.respondWith(networkFirst(request, "/offline"));
   }
+});
+
+// Web Push (Phase 6): order alerts for stores and status updates for customers. The payload is
+// { title, body, url, tag } from the server; tapping opens (or focuses) that page.
+self.addEventListener("push", (event) => {
+  let data = { title: "Klik Go", body: "", url: "/", tag: undefined };
+  try {
+    data = { ...data, ...event.data.json() };
+  } catch {
+    // A push without a JSON body still shows a generic notification.
+  }
+  event.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      tag: data.tag,
+      renotify: Boolean(data.tag),
+      icon: "/brand/icon-192.png",
+      badge: "/brand/icon-192.png",
+      data: { url: data.url },
+    }),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const target = new URL(event.notification.data?.url ?? "/", self.location.origin);
+  if (target.origin !== self.location.origin) return;
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((windows) => {
+      const open = windows.find((w) => new URL(w.url).pathname === target.pathname);
+      return open ? open.focus() : self.clients.openWindow(target.href);
+    }),
+  );
 });

@@ -179,7 +179,9 @@ export class DbFixtures {
     const cancel =
       status === "cancelled"
         ? ", cancel_reason = 'Test cancellation', cancelled_by_role = 'admin'"
-        : "";
+        : status === "rejected"
+          ? ", reject_reason = 'Test rejection'"
+          : "";
     await this.db.query(`update public.orders set status = $2${cancel} where id = $1`, [
       orderId,
       status,

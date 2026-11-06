@@ -167,7 +167,57 @@
     "importLead": "Kunan ng litrato ang menu at suriin ang mga item",
     "storePage": "Tingnan ang pahina ng tindahan",
     "back": "Bumalik sa dashboard",
-    "failed": "Hindi ito gumana. Pakisubukang muli."
+    "failed": "Hindi ito gumana. Pakisubukang muli.",
+    "orders": {
+      "title": "Mga order",
+      "back": "Dashboard",
+      "noStore": "Wala ka pang hawak na tindahan.",
+      "loading": "Kinukuha ang mga order…",
+      "failed": "May nagkamali. Pakisubukang muli.",
+      "live": "Live",
+      "polling": "Nire-refresh",
+      "soundOn": "May tunog",
+      "soundOff": "Buksan ang tunog",
+      "turnOnSound": "May bagong order! Buksan ang tunog para hindi ka makaligta.",
+      "column": {
+        "new": "Bago",
+        "preparing": "Inihahanda",
+        "ready": "Handa na",
+        "pickedUp": "Nakuha na"
+      },
+      "empty": {
+        "new": "Walang bagong order.",
+        "preparing": "Walang niluluto.",
+        "ready": "Walang naghihintay ng rider.",
+        "pickedUp": "Walang nasa daan."
+      },
+      "orderLabel": "Order {code}",
+      "scheduled": "Naka-schedule sa {time}",
+      "confirmWithin": "Tanggapin sa loob ng {time}",
+      "readyBy": "Handa bago mag-{time}",
+      "soldOut": "Ubos na",
+      "markedSoldOut": "Minarkahang ubos",
+      "collectCash": "singilin ng cash",
+      "paid": "bayad online",
+      "acceptWith": "Tanggapin · oras ng paghahanda",
+      "acceptMinutes": "Tanggapin, handa sa {minutes} minuto",
+      "minutes": "{minutes} min",
+      "reject": "Hindi kaya",
+      "rejectWhy": "Bakit hindi mo matanggap ang order?",
+      "rejectReason": {
+        "0": "Masyadong busy ngayon",
+        "1": "May ubos na item",
+        "2": "Malapit nang magsara",
+        "3": "Hindi maihatid sa address na ito"
+      },
+      "otherReason": "Ibang dahilan",
+      "rejectConfirm": "Tanggihan ang order",
+      "keep": "Huwag tanggihan",
+      "markReady": "Handa na",
+      "waitingRider": "Hinihintay ang rider."
+    },
+    "ordersLink": "Mga order",
+    "ordersLinkLead": "Tanggapin ang bagong order at markahang handa"
   },
   "StoreSettings": {
     "title": "Settings ng tindahan",
@@ -496,7 +546,23 @@
         "refunded": "Na-refund",
         "partially_refunded": "Bahagyang na-refund"
       },
-      "refunded": "Na-refund ang {amount}"
+      "refunded": "Na-refund ang {amount}",
+      "live": "Live",
+      "progress": "Takbo ng order",
+      "readyBy": "Handa bandang {time} (mga {minutes} minuto)",
+      "cancel": "Kanselahin ang order",
+      "step": {
+        "placed": "Naipadala ang order",
+        "accepted": "Tinanggap ng tindahan",
+        "preparing": "Inihahanda",
+        "ready": "Handa nang kunin",
+        "picked_up": "Papunta na",
+        "delivered": "Naihatid na"
+      },
+      "reason": {
+        "merchant_timeout": "Hindi kinumpirma ng tindahan sa oras. Ire-refund ang anumang bayad.",
+        "payment_timeout": "Hindi natapos ang bayad sa oras."
+      }
     },
     "devPay": {
       "title": "Test checkout",
@@ -508,5 +574,10 @@
       "done": "Ang order na ito ay {status} na.",
       "failed": "Hindi natuloy ang test na bayad."
     }
+  },
+  "Push": {
+    "on": "Tumanggap ng alerto dito",
+    "off": "Patayin ang alerto",
+    "blocked": "Naka-block ang alerto sa settings ng browser."
   }
 }

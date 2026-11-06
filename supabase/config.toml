@@ -282,6 +282,8 @@ max_frequency = "1s"
 639170000108 = "123456"
 639170000109 = "123456"
 639170000110 = "123456"
+639170000111 = "123456"
+639170000112 = "123456"
 
 # Send-SMS hook: Supabase Auth calls the BFF, which texts through Semaphore (docs/ARCHITECTURE.md).
 # The secret ("v1,whsec_…") must equal SEND_SMS_HOOK_SECRET in the web app's environment.

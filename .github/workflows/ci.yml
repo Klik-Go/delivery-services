@@ -73,6 +73,12 @@ jobs:
           secret="whsk_test_$(openssl rand -hex 24)"
           echo "::add-mask::$secret"
           echo "PAYMONGO_WEBHOOK_SECRET=$secret" >> "$GITHUB_ENV"
+      - name: Generate a throwaway scheduler secret
+        # Lets Cucumber call POST /api/internal/jobs like pg_cron does in production, for this run only.
+        run: |
+          secret="$(openssl rand -hex 32)"
+          echo "::add-mask::$secret"
+          echo "CRON_SECRET=$secret" >> "$GITHUB_ENV"
       - name: Supabase start
         # Services we do not use yet are excluded to keep CI fast; add them back as phases need them.
         run: pnpm exec supabase start -x studio,imgproxy,mailpit,edge-runtime,logflare,vector,supavisor,postgres-meta

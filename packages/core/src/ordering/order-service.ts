@@ -9,6 +9,7 @@ import type { SessionUser } from "../auth/session-user";
 import type { CartQuote, PricingService } from "../catalog/pricing-service";
 import type { QuoteCatalog } from "../catalog/ports";
 import type { Clock } from "../ports/clock";
+import type { IOrderNotifier } from "../notifications/notification-service";
 import type { Logger } from "../ports/logger";
 import {
   ConflictError,
@@ -28,6 +29,7 @@ import type {
   IPaymentGateway,
   NewOrder,
   OrderRecord,
+  OrderTimeline,
 } from "./ports";
 import type { AppliedPromo, PromoService } from "./promo-service";
 import { deliverySlots } from "./schedule";
@@ -72,6 +74,16 @@ export interface OrderView {
   /** The hosted payment page while the order still awaits payment; null otherwise. */
   readonly checkoutUrl: string | null;
   readonly createdAt: string;
+  readonly merchantName: string;
+  readonly prepMinutes: number | null;
+  /** When the store expects the food to be ready (accepted + prep time). */
+  readonly readyBy: string | null;
+  readonly rejectReason: string | null;
+  readonly cancelReason: string | null;
+  /** When each step happened (ISO times, null until it does): the tracking stepper. */
+  readonly timeline: Readonly<Record<keyof OrderTimeline, string | null>>;
+  /** True while the customer can still cancel (before the store accepts). */
+  readonly canCancel: boolean;
 }
 
 /** Return addresses for the hosted payment page. */
@@ -108,6 +120,7 @@ export class OrderService {
       authz: AuthorizationService;
       clock: Clock;
       logger: Logger;
+      notifier: IOrderNotifier;
     },
   ) {}
 
@@ -161,6 +174,27 @@ export class OrderService {
       checkoutUrl:
         order.status === "awaiting_payment" ? (order.payment?.checkoutUrl ?? null) : null,
       createdAt: order.createdAt.toISOString(),
+      merchantName: order.merchantName,
+      prepMinutes: order.prepMinutes,
+      readyBy:
+        order.timeline.acceptedAt && order.prepMinutes
+          ? new Date(order.timeline.acceptedAt.getTime() + order.prepMinutes * 60_000).toISOString()
+          : null,
+      rejectReason: order.rejectReason,
+      cancelReason: order.cancelReason,
+      timeline: {
+        placedAt: iso(order.timeline.placedAt),
+        acceptedAt: iso(order.timeline.acceptedAt),
+        preparingAt: iso(order.timeline.preparingAt),
+        readyAt: iso(order.timeline.readyAt),
+        pickedUpAt: iso(order.timeline.pickedUpAt),
+        deliveredAt: iso(order.timeline.deliveredAt),
+        rejectedAt: iso(order.timeline.rejectedAt),
+        cancelledAt: iso(order.timeline.cancelledAt),
+      },
+      canCancel:
+        order.customerId === actor.id &&
+        (order.status === "awaiting_payment" || order.status === "placed"),
     });
   }
 
@@ -233,12 +267,27 @@ export class OrderService {
       paymentMethod: order.paymentMethod,
       totalCentavos: order.totalCentavos,
     });
-    return this.startPayment(
+    const started = await this.startPayment(
       { id: created.id, code: created.code, status: order.status, totalCentavos },
       input.paymentMethod,
       gateway,
       context.urls,
     );
+    // Cash on delivery goes straight to the store; online orders are announced once paid.
+    if (started.ok && order.status === "placed") {
+      await this.deps.notifier.statusChanged(
+        {
+          id: created.id,
+          code: created.code,
+          customerId: actor.id,
+          merchantId: order.merchantId,
+          merchantName: store.name,
+          totalCentavos,
+        },
+        "placed",
+      );
+    }
+    return started;
   }
 
   /** The same Idempotency-Key again: the same order (resuming its payment if it never started). */
@@ -406,3 +455,5 @@ function canonical(input: PlaceOrderRequest): string {
     scheduledFor: input.scheduledFor ?? null,
   });
 }
+
+const iso = (at: Date | null): string | null => (at ? at.toISOString() : null);

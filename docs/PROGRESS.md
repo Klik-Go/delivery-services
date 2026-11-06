@@ -13,8 +13,8 @@ Phases are defined in `docs/BUILD_PLAN.md` §6. Agents update this file in every
 | 3.1 | Follow-up: launch zones (Makati, San Fernando, San Marcelino) + owner answers | ✅ Done (merged) | [Klik-Go/delivery-services#9](https://github.com/Klik-Go/delivery-services/pull/9) | Owner: `main` ruleset target (Q6), Gemini paid tier (Q16) |
 | 4 | Customer discovery, store page, cart (PWA) | ✅ Done (merged) | [Klik-Go/delivery-services#10](https://github.com/Klik-Go/delivery-services/pull/10) | Owner: `GOOGLE_MAPS_API_KEY` for address search (optional, Q17) |
 | 4.1 | Follow-up: deploy fixes (readiness, migration deploy) + placeholder sign-in code | ✅ Done (merged) | [Klik-Go/delivery-services#11](https://github.com/Klik-Go/delivery-services/pull/11), [#12](https://github.com/Klik-Go/delivery-services/pull/12), [#13](https://github.com/Klik-Go/delivery-services/pull/13) | 4.1.1 readiness fix, 4.1.2 bootstrap-admin workflow; owner confirmed sign-in works on production |
-| 5 | Checkout and payments (PayMongo + COD) | 🟡 In progress (PR open) | [Klik-Go/delivery-services#14](https://github.com/Klik-Go/delivery-services/pull/14) | Owner: PayMongo keys + webhook (Q22), BSP/legal check on holding payments (Q23) |
-| 6 | Order lifecycle, merchant queue, SLA | ⬜ Not started | | |
+| 5 | Checkout and payments (PayMongo + COD) | ✅ Done (merged) | [Klik-Go/delivery-services#14](https://github.com/Klik-Go/delivery-services/pull/14) | Owner: PayMongo keys + webhook (Q22), BSP/legal check on holding payments (Q23) |
+| 6 | Order lifecycle, merchant queue, SLA | 🟡 In progress (PR open) | [Klik-Go/delivery-services#15](https://github.com/Klik-Go/delivery-services/pull/15) | Owner: Vault secrets + `CRON_SECRET`, VAPID keys, store phones (Q25); SLA penalty (Q26) |
 | 7 | Rider app, dispatch, live tracking | ⬜ Not started | | |
 | 8 | Coordinator and Admin console | ⬜ Not started | | |
 | 9 | Ratings, reorder, promos, referrals, loyalty | ⬜ Not started | | |
@@ -157,7 +157,27 @@ Deliverables:
 - [x] Tests: Cucumber 94/94 (20 new), unit 378 (ordering services 94–100% lines), DB 150, Playwright 60/60 on Pixel 7 + desktop (8 new checkout runs with axe), Lighthouse store page 97 / Home 100. Screenshots: `docs/screenshots/phase-5-*`.
 - [ ] Owner: PayMongo account, keys and webhook (Q22); legal/BSP check (Q23).
 
-Next: Phase 6, order lifecycle and the merchant queue, after this PR is reviewed and merged.
+Merged in [Klik-Go/delivery-services#14](https://github.com/Klik-Go/delivery-services/pull/14). Owner 2026-11-06: PayMongo comes later; testing starts with cash on delivery.
+
+### Phase 6 — Merchant order queue, lifecycle, notifications, SLA timers (branch `phase-6-order-lifecycle`)
+Acceptance (docs/BUILD_PLAN.md §6, Gherkin in `features/orders/`):
+- [x] Illegal transitions are rejected (unit tests for every pair): `order-state-machine.test.ts` checks all 100 status pairs × 8 actors against a hand-written rulebook (conflict when the change does not exist, forbidden for the wrong actor); the database guard repeats the check.
+- [x] The merchant sees a new order in under 2 s locally: `e2e/order-board.spec.ts` opens the store's board (Realtime private channel `merchant:<id>`, "Live"), places a cash order in a second browser context and requires the card within 2,000 ms, on Pixel 7 and desktop.
+- [x] An unacknowledged order is auto-cancelled at 180 s and the refund triggered: `pg_cron` `merchant-sla` (every 30 s) texts at 60 s, alerts the coordinator at 120 s and cancels at 180 s (`order-lifecycle.db.test.ts`, `merchant-sla.feature`); the paid case is refunded in full by the background job and the ledger balances.
+- [x] The customer's tracking stepper updates live: the same e2e test accepts and marks ready on the store's board while the customer's order page (channel `order:<id>`) changes to "Being prepared" and "Ready for pickup" within 3 s without a reload.
+
+Deliverables:
+- [x] `OrderLifecycleService`: accept with prep time (accepted → preparing in one transaction), reject with reason, mark ready, cancel (customer until the store accepts; coordinator/admin later); conditional on the status read (`FOR UPDATE`), actor recorded on `order_events`, promo released, paid orders refunded.
+- [x] Merchant board `/merchant/orders`: New / Preparing / Ready / Picked up, 3-minute countdown, prep chips 10/15/20/30, reject reasons, quick "sold out", Web Audio alarm until acknowledged (one tap to allow sound), live badge, polling fallback. Dashboard link.
+- [x] Realtime: DB trigger → `realtime.send` on private topics; `realtime.messages` SELECT policy `private.can_follow_topic` (customer, store staff with TOTP, zone coordinator, admin; no INSERT); `/api/realtime/token` for the browser; clients refetch through the BFF.
+- [x] Notifications: `NotificationService` + policy table; `WebPushSender` (VAPID, `web-push` 3.6.7), `SmsNotificationSender` (Semaphore/dev), `InAppNotificationSender`; push opt-in on the board; service worker `push`/`notificationclick`.
+- [x] SLA escalation in SQL with thresholds in the `merchant_sla` feature flag; background jobs `POST /api/internal/jobs` (`CRON_SECRET`) called by `pg_cron` + `pg_net` with Vault secrets.
+- [x] Customer order page: live stepper with times, ready-by estimate, rejection/cancellation reason, Cancel button while allowed.
+- [x] Migration `20261112100000_order_lifecycle.sql` with DB tests; Prisma schema + ERD regenerated.
+- [x] Tests: Cucumber 107/107 (13 new), unit 515, DB 168 (137 + 31 repository), Playwright 66/66 (6 new board runs on Pixel 7 + desktop with axe), Lighthouse store page 98 / Home 100. Screenshots: `docs/screenshots/phase-6-*`.
+- [ ] Owner: Vault secrets + `CRON_SECRET`, VAPID keys, store phone numbers (Q25); penalty rule (Q26).
+
+Next: Phase 7, rider app, dispatch and live tracking, after this PR is reviewed and merged.
 
 ## Business validation (parallel, doc §8)
 - [ ] 20–30 customer interviews in the pilot barangay

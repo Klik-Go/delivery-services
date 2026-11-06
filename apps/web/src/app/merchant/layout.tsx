@@ -1,4 +1,5 @@
 import type { JSX, ReactNode } from "react";
+import { ServiceWorkerRegister } from "@/components/customer/pwa";
 import { QueryProvider } from "@/components/query-provider";
 import { requireSurface } from "@/server/auth/guards";
 
@@ -9,5 +10,11 @@ export default async function MerchantLayout({
   readonly children: ReactNode;
 }): Promise<JSX.Element> {
   await requireSurface("merchant", "/merchant");
-  return <QueryProvider>{children}</QueryProvider>;
+  // The service worker shows order alerts (Web Push) on the store's devices.
+  return (
+    <QueryProvider>
+      <ServiceWorkerRegister />
+      {children}
+    </QueryProvider>
+  );
 }

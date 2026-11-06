@@ -1,5 +1,28 @@
-import type { OrderStatus, PaymentMethod, PaymentStatus, RefundStatus } from "@klikgo/types";
+import {
+  ORDER_STATUS_TRANSITIONS,
+  type AppRole,
+  type NotificationChannel,
+  type OrderStatus,
+  type PaymentMethod,
+  type PaymentStatus,
+  type RefundStatus,
+} from "@klikgo/types";
 import type {
+  INotificationLog,
+  INotificationSender,
+  IPushSubscriptionStore,
+  PushSubscriptionRecord,
+  IRecipientDirectory,
+  NotificationMessage,
+  QueuedNotification,
+  RenderedNotification,
+} from "../notifications/ports";
+import type { IOrderNotifier, NotifiableOrder } from "../notifications/notification-service";
+import type {
+  BoardOrder,
+  IOrderLifecycleRepository,
+  OrderTimeline,
+  StatusChangeRequest,
   CheckoutStart,
   CheckoutStartRequest,
   GatewayPaymentStatus,
@@ -20,13 +43,33 @@ import { AppError, ServiceUnavailableError } from "../shared/errors";
 import type { Centavos } from "../shared/money";
 import { err, ok, type Result } from "../shared/result";
 
-interface StoredOrder extends Omit<NewOrder, "status"> {
+type MutableTimeline = { -readonly [K in keyof OrderTimeline]: OrderTimeline[K] };
+
+interface StoredOrder extends Omit<NewOrder, "status" | "prepMinutes"> {
   readonly id: string;
   readonly code: string;
   status: OrderStatus;
   paymentStatus: PaymentStatus;
+  prepMinutes: number;
   readonly createdAt: Date;
+  readonly timeline: MutableTimeline;
+  rejectReason: string | null;
+  cancelReason: string | null;
 }
+
+/** The timestamp column the database stamps for each status (orders_status_guard). */
+const STAMP: Readonly<Partial<Record<OrderStatus, keyof OrderTimeline>>> = {
+  placed: "placedAt",
+  accepted: "acceptedAt",
+  preparing: "preparingAt",
+  ready: "readyAt",
+  picked_up: "pickedUpAt",
+  delivered: "deliveredAt",
+  rejected: "rejectedAt",
+  cancelled: "cancelledAt",
+};
+
+const LIVE: readonly OrderStatus[] = ["placed", "accepted", "preparing", "ready", "picked_up"];
 
 interface StoredRefund {
   readonly id: string;
@@ -44,8 +87,29 @@ interface StoredRefund {
  * customer and Idempotency-Key, one payment per order, refunds never above the amount paid,
  * conditional placement and balanced ledger transactions.
  */
-export class InMemoryOrderStore implements IOrderRepository, IPaymentRepository {
+export class InMemoryOrderStore
+  implements IOrderRepository, IPaymentRepository, IOrderLifecycleRepository
+{
   readonly orders: StoredOrder[] = [];
+  /** order_events as the database would write them. */
+  readonly events: {
+    orderId: string;
+    from: OrderStatus | null;
+    to: OrderStatus;
+    actorId: string | null;
+    actorRole: AppRole | null;
+    meta: Readonly<Record<string, string | number>>;
+  }[] = [];
+  private readonly now: () => Date;
+  private readonly merchantNames: Readonly<Record<string, string>>;
+
+  constructor(
+    options: { now?: () => Date; merchantNames?: Readonly<Record<string, string>> } = {},
+  ) {
+    this.now = options.now ?? (() => new Date(0));
+    this.merchantNames = options.merchantNames ?? {};
+  }
+
   readonly payments: (Omit<
     PaymentRecord,
     "status" | "gatewayPaymentId" | "feeCentavos" | "refundedCentavos"
@@ -82,12 +146,33 @@ export class InMemoryOrderStore implements IOrderRepository, IPaymentRepository 
     this.sequence += 1;
     const id = `order-${String(this.sequence)}`;
     const code = `KG-TEST${String(this.sequence).padStart(2, "0")}`;
+    const at = this.now();
     this.orders.push({
       ...order,
       id,
       code,
       paymentStatus: "pending",
-      createdAt: new Date(0),
+      createdAt: at,
+      timeline: {
+        placedAt: order.status === "placed" ? at : null,
+        acceptedAt: null,
+        preparingAt: null,
+        readyAt: null,
+        pickedUpAt: null,
+        deliveredAt: null,
+        rejectedAt: null,
+        cancelledAt: null,
+      },
+      rejectReason: null,
+      cancelReason: null,
+    });
+    this.events.push({
+      orderId: id,
+      from: null,
+      to: order.status,
+      actorId: order.customerId,
+      actorRole: "customer",
+      meta: {},
     });
     if (order.promo) {
       this.redemptions.push({
@@ -147,7 +232,8 @@ export class InMemoryOrderStore implements IOrderRepository, IPaymentRepository 
     payment.feeCentavos = input.feeCentavos;
     payment.paidAt = input.paidAt;
     order.paymentStatus = "paid";
-    if (order.status === "awaiting_payment") order.status = "placed";
+    if (order.status === "awaiting_payment")
+      this.setStatus(order, "placed", null, null, { reason: "payment_confirmed" });
     this.post(input.ledger);
     return Promise.resolve({ alreadyPaid: false, orderStatus: order.status });
   }
@@ -222,10 +308,19 @@ export class InMemoryOrderStore implements IOrderRepository, IPaymentRepository 
   }
 
   /** Test helper: what the unpaid-order timeout does. */
+  /** What pg_cron does to an order still unpaid after 15 minutes. */
   cancelUnpaid(orderId: string): void {
     const order = this.orderById(orderId);
-    order.status = "cancelled";
+    this.setStatus(order, "cancelled", null, null, { reason: "payment_timeout", by: "system" });
+    order.cancelReason = "payment_timeout";
     order.paymentStatus = "failed";
+  }
+
+  /** What pg_cron does to an order its store never confirmed (docs/BUSINESS.md §5.4). */
+  cancelForStoreTimeout(orderId: string): void {
+    const order = this.orderById(orderId);
+    this.setStatus(order, "cancelled", null, null, { reason: "merchant_timeout", by: "system" });
+    order.cancelReason = "merchant_timeout";
   }
 
   /** Sum of debits minus credits over an order's ledger (0 when it balances). */
@@ -254,6 +349,83 @@ export class InMemoryOrderStore implements IOrderRepository, IPaymentRepository 
     return payment;
   }
 
+  changeStatus(request: StatusChangeRequest): Promise<boolean> {
+    const order = this.orders.find((o) => o.id === request.orderId);
+    if (order?.status !== request.from) return Promise.resolve(false);
+    for (const to of request.steps) {
+      this.setStatus(order, to, request.actor.id, request.actor.role, request.meta);
+    }
+    if (request.prepMinutes !== undefined) order.prepMinutes = request.prepMinutes;
+    if (request.rejectReason !== undefined) order.rejectReason = request.rejectReason;
+    if (request.cancelReason !== undefined) order.cancelReason = request.cancelReason;
+    if (request.releasePromo) {
+      const keep = this.redemptions.filter((r) => r.orderId !== order.id);
+      this.redemptions.splice(0, this.redemptions.length, ...keep);
+    }
+    return Promise.resolve(true);
+  }
+
+  board(merchantId: string): Promise<BoardOrder[]> {
+    return Promise.resolve(
+      this.orders
+        .filter((o) => o.merchantId === merchantId && LIVE.includes(o.status))
+        .map((o) => ({
+          id: o.id,
+          code: o.code,
+          status: o.status,
+          paymentMethod: o.paymentMethod,
+          paymentStatus: o.paymentStatus,
+          totalCentavos: o.totalCentavos,
+          placedAt: o.timeline.placedAt ?? o.createdAt,
+          acceptedAt: o.timeline.acceptedAt,
+          prepMinutes: o.timeline.acceptedAt ? o.prepMinutes : null,
+          scheduledFor: o.scheduledFor,
+          flaggedAt: null,
+          notes: o.address.notes ?? null,
+          items: o.lines.map((line) => ({
+            menuItemId: line.menuItemId,
+            name: line.name,
+            quantity: line.quantity,
+            modifiers: line.modifiers.map((m) => m.name),
+          })),
+        }))
+        .sort((a, b) => a.placedAt.getTime() - b.placedAt.getTime()),
+    );
+  }
+
+  refundsDue(limit: number): Promise<{ orderId: string; reason: string }[]> {
+    return Promise.resolve(
+      this.orders
+        .filter(
+          (o) =>
+            (o.status === "cancelled" || o.status === "rejected") &&
+            this.payments.some((p) => p.orderId === o.id && p.status === "paid"),
+        )
+        .slice(0, limit)
+        .map((o) => ({
+          orderId: o.id,
+          reason: o.rejectReason ?? o.cancelReason ?? "Order ended early",
+        })),
+    );
+  }
+
+  private setStatus(
+    order: StoredOrder,
+    to: OrderStatus,
+    actorId: string | null,
+    actorRole: AppRole | null,
+    meta: Readonly<Record<string, string | number>>,
+  ): void {
+    const from = order.status;
+    if (!ORDER_STATUS_TRANSITIONS[from].includes(to)) {
+      throw new Error(`invalid order status transition: ${from} -> ${to}`);
+    }
+    order.status = to;
+    const column = STAMP[to];
+    if (column) order.timeline[column] = this.now();
+    this.events.push({ orderId: order.id, from, to, actorId, actorRole, meta });
+  }
+
   private record(order: StoredOrder | undefined): OrderRecord | null {
     if (!order) return null;
     const payment = this.payments.find((p) => p.orderId === order.id);
@@ -262,7 +434,12 @@ export class InMemoryOrderStore implements IOrderRepository, IPaymentRepository 
       code: order.code,
       customerId: order.customerId,
       merchantId: order.merchantId,
+      merchantName: this.merchantNames[order.merchantId] ?? order.merchantId,
       zoneId: order.zoneId,
+      prepMinutes: order.timeline.acceptedAt ? order.prepMinutes : null,
+      rejectReason: order.rejectReason,
+      cancelReason: order.cancelReason,
+      timeline: { ...order.timeline },
       status: order.status,
       paymentMethod: order.paymentMethod,
       paymentStatus: order.paymentStatus,
@@ -403,5 +580,133 @@ export class FakeContentHasher implements IContentHasher {
       h2 = Math.imul(h2 + text.charCodeAt(i), 0x5bd1e995) >>> 0;
     }
     return (h1.toString(16).padStart(8, "0") + h2.toString(16).padStart(8, "0")).repeat(4);
+  }
+}
+
+/** Remembers every status change it is told about (unit tests). */
+export class RecordingNotifier implements IOrderNotifier {
+  readonly changes: {
+    orderId: string;
+    to: OrderStatus;
+    params: Readonly<Record<string, string | number>>;
+  }[] = [];
+
+  statusChanged(
+    order: NotifiableOrder,
+    to: OrderStatus,
+    params: Readonly<Record<string, string | number>> = {},
+  ): Promise<void> {
+    this.changes.push({ orderId: order.id, to, params });
+    return Promise.resolve();
+  }
+}
+
+/** The notifications table in memory: started, finished and queued messages. */
+export class InMemoryNotificationLog implements INotificationLog {
+  readonly rows: (NotificationMessage & {
+    id: string;
+    channel: NotificationChannel;
+    status: "queued" | "sending" | "sent" | "failed";
+    error: string | null;
+  })[] = [];
+
+  start(message: NotificationMessage, channel: NotificationChannel): Promise<string> {
+    const id = `notification-${String(this.rows.length + 1)}`;
+    this.rows.push({ ...message, id, channel, status: "sending", error: null });
+    return Promise.resolve(id);
+  }
+
+  finish(id: string, outcome: { ok: true } | { ok: false; error: string }): Promise<void> {
+    const row = this.rows.find((r) => r.id === id);
+    if (row) {
+      row.status = outcome.ok ? "sent" : "failed";
+      row.error = outcome.ok ? null : outcome.error;
+    }
+    return Promise.resolve();
+  }
+
+  /** Queues a message the way the database's SLA job does. */
+  queue(message: NotificationMessage, channel: NotificationChannel): void {
+    this.rows.push({
+      ...message,
+      id: `notification-${String(this.rows.length + 1)}`,
+      channel,
+      status: "queued",
+      error: null,
+    });
+  }
+
+  claimQueued(limit: number): Promise<QueuedNotification[]> {
+    const claimed = this.rows.filter((r) => r.status === "queued").slice(0, limit);
+    for (const row of claimed) row.status = "sending";
+    return Promise.resolve(
+      claimed.map(({ id, channel, userId, template, orderId, params }) => ({
+        id,
+        channel,
+        userId,
+        template,
+        orderId,
+        params,
+      })),
+    );
+  }
+}
+
+/** A channel that keeps what it would have sent; `fail` makes it refuse. */
+export class FakeNotificationSender implements INotificationSender {
+  readonly sent: { message: NotificationMessage; rendered: RenderedNotification }[] = [];
+  fail = false;
+  throws = false;
+
+  constructor(readonly channel: NotificationChannel) {}
+
+  send(
+    message: NotificationMessage,
+    rendered: RenderedNotification,
+  ): Promise<Result<void, AppError>> {
+    if (this.throws) return Promise.reject(new Error("boom"));
+    if (this.fail) return Promise.resolve(err(new ServiceUnavailableError("Channel is down.")));
+    this.sent.push({ message, rendered });
+    return Promise.resolve(ok(undefined));
+  }
+}
+
+/** Store teams by merchant id. */
+export class InMemoryRecipients implements IRecipientDirectory {
+  constructor(private readonly teams: Readonly<Record<string, readonly string[]>> = {}) {}
+
+  merchantTeam(merchantId: string): Promise<string[]> {
+    return Promise.resolve([...(this.teams[merchantId] ?? [])]);
+  }
+}
+
+/** device_push_subscriptions in memory (unique per endpoint). */
+export class InMemoryPushSubscriptions implements IPushSubscriptionStore {
+  readonly rows: {
+    userId: string;
+    subscription: PushSubscriptionRecord;
+    userAgent: string | null;
+  }[] = [];
+
+  forUser(userId: string): Promise<PushSubscriptionRecord[]> {
+    return Promise.resolve(this.rows.filter((r) => r.userId === userId).map((r) => r.subscription));
+  }
+
+  save(
+    userId: string,
+    subscription: PushSubscriptionRecord,
+    userAgent: string | null,
+  ): Promise<void> {
+    const keep = this.rows.filter((r) => r.subscription.endpoint !== subscription.endpoint);
+    this.rows.splice(0, this.rows.length, ...keep, { userId, subscription, userAgent });
+    return Promise.resolve();
+  }
+
+  remove(endpoint: string, userId: string | null): Promise<void> {
+    const keep = this.rows.filter(
+      (r) => r.subscription.endpoint !== endpoint || (userId !== null && r.userId !== userId),
+    );
+    this.rows.splice(0, this.rows.length, ...keep);
+    return Promise.resolve();
   }
 }

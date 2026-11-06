@@ -61,6 +61,9 @@ export interface CheckoutScenario {
   webhookBody?: string;
   webhookStatus?: number;
   adminApi?: ApiClient;
+  /** A store owner signed in with TOTP, and their store. */
+  ownerApi?: ApiClient;
+  ownerMerchantId?: string;
 }
 
 export const BASE_URL = process.env.BASE_URL ?? "http://localhost:3000";

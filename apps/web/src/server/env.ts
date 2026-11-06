@@ -56,6 +56,22 @@ const ServerEnvSchema = z
       (value) => (value === "" ? undefined : value),
       z.enum(["paymongo", "fake"]).optional(),
     ),
+    // Web Push (Phase 6): VAPID keys from `npx web-push generate-vapid-keys`. The public key is
+    // handed to browsers; the private key is server only. Subject: mailto: or https: contact.
+    VAPID_PUBLIC_KEY: optionalString,
+    VAPID_PRIVATE_KEY: optionalString,
+    VAPID_SUBJECT: z.preprocess(
+      (value) => (value === "" ? undefined : value),
+      z
+        .string()
+        .regex(/^(mailto:|https:\/\/)/, "must start with mailto: or https://")
+        .optional(),
+    ),
+    // Shared secret the scheduler (pg_cron via pg_net) sends to POST /api/internal/jobs.
+    CRON_SECRET: z.preprocess(
+      (value) => (value === "" ? undefined : value),
+      z.string().min(32, "must be at least 32 characters").optional(),
+    ),
     // "fake" uses the deterministic test menu reader (local dev, Cucumber, Playwright only).
     MENU_PARSER: z.preprocess(
       (value) => (value === "" ? undefined : value),

@@ -1,4 +1,5 @@
 import type {
+  AppRole,
   CheckoutAddress,
   LedgerAccount,
   LedgerParty,
@@ -97,13 +98,32 @@ export interface PaymentRecord {
   readonly refundedCentavos: Centavos;
 }
 
+/** When an order reached each status (null until it does). */
+export interface OrderTimeline {
+  readonly placedAt: Date | null;
+  readonly acceptedAt: Date | null;
+  readonly preparingAt: Date | null;
+  readonly readyAt: Date | null;
+  readonly pickedUpAt: Date | null;
+  readonly deliveredAt: Date | null;
+  readonly rejectedAt: Date | null;
+  readonly cancelledAt: Date | null;
+}
+
 /** An order with its payment (if one was started). */
 export interface OrderRecord {
   readonly id: string;
   readonly code: string;
   readonly customerId: string;
   readonly merchantId: string;
+  /** The store's name, for messages to the customer. */
+  readonly merchantName: string;
   readonly zoneId: string;
+  /** Minutes the store said it needs (set when it accepts). */
+  readonly prepMinutes: number | null;
+  readonly rejectReason: string | null;
+  readonly cancelReason: string | null;
+  readonly timeline: OrderTimeline;
   readonly status: OrderStatus;
   readonly paymentMethod: PaymentMethod;
   readonly paymentStatus: PaymentStatus;
@@ -305,4 +325,58 @@ export interface IPaymentWebhookVerifier {
 /** SHA-256 of a string, as 64 lowercase hex characters (request fingerprints). */
 export interface IContentHasher {
   sha256Hex(text: string): string;
+}
+
+// ---------------------------------------------------------------------------
+// Order lifecycle (Phase 6)
+// ---------------------------------------------------------------------------
+
+/**
+ * One or more status changes made together (e.g. accepted then preparing) by one actor. The
+ * repository applies them in one transaction only if the order is still `from`, sets the actor
+ * for the database's order_events rows, and reports false when someone else changed it first.
+ */
+export interface StatusChangeRequest {
+  readonly orderId: string;
+  readonly from: OrderStatus;
+  readonly steps: readonly OrderStatus[];
+  /** Null id and role for the platform itself. */
+  readonly actor: { readonly id: string | null; readonly role: AppRole | null };
+  readonly meta: Readonly<Record<string, string | number>>;
+  readonly prepMinutes?: number;
+  readonly rejectReason?: string;
+  readonly cancelReason?: string;
+  /** Gives a used promo back (rejected or cancelled orders). */
+  readonly releasePromo?: boolean;
+}
+
+/** An order as the store's board shows it: no customer details beyond what cooking needs. */
+export interface BoardOrder {
+  readonly id: string;
+  readonly code: string;
+  readonly status: OrderStatus;
+  readonly paymentMethod: PaymentMethod;
+  readonly paymentStatus: PaymentStatus;
+  readonly totalCentavos: Centavos;
+  readonly placedAt: Date;
+  readonly acceptedAt: Date | null;
+  readonly prepMinutes: number | null;
+  readonly scheduledFor: Date | null;
+  /** Set when the platform alerted the zone coordinator about a late confirmation. */
+  readonly flaggedAt: Date | null;
+  readonly notes: string | null;
+  readonly items: readonly {
+    readonly menuItemId: string | null;
+    readonly name: string;
+    readonly quantity: number;
+    readonly modifiers: readonly string[];
+  }[];
+}
+
+export interface IOrderLifecycleRepository {
+  changeStatus(request: StatusChangeRequest): Promise<boolean>;
+  /** The store's live orders (placed through picked up), oldest first. */
+  board(merchantId: string): Promise<BoardOrder[]>;
+  /** Rejected or cancelled orders still holding an online payment (to refund). */
+  refundsDue(limit: number): Promise<{ readonly orderId: string; readonly reason: string }[]>;
 }

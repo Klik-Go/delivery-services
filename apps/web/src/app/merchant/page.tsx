@@ -1,4 +1,4 @@
-import { ChevronRight, Camera, Settings, UtensilsCrossed } from "lucide-react";
+import { ChevronRight, Camera, ClipboardList, Settings, UtensilsCrossed } from "lucide-react";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import type { JSX } from "react";
@@ -32,6 +32,12 @@ export default async function MerchantPage({
   const store = settings.value;
   const query = `?store=${store.merchantId}`;
   const links = [
+    {
+      href: `/merchant/orders${query}`,
+      title: t("ordersLink"),
+      lead: t("ordersLinkLead"),
+      Icon: ClipboardList,
+    },
     {
       href: `/merchant/menu${query}`,
       title: t("menu"),

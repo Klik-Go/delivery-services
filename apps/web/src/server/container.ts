@@ -36,6 +36,12 @@ import {
   PrismaWebhookEventStore,
   UnconfiguredWebhookVerifier,
   payMongoModeOf,
+  InAppNotificationSender,
+  PrismaNotificationLog,
+  PrismaPushSubscriptions,
+  PrismaRecipientDirectory,
+  SmsNotificationSender,
+  WebPushSender,
 } from "@klikgo/adapters";
 import {
   AddressService,
@@ -72,7 +78,12 @@ import {
   PaymentWebhookService,
   PromoService,
   RefundService,
+  BackgroundJobs,
+  NotificationService,
+  OrderLifecycleService,
+  PushSubscriptionService,
   type IMenuParser,
+  type INotificationSender,
   type IPaymentGateway,
   type IRateLimiter,
   type IUserRoleRepository,
@@ -121,6 +132,13 @@ export interface Container {
   /** POST /api/webhooks/paymongo: verify, then apply each event once. */
   readonly paymentWebhooks: PaymentWebhookService;
   readonly refunds: RefundService;
+  /** Accept, reject, ready and cancel; the store's order board. */
+  readonly lifecycle: OrderLifecycleService;
+  /** Queued messages and unfinished refunds (POST /api/internal/jobs). */
+  readonly jobs: BackgroundJobs;
+  readonly pushSubscriptions: PushSubscriptionService;
+  /** CRON_SECRET for the jobs endpoint; null disables it. */
+  readonly cronSecret: string | null;
   /** The local payment page (PAYMENT_GATEWAY=fake only); null everywhere else. */
   readonly fakeCheckout: FakeCheckout | null;
   /** True while the pre-launch placeholder sign-in code is on (sign-in screens say so). */
@@ -190,6 +208,24 @@ export function createContainer(env: ServerEnv): Container {
   ]);
   const orderStore = new PrismaOrderRepository(prisma);
   const ledger = new LedgerService();
+  const states = new OrderStateMachine();
+
+  // Notifications: one sender per channel (OCP). Push only with VAPID keys; SMS through the same
+  // sender as sign-in codes (Semaphore, or the dev logger locally).
+  const recipients = new PrismaRecipientDirectory(prisma);
+  const pushStore = new PrismaPushSubscriptions(prisma);
+  const vapid = vapidKeys(env, logger);
+  const senders: INotificationSender[] = [
+    new InAppNotificationSender(),
+    new SmsNotificationSender({ sms, numbers: recipients }),
+    ...(vapid ? [new WebPushSender({ subscriptions: pushStore, vapid, logger })] : []),
+  ];
+  const notifications = new NotificationService({
+    senders,
+    log: new PrismaNotificationLog(prisma),
+    recipients,
+    logger,
+  });
   const refunds = new RefundService({
     orders: orderStore,
     payments: orderStore,
@@ -209,8 +245,9 @@ export function createContainer(env: ServerEnv): Container {
       events: new PrismaWebhookEventStore(prisma),
       payments: orderStore,
       ledger,
-      states: new OrderStateMachine(),
+      states,
       refunds,
+      notifier: notifications,
       logger,
     }),
     clock,
@@ -296,8 +333,24 @@ export function createContainer(env: ServerEnv): Container {
       authz,
       clock,
       logger,
+      notifier: notifications,
     }),
     paymentWebhooks,
+    lifecycle: new OrderLifecycleService({
+      orders: orderStore,
+      lifecycle: orderStore,
+      states,
+      authz,
+      refunds,
+      notifier: notifications,
+      logger,
+    }),
+    jobs: new BackgroundJobs({ notifications, lifecycle: orderStore, refunds, logger }),
+    pushSubscriptions: new PushSubscriptionService({
+      store: pushStore,
+      publicKey: vapid?.publicKey ?? null,
+    }),
+    cronSecret: env.CRON_SECRET ?? null,
     refunds,
     fakeCheckout:
       payments.fake && payments.webhookSecret
@@ -352,6 +405,25 @@ function placeholderOtpCode(env: ServerEnv, hasAdmin: boolean, logger: Logger): 
 
 function notConfigured(feature: string): AppError {
   return new AppError("INTERNAL", `${feature} are not configured (SUPABASE_SERVICE_ROLE_KEY).`);
+}
+
+/** All three VAPID values, or none (Web Push off; in-app and SMS still work). */
+function vapidKeys(
+  env: ServerEnv,
+  logger: Logger,
+): { publicKey: string; privateKey: string; subject: string } | null {
+  const {
+    VAPID_PUBLIC_KEY: publicKey,
+    VAPID_PRIVATE_KEY: privateKey,
+    VAPID_SUBJECT: subject,
+  } = env;
+  if (publicKey && privateKey && subject) return { publicKey, privateKey, subject };
+  if (publicKey || privateKey || subject) {
+    logger.warn("push.disabled", {
+      reason: "set VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY and VAPID_SUBJECT together",
+    });
+  }
+  return null;
 }
 
 /**

@@ -1,6 +1,8 @@
 import { randomUUID } from "node:crypto";
 import type {
+  BoardOrder,
   Centavos,
+  IOrderLifecycleRepository,
   IOrderRepository,
   IPaymentRepository,
   LedgerTxn,
@@ -8,6 +10,7 @@ import type {
   NewPayment,
   OrderRecord,
   PaymentRecord,
+  StatusChangeRequest,
 } from "@klikgo/core";
 import type { PrismaClient } from "@klikgo/db";
 import type { OrderStatus, PaymentMethod, PaymentStatus, RefundStatus } from "@klikgo/types";
@@ -33,7 +36,19 @@ interface OrderRow {
   code: string;
   customer_id: string;
   merchant_id: string;
+  merchants: { name: string };
   zone_id: string;
+  prep_minutes: number | null;
+  reject_reason: string | null;
+  cancel_reason: string | null;
+  accepted_at: Date | null;
+  placed_at: Date | null;
+  preparing_at: Date | null;
+  ready_at: Date | null;
+  picked_up_at: Date | null;
+  delivered_at: Date | null;
+  rejected_at: Date | null;
+  cancelled_at: Date | null;
   status: string;
   payment_method: string;
   payment_status: string;
@@ -62,7 +77,22 @@ const toOrder = (row: OrderRow): OrderRecord => ({
   code: row.code,
   customerId: row.customer_id,
   merchantId: row.merchant_id,
+  merchantName: row.merchants.name,
   zoneId: row.zone_id,
+  // The default prep time is copied at checkout; the store's own number counts once it accepts.
+  prepMinutes: row.accepted_at ? row.prep_minutes : null,
+  rejectReason: row.reject_reason,
+  cancelReason: row.cancel_reason,
+  timeline: {
+    placedAt: row.placed_at,
+    acceptedAt: row.accepted_at,
+    preparingAt: row.preparing_at,
+    readyAt: row.ready_at,
+    pickedUpAt: row.picked_up_at,
+    deliveredAt: row.delivered_at,
+    rejectedAt: row.rejected_at,
+    cancelledAt: row.cancelled_at,
+  },
   status: row.status as OrderStatus,
   paymentMethod: row.payment_method as PaymentMethod,
   paymentStatus: row.payment_status as PaymentStatus,
@@ -71,6 +101,8 @@ const toOrder = (row: OrderRow): OrderRecord => ({
   createdAt: row.created_at,
   payment: row.payments ? toPayment(row.payments) : null,
 });
+
+const ORDER_INCLUDE = { payments: true, merchants: { select: { name: true } } } as const;
 
 /** True when a database error is a unique violation of `constraint`. */
 function isUniqueViolation(error: unknown, constraint: string): boolean {
@@ -113,13 +145,15 @@ async function postLedger(tx: Tx, txn: LedgerTxn): Promise<void> {
  * money runs in one transaction; order status changes go through the database's transition guard
  * and leave an order_events row with the actor.
  */
-export class PrismaOrderRepository implements IOrderRepository, IPaymentRepository {
+export class PrismaOrderRepository
+  implements IOrderRepository, IPaymentRepository, IOrderLifecycleRepository
+{
   constructor(private readonly prisma: PrismaClient) {}
 
   async findById(orderId: string): Promise<OrderRecord | null> {
     const row = await this.prisma.orders.findUnique({
       where: { id: orderId },
-      include: { payments: true },
+      include: ORDER_INCLUDE,
     });
     return row ? toOrder(row) : null;
   }
@@ -127,7 +161,7 @@ export class PrismaOrderRepository implements IOrderRepository, IPaymentReposito
   async findByIdempotencyKey(customerId: string, key: string): Promise<OrderRecord | null> {
     const row = await this.prisma.orders.findFirst({
       where: { customer_id: customerId, idempotency_key: key },
-      include: { payments: true },
+      include: ORDER_INCLUDE,
     });
     return row ? toOrder(row) : null;
   }
@@ -210,7 +244,7 @@ export class PrismaOrderRepository implements IOrderRepository, IPaymentReposito
   ): Promise<{ payment: PaymentRecord; order: OrderRecord } | null> {
     const row = await this.prisma.payments.findUnique({
       where: { gateway_intent_id: { gateway, intent_id: intentId } },
-      include: { orders: { include: { payments: true } } },
+      include: { orders: { include: ORDER_INCLUDE } },
     });
     return row ? { payment: toPayment(row), order: toOrder(row.orders) } : null;
   }
@@ -349,4 +383,108 @@ export class PrismaOrderRepository implements IOrderRepository, IPaymentReposito
     });
     return updated.count > 0;
   }
+
+  async changeStatus(request: StatusChangeRequest): Promise<boolean> {
+    return this.prisma.$transaction(async (tx) => {
+      await setActor(tx, request.actor.id, request.actor.role, request.meta);
+      // Lock the row and check it is still where the caller saw it, so two staff (or two taps)
+      // cannot both win; the database's guard validates each step and writes order_events.
+      const locked = await tx.$queryRaw<{ status: string }[]>`
+        select status::text from public.orders where id = ${request.orderId}::uuid for update`;
+      if (locked[0]?.status !== request.from) return false;
+      for (const step of request.steps) {
+        await tx.orders.update({
+          where: { id: request.orderId },
+          data: {
+            status: step,
+            ...(step === "accepted" && request.prepMinutes !== undefined
+              ? { prep_minutes: request.prepMinutes }
+              : {}),
+            ...(step === "rejected" && request.rejectReason !== undefined
+              ? { reject_reason: request.rejectReason }
+              : {}),
+            ...(step === "cancelled"
+              ? {
+                  cancel_reason: request.cancelReason ?? "Cancelled",
+                  cancelled_by_role: request.actor.role,
+                }
+              : {}),
+          },
+        });
+      }
+      if (request.releasePromo) {
+        await tx.promo_redemptions.deleteMany({ where: { order_id: request.orderId } });
+      }
+      return true;
+    });
+  }
+
+  async board(merchantId: string): Promise<BoardOrder[]> {
+    const rows = await this.prisma.orders.findMany({
+      where: {
+        merchant_id: merchantId,
+        status: { in: ["placed", "accepted", "preparing", "ready", "picked_up"] },
+      },
+      include: { order_items: { orderBy: { created_at: "asc" } } },
+      orderBy: { placed_at: "asc" },
+    });
+    return rows.map((row) => ({
+      id: row.id,
+      code: row.code,
+      status: row.status,
+      paymentMethod: row.payment_method,
+      paymentStatus: row.payment_status,
+      totalCentavos: row.total_centavos,
+      placedAt: row.placed_at ?? row.created_at,
+      acceptedAt: row.accepted_at,
+      prepMinutes: row.accepted_at ? row.prep_minutes : null,
+      scheduledFor: row.scheduled_for,
+      flaggedAt: row.sla_flagged_at,
+      notes: noteOf(row.address_snapshot),
+      items: row.order_items.map((item) => ({
+        menuItemId: item.menu_item_id,
+        name: item.name_snapshot,
+        quantity: item.quantity,
+        modifiers: modifierNames(item.modifiers_snapshot),
+      })),
+    }));
+  }
+
+  async refundsDue(limit: number): Promise<{ orderId: string; reason: string }[]> {
+    const rows = await this.prisma.orders.findMany({
+      where: {
+        status: { in: ["cancelled", "rejected"] },
+        payments: { status: "paid" },
+      },
+      select: { id: true, reject_reason: true, cancel_reason: true },
+      orderBy: { updated_at: "asc" },
+      take: limit,
+    });
+    return rows.map((row) => ({
+      orderId: row.id,
+      reason: reasonText(row.reject_reason ?? row.cancel_reason),
+    }));
+  }
+}
+
+/** Words for the system's cancel codes, for refund notes. */
+function reasonText(reason: string | null): string {
+  if (reason === "merchant_timeout") return "The store did not confirm the order in time";
+  if (reason === "payment_timeout") return "Paid after the order was cancelled";
+  return reason ?? "Order ended early";
+}
+
+function noteOf(snapshot: unknown): string | null {
+  if (typeof snapshot !== "object" || snapshot === null) return null;
+  const notes = (snapshot as Record<string, unknown>).notes;
+  return typeof notes === "string" && notes.trim() !== "" ? notes : null;
+}
+
+function modifierNames(snapshot: unknown): string[] {
+  if (!Array.isArray(snapshot)) return [];
+  return snapshot
+    .map((m: unknown) =>
+      typeof m === "object" && m !== null ? (m as Record<string, unknown>).name : undefined,
+    )
+    .filter((name): name is string => typeof name === "string");
 }
