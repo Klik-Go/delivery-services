@@ -1,0 +1,71 @@
+name: Bootstrap first admin
+
+# Manual only. Creates (or recovers) the Klik Go admin for `admin_email` on the hosted project
+# with scripts/bootstrap-admin.ts and prints a ONE-TIME sign-in link in the step log. The link
+# is a credential: open it at once (it works once and expires), set a password and enrol TOTP,
+# then delete this run's logs (run page → ⋯ → Delete all logs). Safe to run again: an existing
+# account gets a fresh recovery link and keeps exactly one admin role. OPEN_QUESTIONS.md Q13.
+on:
+  workflow_dispatch:
+    inputs:
+      admin_email:
+        description: "Admin's email (an inbox you control; nothing is emailed)"
+        required: true
+        type: string
+      app_url:
+        description: Public https URL of the app the link opens
+        required: true
+        default: https://delivery-services-web-nine.vercel.app
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bootstrap-admin
+  cancel-in-progress: false
+
+jobs:
+  bootstrap:
+    name: Create or recover the admin
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Same gate as database deploys: a required reviewer here approves each run.
+    environment: production
+    env:
+      SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      # Inputs reach the shell only as environment variables, never as inline expressions.
+      ADMIN_EMAIL: ${{ inputs.admin_email }}
+      NEXT_PUBLIC_APP_URL: ${{ inputs.app_url }}
+    steps:
+      - name: Check the inputs and secrets
+        run: |
+          echo "::add-mask::$ADMIN_EMAIL"
+          missing=""
+          for name in SUPABASE_PROJECT_REF SUPABASE_SERVICE_ROLE_KEY DATABASE_URL; do
+            if [ -z "${!name}" ]; then missing="$missing $name"; fi
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Add these repository secrets first:$missing (docs/OPEN_QUESTIONS.md Q13)."
+            exit 1
+          fi
+          if ! printf '%s' "$ADMIN_EMAIL" | grep -Eq '^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$'; then
+            echo "::error::admin_email is not an email address."
+            exit 1
+          fi
+          case "$NEXT_PUBLIC_APP_URL" in
+            https://*) ;;
+            *) echo "::error::app_url must start with https://"; exit 1 ;;
+          esac
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - name: Create the admin and print the one-time link
+        run: |
+          echo "::add-mask::$ADMIN_EMAIL"
+          export NEXT_PUBLIC_SUPABASE_URL="https://${SUPABASE_PROJECT_REF}.supabase.co"
+          pnpm bootstrap:admin
+      - name: Next steps
+        run: |
+          echo "::notice::Open the one-time link in the step above now, set a password and enrol your authenticator app. Then delete this run's logs: run page → ⋯ → Delete all logs."

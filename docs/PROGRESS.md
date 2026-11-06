@@ -136,6 +136,7 @@ Owner report 2026-11-05: "Something went wrong" when saving a delivery address o
 - [x] Any Philippine mobile accepted (09xx and 08xx incl. DITO 0895–0898), with matching database checks (migration `20261110100000_ph_mobile_prefixes.sql`, `phone.db.test.ts`).
 - [ ] Owner: GitHub secrets + run "Deploy database migrations"; check `/api/health/ready`; set `PLACEHOLDER_OTP_CODE` in Vercel.
 - [x] Phase 4.1.1 fix (branch `phase-4.1.1-readiness-fix`): a database that has never been migrated now reads `outdated`, not `unreachable`. Production showed `42P01 relation "supabase_migrations.schema_migrations" does not exist`: the connection worked, but Postgres resolves every table name before running a query, so the single "if the table exists" query failed. Reproduced in `prisma-database-probe.db.test.ts` (table hidden in a rolled-back transaction).
+- [x] Phase 4.1.2 (branch `phase-4.1.2-bootstrap-admin-workflow`): manual **Bootstrap first admin** workflow (`.github/workflows/bootstrap-admin.yml`) runs `pnpm bootstrap:admin` against the hosted project; validates inputs and secrets, masks the email, `production` environment gate. Owner: add `SUPABASE_SERVICE_ROLE_KEY` and `DATABASE_URL` GitHub secrets, run it, open the link, delete the run logs (OPEN_QUESTIONS Q13 step 8).
 
 Next: Phase 5, checkout and payments, after this PR is reviewed and merged.
 

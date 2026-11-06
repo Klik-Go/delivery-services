@@ -76,6 +76,8 @@ Then put the values from `pnpm exec supabase status -o env` (`API_URL`, `ANON_KE
 ADMIN_EMAIL=you@example.com pnpm bootstrap:admin
 ```
 
+For the hosted project, use GitHub Actions → **Bootstrap first admin** instead (needs the `SUPABASE_PROJECT_REF`, `SUPABASE_SERVICE_ROLE_KEY` and `DATABASE_URL` repository secrets; see `docs/OPEN_QUESTIONS.md` Q13 step 8). It prints a one-time link: open it straight away, then delete the run's logs.
+
 AI menu import works locally without a Gemini key: add `MENU_PARSER=fake` to `apps/web/.env.local` to use the built-in sample menu reader. Menu photo uploads need Storage, so start Supabase without excluding `storage-api`.
 
 Database tests and generated files (need the local DB running):
