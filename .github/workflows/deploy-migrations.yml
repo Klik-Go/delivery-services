@@ -42,9 +42,21 @@ jobs:
         if: steps.secrets.outputs.ready == 'true'
       - uses: ./.github/actions/setup
         if: steps.secrets.outputs.ready == 'true'
+      - name: Throwaway Send-SMS hook secret for config parsing
+        # The CLI validates supabase/config.toml (auth.hook.send_sms.secrets = env(...)) before
+        # pushing. `db push` applies migrations only and never uploads auth settings, so a random,
+        # correctly formatted value is enough; the project's real hook secret is untouched.
+        if: steps.secrets.outputs.ready == 'true'
+        run: |
+          secret="v1,whsec_$(openssl rand -base64 32)"
+          echo "::add-mask::$secret"
+          echo "SEND_SMS_HOOK_SECRET=$secret" >> "$GITHUB_ENV"
       - name: Migrations that will be applied
         if: steps.secrets.outputs.ready == 'true'
         run: pnpm exec supabase db push --remote="$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD" --skip-vault --dry-run
       - name: Apply migrations
         if: steps.secrets.outputs.ready == 'true'
-        run: pnpm exec supabase db push --remote="$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD" --skip-vault
+        # CLI 3 asks before changing a hosted project and cannot ask in CI; --yes answers it.
+        # The dry run above lists exactly what is applied; require a reviewer on the
+        # "production" environment (Settings → Environments) to approve each run by hand.
+        run: pnpm exec supabase db push --remote="$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD" --skip-vault --yes

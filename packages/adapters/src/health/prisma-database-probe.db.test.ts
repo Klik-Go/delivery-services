@@ -4,6 +4,9 @@ import { PrismaDatabaseProbe } from "./prisma-database-probe";
 
 const describeDb = describe.skipIf(!process.env.DATABASE_URL);
 
+/** Thrown to roll the transaction back once the probe has answered. */
+class Rollback extends Error {}
+
 describeDb("PrismaDatabaseProbe (local Supabase)", () => {
   const prisma = getPrismaClient();
   afterAll(() => prisma.$disconnect());
@@ -13,5 +16,21 @@ describeDb("PrismaDatabaseProbe (local Supabase)", () => {
       ok: true,
       value: LATEST_MIGRATION,
     });
+  });
+
+  it("reports no version (not an error) for a database that has never been migrated", async () => {
+    // A brand-new hosted project has no supabase_migrations.schema_migrations until the first
+    // `supabase db push`. Hide the table inside a transaction that is always rolled back.
+    let answer: unknown;
+    await prisma
+      .$transaction(async (tx) => {
+        await tx.$executeRaw`alter table supabase_migrations.schema_migrations rename to schema_migrations_hidden`;
+        answer = await new PrismaDatabaseProbe(tx).schemaVersion();
+        throw new Rollback();
+      })
+      .catch((error: unknown) => {
+        if (!(error instanceof Rollback)) throw error;
+      });
+    expect(answer).toEqual({ ok: true, value: null });
   });
 });
