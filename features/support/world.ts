@@ -52,6 +52,17 @@ export interface DiscoveryScenario {
   itemIds?: Map<string, string>;
 }
 
+/** State for checkout, payment webhook and ledger steps. */
+export interface CheckoutScenario {
+  customerId?: string;
+  orderId?: string;
+  idempotencyKey?: string;
+  /** The last signed webhook body, for replays. */
+  webhookBody?: string;
+  webhookStatus?: number;
+  adminApi?: ApiClient;
+}
+
 export const BASE_URL = process.env.BASE_URL ?? "http://localhost:3000";
 
 setDefaultTimeout(30_000);
@@ -69,6 +80,7 @@ export class KlikWorld extends World {
   readonly auth: AuthScenario = {};
   readonly discovery: DiscoveryScenario = {};
   readonly merchant: MerchantScenario = { applications: new Map(), items: new Map(), cleanups: [] };
+  readonly checkout: CheckoutScenario = {};
   private context: BrowserContext | undefined;
   private currentPage: Page | undefined;
 
