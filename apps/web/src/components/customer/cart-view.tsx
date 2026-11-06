@@ -140,10 +140,15 @@ export function CartView({
       )}
       {data && !data.deliverable ? <FormError message={t("notDeliverable")} /> : null}
       <p className="text-ink-muted text-xs">{t("priceNote")}</p>
-      <Button size="lg" disabled>
-        {t("checkout")}
-      </Button>
-      <p className="text-ink-muted text-sm">{t("checkoutSoon")}</p>
+      {data?.deliverable && data.issues.length === 0 ? (
+        <Button size="lg" asChild>
+          <Link href="/checkout">{t("checkout")}</Link>
+        </Button>
+      ) : (
+        <Button size="lg" disabled>
+          {t("checkout")}
+        </Button>
+      )}
     </div>
   );
 }

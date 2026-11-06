@@ -11,7 +11,15 @@ export type Action =
   | { readonly type: "merchant.manage"; readonly merchantId: string }
   | { readonly type: "merchant.settings"; readonly merchantId: string }
   | { readonly type: "merchant.applications.view" }
-  | { readonly type: "merchant.applications.review" };
+  | { readonly type: "merchant.applications.review" }
+  | { readonly type: "order.place" }
+  | { readonly type: "order.refund"; readonly zoneId: string }
+  | {
+      readonly type: "order.view";
+      readonly customerId: string;
+      readonly merchantId: string;
+      readonly zoneId: string;
+    };
 
 /** Result of an authorization check, with the reason when refused. */
 export type AuthorizationDecision =
@@ -61,6 +69,28 @@ export class AuthorizationService {
         return this.check(user, { roles: ["admin", "coordinator"], requiresMfa: true }, () => true);
       case "merchant.applications.review":
         return this.check(user, { roles: ["admin"], requiresMfa: true }, () => true);
+      case "order.place":
+        return this.check(user, { roles: ["customer"], requiresMfa: false }, () => true);
+      case "order.refund":
+        return this.check(
+          user,
+          { roles: ["admin", "coordinator"], requiresMfa: true },
+          (role, _merchantId, zoneId) => role === "admin" || zoneId === action.zoneId,
+        );
+      case "order.view":
+        // The customer sees their own order; staff see their store's or zone's (with TOTP).
+        if (user.id === action.customerId) return ALLOWED;
+        return this.check(
+          user,
+          {
+            roles: ["admin", "coordinator", "merchant_owner", "merchant_staff"],
+            requiresMfa: true,
+          },
+          (role, merchantId, zoneId) =>
+            role === "admin" ||
+            (role === "coordinator" && zoneId === action.zoneId) ||
+            merchantId === action.merchantId,
+        );
     }
   }
 
@@ -103,10 +133,11 @@ export class AuthorizationService {
   private check(
     user: SessionUser,
     rule: Rule,
-    scopeMatches: (role: AppRole, merchantId: string | null) => boolean,
+    scopeMatches: (role: AppRole, merchantId: string | null, zoneId: string | null) => boolean,
   ): AuthorizationDecision {
     const hasRole = user.roles.some(
-      (grant) => rule.roles.includes(grant.role) && scopeMatches(grant.role, grant.merchantId),
+      (grant) =>
+        rule.roles.includes(grant.role) && scopeMatches(grant.role, grant.merchantId, grant.zoneId),
     );
     if (!hasRole) return { allowed: false, reason: "forbidden" };
     if (rule.requiresMfa && user.aal !== "aal2") return { allowed: false, reason: "mfa_required" };

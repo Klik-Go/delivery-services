@@ -49,7 +49,10 @@ type CookieToSet = {
 async function refreshSupabaseSession(request: NextRequest): Promise<CookieToSet[]> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key || request.nextUrl.pathname.startsWith("/api/hooks/")) return [];
+  // Server-to-server callers (Supabase hooks, payment webhooks) have no session to refresh.
+  const path = request.nextUrl.pathname;
+  if (!url || !key || path.startsWith("/api/hooks/") || path.startsWith("/api/webhooks/"))
+    return [];
   const hasSession = request.cookies.getAll().some((cookie) => cookie.name.startsWith("sb-"));
   if (!hasSession) return [];
 

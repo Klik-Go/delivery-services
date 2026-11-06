@@ -34,6 +34,7 @@ erDiagram
   profiles ||--o{ ratings : "from_user_id"
   profiles ||--o| referrals : "referee_id"
   profiles ||--o{ referrals : "referrer_id"
+  profiles |o--o{ refunds : "requested_by"
   profiles |o--o{ rider_kyc_documents : "reviewed_by"
   profiles ||--o| riders : "user_id"
   zones ||--o{ riders : "zone_id"
@@ -297,10 +298,11 @@ erDiagram
   merchants ||--o{ orders : "merchant_id"
   riders |o--o{ orders : "rider_id"
   zones ||--o{ orders : "zone_id"
-  orders ||--o{ payments : "order_id"
+  orders ||--o| payments : "order_id"
   orders ||--o| promo_redemptions : "order_id"
   orders ||--o{ ratings : "order_id"
   orders |o--o{ referrals : "qualifying_order_id"
+  orders ||--o{ refunds : "order_id"
   orders |o--o{ rider_location_breadcrumbs : "order_id"
   orders {
     uuid id PK
@@ -339,6 +341,8 @@ erDiagram
     timestamptz failed_at
     timestamptz created_at
     timestamptz updated_at
+    text idempotency_key
+    text request_hash
   }
   order_items {
     uuid id PK
@@ -384,7 +388,10 @@ erDiagram
 ```mermaid
 erDiagram
   orders |o--o{ ledger_entries : "order_id"
-  orders ||--o{ payments : "order_id"
+  orders ||--o| payments : "order_id"
+  orders ||--o{ refunds : "order_id"
+  payments ||--o{ refunds : "payment_id"
+  profiles |o--o{ refunds : "requested_by"
   payments {
     uuid id PK
     uuid order_id FK
@@ -394,6 +401,23 @@ erDiagram
     int4 amount_centavos
     payment_status status
     payment_method method
+    timestamptz created_at
+    timestamptz updated_at
+    text checkout_url
+    text gateway_payment_id
+    int4 fee_centavos
+    int4 refunded_centavos
+    timestamptz paid_at
+  }
+  refunds {
+    uuid id PK
+    uuid order_id FK
+    uuid payment_id FK
+    int4 amount_centavos
+    text reason
+    refund_status status
+    text gateway_ref
+    uuid requested_by FK
     timestamptz created_at
     timestamptz updated_at
   }
@@ -619,6 +643,7 @@ Role helpers live in the `private` schema (`has_role`, `is_admin`, `is_merchant_
 | `promos` | on | `promos_select_admin` (select · authenticated) |
 | `ratings` | on | `ratings_insert_customer` (insert · authenticated)<br>`ratings_select` (select · authenticated) |
 | `referrals` | on | `referrals_select` (select · authenticated) |
+| `refunds` | on | `refunds_select` (select · authenticated) |
 | `rider_kyc_documents` | on | `rider_kyc_insert_self` (insert · authenticated)<br>`rider_kyc_select_admin` (select · authenticated) |
 | `rider_location_breadcrumbs` | on | `breadcrumbs_insert_self` (insert · authenticated)<br>`breadcrumbs_select` (select · authenticated) |
 | `rider_locations` | on | `rider_locations_insert_self` (insert · authenticated)<br>`rider_locations_select` (select · authenticated)<br>`rider_locations_select_customer_delivery` (select · authenticated)<br>`rider_locations_update_self` (update · authenticated) |

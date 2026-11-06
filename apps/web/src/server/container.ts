@@ -27,6 +27,15 @@ import {
   SupabasePhoneAccountAdmin,
   SupabaseStaffAccountGateway,
   SystemClock,
+  CashOnDeliveryGateway,
+  NodeContentHasher,
+  PayMongoGateway,
+  PayMongoWebhookVerifier,
+  PrismaOrderRepository,
+  PrismaPromoRepository,
+  PrismaWebhookEventStore,
+  UnconfiguredWebhookVerifier,
+  payMongoModeOf,
 } from "@klikgo/adapters";
 import {
   AddressService,
@@ -55,17 +64,27 @@ import {
   StaffAuthService,
   StoreSettingsService,
   StorefrontService,
+  LedgerService,
+  OrderService,
+  OrderStateMachine,
+  PaymentEventService,
+  PaymentGatewayRegistry,
+  PaymentWebhookService,
+  PromoService,
+  RefundService,
   type IMenuParser,
+  type IPaymentGateway,
   type IRateLimiter,
   type IUserRoleRepository,
   type Logger,
   type Result,
 } from "@klikgo/core";
-import { FakeMenuParser } from "@klikgo/core/testing";
+import { FakeMenuParser, FakePaymentGateway } from "@klikgo/core/testing";
 import { getPrismaClient, LATEST_MIGRATION } from "@klikgo/db";
-import { randomUUID } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getServerEnv, type ServerEnv } from "./env";
+import { FakeCheckout } from "./payments/fake-checkout";
 import { supabaseAdminClient } from "./supabase/admin-client";
 
 /**
@@ -97,6 +116,13 @@ export interface Container {
   inviteService(): Result<InviteService, AppError>;
   /** Partner applications and approvals (approval creates staff accounts: service-role key). */
   merchantOnboarding(): Result<MerchantOnboardingService, AppError>;
+  /** Checkout quotes, placing orders (Idempotency-Key) and reading one order. */
+  readonly orders: OrderService;
+  /** POST /api/webhooks/paymongo: verify, then apply each event once. */
+  readonly paymentWebhooks: PaymentWebhookService;
+  readonly refunds: RefundService;
+  /** The local payment page (PAYMENT_GATEWAY=fake only); null everywhere else. */
+  readonly fakeCheckout: FakeCheckout | null;
   /** True while the pre-launch placeholder sign-in code is on (sign-in screens say so). */
   readonly placeholderOtp: boolean;
   /** Services bound to one request's Supabase session (cookies). */
@@ -154,6 +180,41 @@ export function createContainer(env: ServerEnv): Container {
     authz,
     logger,
     newId: randomUUID,
+  });
+
+  // Payments: one gateway per family of methods (OCP: a new gateway is one more entry here).
+  const payments = paymentSetup(env, logger);
+  const gateways = new PaymentGatewayRegistry([
+    ...(payments.online ? [payments.online] : []),
+    new CashOnDeliveryGateway(),
+  ]);
+  const orderStore = new PrismaOrderRepository(prisma);
+  const ledger = new LedgerService();
+  const refunds = new RefundService({
+    orders: orderStore,
+    payments: orderStore,
+    gateways,
+    ledger,
+    authz,
+    logger,
+  });
+  const paymentWebhooks = new PaymentWebhookService({
+    verifier: payments.webhookSecret
+      ? new PayMongoWebhookVerifier({
+          webhookSecret: payments.webhookSecret,
+          mode: payMongoModeOf(env.PAYMONGO_SECRET_KEY),
+        })
+      : new UnconfiguredWebhookVerifier(),
+    events: new PaymentEventService({
+      events: new PrismaWebhookEventStore(prisma),
+      payments: orderStore,
+      ledger,
+      states: new OrderStateMachine(),
+      refunds,
+      logger,
+    }),
+    clock,
+    logger,
   });
 
   return {
@@ -226,6 +287,27 @@ export function createContainer(env: ServerEnv): Container {
       });
       return { ok: true, value: invite };
     },
+    orders: new OrderService({
+      pricing,
+      promos: new PromoService({ promos: new PrismaPromoRepository(prisma), clock }),
+      orders: orderStore,
+      gateways,
+      hasher: new NodeContentHasher(),
+      authz,
+      clock,
+      logger,
+    }),
+    paymentWebhooks,
+    refunds,
+    fakeCheckout:
+      payments.fake && payments.webhookSecret
+        ? new FakeCheckout({
+            payments: orderStore,
+            webhooks: paymentWebhooks,
+            webhookSecret: payments.webhookSecret,
+            clock,
+          })
+        : null,
     placeholderOtp: placeholderCode !== undefined,
     forRequest(supabase) {
       const gateway = new SupabaseAuthGateway(supabase, logger);
@@ -270,6 +352,33 @@ function placeholderOtpCode(env: ServerEnv, hasAdmin: boolean, logger: Logger): 
 
 function notConfigured(feature: string): AppError {
   return new AppError("INTERNAL", `${feature} are not configured (SUPABASE_SERVICE_ROLE_KEY).`);
+}
+
+/**
+ * PayMongo when its secret key is set; the local fake (pays on /dev/pay, signs its own webhooks)
+ * only when asked for and never on Vercel production. Without either, checkout offers cash only.
+ */
+function paymentSetup(
+  env: ServerEnv,
+  logger: Logger,
+): { online: IPaymentGateway | null; webhookSecret: string | undefined; fake: boolean } {
+  if (env.PAYMENT_GATEWAY === "fake" && env.VERCEL_ENV !== "production") {
+    return {
+      online: new FakePaymentGateway({ checkoutBase: "/dev/pay" }),
+      // A per-process secret is enough: the fake page signs and this process verifies.
+      webhookSecret: env.PAYMONGO_WEBHOOK_SECRET ?? randomBytes(32).toString("hex"),
+      fake: true,
+    };
+  }
+  if (!env.PAYMONGO_SECRET_KEY) {
+    logger.warn("payments.online_disabled", { reason: "PAYMONGO_SECRET_KEY is not set" });
+    return { online: null, webhookSecret: env.PAYMONGO_WEBHOOK_SECRET, fake: false };
+  }
+  return {
+    online: new PayMongoGateway({ secretKey: env.PAYMONGO_SECRET_KEY, logger }),
+    webhookSecret: env.PAYMONGO_WEBHOOK_SECRET,
+    fake: false,
+  };
 }
 
 /** Gemini when a key is set; the deterministic fake only when asked for (tests, local demos). */

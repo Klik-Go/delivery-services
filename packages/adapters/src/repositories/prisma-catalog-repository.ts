@@ -169,8 +169,10 @@ export class PrismaCatalogRepository implements ICatalogReadRepository, IPricing
   }
 
   async loadForQuote(merchantId: string, itemIds: readonly string[]): Promise<QuoteCatalog | null> {
-    const [store] = await this.prisma.$queryRaw<(StoreRow & { zone_id: string })[]>`
-      select m.id, m.name, m.zone_id, m.is_open, m.hours, m.default_prep_minutes as prep,
+    const [store] = await this.prisma.$queryRaw<
+      (StoreRow & { zone_id: string; accepts_cod: boolean })[]
+    >`
+      select m.id, m.name, m.zone_id, m.is_open, m.hours, m.default_prep_minutes as prep, m.accepts_cod,
              extensions.st_y(m.location::extensions.geometry) as lat,
              extensions.st_x(m.location::extensions.geometry) as lng,
              coalesce(m.service_radius_km, z.max_radius_km)::float8 as radius_km,
@@ -196,6 +198,7 @@ export class PrismaCatalogRepository implements ICatalogReadRepository, IPricing
         closedDates: store.closed_dates ?? [],
         prepMinutes: store.prep,
         radiusKm: Number(store.radius_km),
+        acceptsCod: store.accepts_cod,
       },
       fees: await this.zoneFees(store.zone_id),
       items: items.map((item): PricedItem => ({

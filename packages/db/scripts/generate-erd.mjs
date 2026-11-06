@@ -29,7 +29,7 @@ const DOMAINS = [
     "Orders and dispatch",
     ["orders", "order_items", "order_events", "order_status_transitions", "dispatch_offers"],
   ],
-  ["Payments and money", ["payments", "webhook_events", "ledger_entries", "payouts"]],
+  ["Payments and money", ["payments", "refunds", "webhook_events", "ledger_entries", "payouts"]],
   [
     "Engagement and operations",
     [

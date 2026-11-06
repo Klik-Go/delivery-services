@@ -266,6 +266,28 @@ describeDb("row-level security: what each role may change", () => {
     expect(err).toMatch(/above the zone maximum/);
   });
 
+  it("refunds and payments are written by the server only, never by a client", async () => {
+    for (const actor of [w.users.customer1, w.users.admin, null]) {
+      const insert = await asUser(db(), actor, () =>
+        failureOf(db(), () =>
+          db().query(
+            `insert into public.refunds (order_id, payment_id, amount_centavos, reason)
+             select p.order_id, p.id, 100, 'Hack' from public.payments p limit 1`,
+          ),
+        ),
+      );
+      expect(insert, String(actor)).toMatch(/permission denied|row-level security/);
+      const update = await asUser(db(), actor, () =>
+        failureOf(db(), () =>
+          db().query(`update public.payments set refunded_centavos = 0 where order_id = $1`, [
+            w.order1,
+          ]),
+        ),
+      );
+      expect(update, String(actor)).toMatch(/permission denied/);
+    }
+  });
+
   it("the waitlist is written by the server only, never directly by a client", async () => {
     for (const actor of [w.users.customer1, w.users.admin, null]) {
       const err = await asUser(db(), actor, () =>

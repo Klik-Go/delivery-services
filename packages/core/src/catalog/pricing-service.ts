@@ -6,7 +6,7 @@ import type { Clock } from "../ports/clock";
 import type { DeliveryFeeStrategy, FeeContext, SurchargeStrategy } from "./fee-strategies";
 import { etaRange, roadMeters } from "./geo";
 import { openingStatus, type OpeningStatus } from "./hours";
-import type { IPricingCatalog, IServiceArea, PricedItem, ZoneFees } from "./ports";
+import type { IPricingCatalog, IServiceArea, PricedItem, QuoteCatalog, ZoneFees } from "./ports";
 
 /** Why a cart line could not be priced. */
 export type QuoteIssueCode = "not_found" | "sold_out" | "choices_needed" | "invalid_choice";
@@ -18,6 +18,10 @@ export interface QuoteLine {
   readonly quantity: number;
   readonly optionIds: readonly string[];
   readonly optionNames: readonly string[];
+  /** The menu price of one unit, before paid choices. */
+  readonly basePriceCentavos: Centavos;
+  /** Paid choices for one unit (sum of option price deltas). */
+  readonly modifiersUnitCentavos: Centavos;
   readonly unitPriceCentavos: Centavos;
   readonly lineTotalCentavos: Centavos;
 }
@@ -67,6 +71,14 @@ export class PricingService {
   }
 
   async quote(request: CartQuoteRequest): Promise<Result<CartQuote, AppError>> {
+    const priced = await this.quoteWithStore(request);
+    return priced.ok ? ok(priced.value.quote) : priced;
+  }
+
+  /** The quote plus the store details checkout needs (zone, cash on delivery, hours). */
+  async quoteWithStore(
+    request: CartQuoteRequest,
+  ): Promise<Result<{ quote: CartQuote; store: QuoteCatalog["merchant"] }, AppError>> {
     const catalog = await this.deps.catalog.loadForQuote(request.merchantId, [
       ...new Set(request.items.map((line) => line.itemId)),
     ]);
@@ -97,7 +109,7 @@ export class PricingService {
     const smallOrderFee = lines.length > 0 ? surcharge("small_order") : 0;
     const serviceFee = lines.length > 0 ? surcharge("service") : 0;
 
-    return ok({
+    const quote: CartQuote = {
       merchantId: merchant.id,
       merchantName: merchant.name,
       lines,
@@ -111,7 +123,8 @@ export class PricingService {
       eta: etaRange(merchant.prepMinutes, distanceM),
       deliverable: zone?.id === merchant.zoneId && distanceM <= merchant.radiusKm * 1000,
       opening: openingStatus(merchant, this.deps.clock.now()),
-    });
+    };
+    return ok({ quote, store: merchant });
   }
 }
 
@@ -144,6 +157,8 @@ function priceLine(
     quantity,
     optionIds: [...chosen],
     optionNames: names,
+    basePriceCentavos: item.priceCentavos,
+    modifiersUnitCentavos: unit - item.priceCentavos,
     unitPriceCentavos: unit,
     lineTotalCentavos: unit * quantity,
   };

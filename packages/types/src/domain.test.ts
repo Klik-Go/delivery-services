@@ -40,7 +40,7 @@ describe("domain enums", () => {
   });
 
   it("lists every enum once for the database parity check", () => {
-    expect(Object.keys(POSTGRES_ENUMS)).toHaveLength(22);
+    expect(Object.keys(POSTGRES_ENUMS)).toHaveLength(23);
     for (const values of Object.values(POSTGRES_ENUMS))
       expect(new Set(values).size).toBe(values.length);
   });

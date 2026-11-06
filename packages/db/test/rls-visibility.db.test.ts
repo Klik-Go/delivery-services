@@ -37,8 +37,8 @@ describeDb("row-level security: who can see which rows", () => {
     expect(await seen("anon", q, [all])).toEqual([]);
   });
 
-  it("order items, events and payments follow the order they belong to", async () => {
-    for (const table of ["order_items", "order_events", "payments"]) {
+  it("order items, events, payments and refunds follow the order they belong to", async () => {
+    for (const table of ["order_items", "order_events", "payments", "refunds"]) {
       const q = `select distinct order_id as id from public.${table} where order_id = any($1)`;
       const pair = [w.order1, w.order2];
       expect(await seen("customer1", q, [pair]), table).toEqual([w.order1]);

@@ -387,7 +387,7 @@ model order_status_transitions {
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model orders {
   id                                                      String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  code                                                    String                       @unique
+  code                                                    String                       @unique @default(dbgenerated("private.new_order_code()"))
   customer_id                                             String                       @db.Uuid
   merchant_id                                             String                       @db.Uuid
   rider_id                                                String?                      @db.Uuid
@@ -422,6 +422,8 @@ model orders {
   failed_at                                               DateTime?                    @db.Timestamptz(6)
   created_at                                              DateTime                     @default(now()) @db.Timestamptz(6)
   updated_at                                              DateTime                     @default(now()) @db.Timestamptz(6)
+  idempotency_key                                         String?
+  request_hash                                            String?
   dispatch_offers                                         dispatch_offers[]
   ledger_entries                                          ledger_entries[]
   loyalty_stamps_loyalty_stamps_order_idToorders          loyalty_stamps?              @relation("loyalty_stamps_order_idToorders")
@@ -434,10 +436,11 @@ model orders {
   merchants                                               merchants                    @relation(fields: [merchant_id], references: [id], onUpdate: NoAction)
   riders                                                  riders?                      @relation(fields: [rider_id], references: [id], onUpdate: NoAction)
   zones                                                   zones                        @relation(fields: [zone_id], references: [id], onUpdate: NoAction)
-  payments                                                payments[]
+  payments                                                payments?
   promo_redemptions                                       promo_redemptions?
   ratings                                                 ratings[]
   referrals                                               referrals[]
+  refunds                                                 refunds[]
   rider_location_breadcrumbs                              rider_location_breadcrumbs[]
 
   @@index([customer_id, created_at(sort: Desc)], map: "orders_customer_idx")
@@ -450,17 +453,23 @@ model orders {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model payments {
-  id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  order_id        String         @db.Uuid
-  gateway         String
-  intent_id       String
-  gateway_ref     String?
-  amount_centavos Int
-  status          payment_status @default(pending)
-  method          payment_method
-  created_at      DateTime       @default(now()) @db.Timestamptz(6)
-  updated_at      DateTime       @default(now()) @db.Timestamptz(6)
-  orders          orders         @relation(fields: [order_id], references: [id], onUpdate: NoAction)
+  id                 String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  order_id           String         @unique(map: "payments_one_per_order") @db.Uuid
+  gateway            String
+  intent_id          String
+  gateway_ref        String?
+  amount_centavos    Int
+  status             payment_status @default(pending)
+  method             payment_method
+  created_at         DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime       @default(now()) @db.Timestamptz(6)
+  checkout_url       String?
+  gateway_payment_id String?
+  fee_centavos       Int?
+  refunded_centavos  Int            @default(0)
+  paid_at            DateTime?      @db.Timestamptz(6)
+  orders             orders         @relation(fields: [order_id], references: [id], onUpdate: NoAction)
+  refunds            refunds[]
 
   @@unique([gateway, intent_id])
   @@index([order_id], map: "payments_order_idx")
@@ -515,6 +524,7 @@ model profiles {
   ratings                                    ratings[]
   referrals_referrals_referee_idToprofiles   referrals?                  @relation("referrals_referee_idToprofiles")
   referrals_referrals_referrer_idToprofiles  referrals[]                 @relation("referrals_referrer_idToprofiles")
+  refunds                                    refunds[]
   rider_kyc_documents                        rider_kyc_documents[]
   riders                                     riders?
   user_roles_user_roles_granted_byToprofiles user_roles[]                @relation("user_roles_granted_byToprofiles")
@@ -815,6 +825,27 @@ model waitlist_signups {
   @@schema("public")
 }
 
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model refunds {
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  order_id        String        @db.Uuid
+  payment_id      String        @db.Uuid
+  amount_centavos Int
+  reason          String
+  status          refund_status @default(pending)
+  gateway_ref     String?
+  requested_by    String?       @db.Uuid
+  created_at      DateTime      @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime      @default(now()) @db.Timestamptz(6)
+  orders          orders        @relation(fields: [order_id], references: [id], onUpdate: NoAction)
+  payments        payments      @relation(fields: [payment_id], references: [id], onUpdate: NoAction)
+  profiles        profiles?     @relation(fields: [requested_by], references: [id], onUpdate: NoAction)
+
+  @@index([order_id], map: "refunds_order_idx")
+  @@schema("public")
+}
+
 enum app_role {
   customer
   rider
@@ -879,6 +910,7 @@ enum ledger_account {
   gateway_fees
   promo_expense
   customer_refunds
+  customer_deposits
 
   @@schema("public")
 }
@@ -1014,6 +1046,14 @@ enum merchant_application_status {
   pending
   approved
   rejected
+
+  @@schema("public")
+}
+
+enum refund_status {
+  pending
+  succeeded
+  failed
 
   @@schema("public")
 }
