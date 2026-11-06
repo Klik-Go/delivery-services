@@ -13,7 +13,7 @@ Phases are defined in `docs/BUILD_PLAN.md` §6. Agents update this file in every
 | 3.1 | Follow-up: launch zones (Makati, San Fernando, San Marcelino) + owner answers | ✅ Done (merged) | [Klik-Go/delivery-services#9](https://github.com/Klik-Go/delivery-services/pull/9) | Owner: `main` ruleset target (Q6), Gemini paid tier (Q16) |
 | 4 | Customer discovery, store page, cart (PWA) | ✅ Done (merged) | [Klik-Go/delivery-services#10](https://github.com/Klik-Go/delivery-services/pull/10) | Owner: `GOOGLE_MAPS_API_KEY` for address search (optional, Q17) |
 | 4.1 | Follow-up: deploy fixes (readiness, migration deploy) + placeholder sign-in code | ✅ Done (merged) | [Klik-Go/delivery-services#11](https://github.com/Klik-Go/delivery-services/pull/11), [#12](https://github.com/Klik-Go/delivery-services/pull/12), [#13](https://github.com/Klik-Go/delivery-services/pull/13) | 4.1.1 readiness fix, 4.1.2 bootstrap-admin workflow; owner confirmed sign-in works on production |
-| 5 | Checkout and payments (PayMongo + COD) | 🟡 In progress (PR open) | branch `phase-5-checkout-payments` | Owner: PayMongo keys + webhook (Q22), BSP/legal check on holding payments (Q23) |
+| 5 | Checkout and payments (PayMongo + COD) | 🟡 In progress (PR open) | [Klik-Go/delivery-services#14](https://github.com/Klik-Go/delivery-services/pull/14) | Owner: PayMongo keys + webhook (Q22), BSP/legal check on holding payments (Q23) |
 | 6 | Order lifecycle, merchant queue, SLA | ⬜ Not started | | |
 | 7 | Rider app, dispatch, live tracking | ⬜ Not started | | |
 | 8 | Coordinator and Admin console | ⬜ Not started | | |
