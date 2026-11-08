@@ -17,7 +17,7 @@
     "@klikgo/core": "workspace:*",
     "@klikgo/db": "workspace:*",
     "@klikgo/types": "workspace:*",
-    "@supabase/supabase-js": "2.118.0",
+    "@supabase/supabase-js": "2.119.0",
     "pino": "10.4.0",
     "web-push": "3.6.7",
     "zod": "4.6.7"
