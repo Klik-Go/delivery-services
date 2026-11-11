@@ -24,7 +24,8 @@
     "db:stop": "supabase stop",
     "db:generate": "turbo run db:generate",
     "test:db": "pnpm db:generate && pnpm --filter @klikgo/db --filter @klikgo/adapters --sequential test:db",
-    "bootstrap:admin": "node --import tsx scripts/bootstrap-admin.ts"
+    "bootstrap:admin": "node --import tsx scripts/bootstrap-admin.ts",
+    "demo:data": "node --import tsx scripts/demo-data.ts"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.14.0",

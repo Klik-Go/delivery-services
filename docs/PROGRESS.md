@@ -14,7 +14,8 @@ Phases are defined in `docs/BUILD_PLAN.md` §6. Agents update this file in every
 | 4 | Customer discovery, store page, cart (PWA) | ✅ Done (merged) | [Klik-Go/delivery-services#10](https://github.com/Klik-Go/delivery-services/pull/10) | Owner: `GOOGLE_MAPS_API_KEY` for address search (optional, Q17) |
 | 4.1 | Follow-up: deploy fixes (readiness, migration deploy) + placeholder sign-in code | ✅ Done (merged) | [Klik-Go/delivery-services#11](https://github.com/Klik-Go/delivery-services/pull/11), [#12](https://github.com/Klik-Go/delivery-services/pull/12), [#13](https://github.com/Klik-Go/delivery-services/pull/13) | 4.1.1 readiness fix, 4.1.2 bootstrap-admin workflow; owner confirmed sign-in works on production |
 | 5 | Checkout and payments (PayMongo + COD) | ✅ Done (merged) | [Klik-Go/delivery-services#14](https://github.com/Klik-Go/delivery-services/pull/14) | Owner: PayMongo keys + webhook (Q22), BSP/legal check on holding payments (Q23) |
-| 6 | Order lifecycle, merchant queue, SLA | 🟡 In progress (PR open) | [Klik-Go/delivery-services#15](https://github.com/Klik-Go/delivery-services/pull/15) | Owner: Vault secrets + `CRON_SECRET`, VAPID keys, store phones (Q25); SLA penalty (Q26) |
+| 6 | Order lifecycle, merchant queue, SLA | ✅ Done (merged) | [Klik-Go/delivery-services#15](https://github.com/Klik-Go/delivery-services/pull/15) | Owner: Vault secrets + `CRON_SECRET`, VAPID keys, store phones (Q25); SLA penalty (Q26) |
+| 6.1 | Follow-up: demo data for the hosted app | 🟡 In progress (PR open) | [Klik-Go/delivery-services#16](https://github.com/Klik-Go/delivery-services/pull/16) | Owner: run **Load demo data** (Q28) |
 | 7 | Rider app, dispatch, live tracking | ⬜ Not started | | |
 | 8 | Coordinator and Admin console | ⬜ Not started | | |
 | 9 | Ratings, reorder, promos, referrals, loyalty | ⬜ Not started | | |
@@ -177,7 +178,17 @@ Deliverables:
 - [x] Tests: Cucumber 107/107 (13 new), unit 515, DB 168 (137 + 31 repository), Playwright 66/66 (6 new board runs on Pixel 7 + desktop with axe), Lighthouse store page 98 / Home 100. Screenshots: `docs/screenshots/phase-6-*`.
 - [ ] Owner: Vault secrets + `CRON_SECRET`, VAPID keys, store phone numbers (Q25); penalty rule (Q26).
 
-Next: Phase 7, rider app, dispatch and live tracking, after this PR is reviewed and merged.
+Merged in [Klik-Go/delivery-services#15](https://github.com/Klik-Go/delivery-services/pull/15).
+
+### Phase 6.1 — Follow-up: demo data (branch `phase-6.1-demo-data`)
+Owner request 2026-11-06: "Fill out all the data needed for a test demo."
+- [x] `pnpm demo:data` (`scripts/demo-data.ts`, data in `scripts/demo/demo-data.ts`): 9 open stores with full menus in the three launch zones, fee bands for zones without any, promo codes DEMOKAIN / DEMOHATID / DEMO10, one owner account for all demo stores with a one-time set-password link; idempotent; `DEMO_ACTION=hide` suspends them.
+- [x] Manual workflow **Load demo data** (`.github/workflows/demo-data.yml`, `production` gate, masked inputs).
+- [x] `features/demo-data.feature`: every zone's demo stores open with full menus and cash on delivery, a San Fernando customer can price an order, reloading duplicates nothing, hiding returns 404 (Cucumber 109/109).
+- [x] Demo walkthrough in OPEN_QUESTIONS Q28.
+- [ ] Owner: run **Load demo data** with `action: load`.
+
+Next: Phase 7, rider app, dispatch and live tracking.
 
 ## Business validation (parallel, doc §8)
 - [ ] 20–30 customer interviews in the pilot barangay
