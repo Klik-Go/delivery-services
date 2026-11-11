@@ -188,6 +188,15 @@ export async function buildWorld(db: pg.ClientBase, fx: DbFixtures): Promise<Wor
     );
   }
 
+  // Support notes: one on an order in each zone, by the admin.
+  for (const orderId of [order1, order2]) {
+    await db.query(
+      `insert into public.order_support_notes (order_id, author_id, author_role, body)
+       values ($1, $2, 'admin', 'Customer asked us to call on arrival')`,
+      [orderId, admin],
+    );
+  }
+
   const ledger = `insert into public.ledger_entries (txn_id, account, party_type, party_id, debit_centavos, credit_centavos, order_id)
     values ($1, 'rider_cash_on_hand', 'rider', $2, 23900, 0, $4),
            ($1, 'merchant_payable', 'merchant', $3, 0, 20000, $4),

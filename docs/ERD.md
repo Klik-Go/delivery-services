@@ -25,6 +25,7 @@ erDiagram
   profiles ||--o{ merchants : "owner_id"
   zones ||--o{ merchants : "zone_id"
   profiles ||--o{ notifications : "user_id"
+  profiles |o--o{ order_support_notes : "author_id"
   profiles |o--o{ orders : "cancelled_by"
   profiles ||--o{ orders : "customer_id"
   zones ||--o{ orders : "zone_id"
@@ -172,6 +173,9 @@ erDiagram
     timestamptz updated_at
     numeric service_radius_km
     timestamptz founding_commission_until
+    text status_reason
+    int4 next_commission_bps
+    timestamptz next_commission_from
   }
   merchant_closures {
     uuid id PK
@@ -251,6 +255,8 @@ erDiagram
     int4 rating_count
     timestamptz created_at
     timestamptz updated_at
+    text status_reason
+    text payout_account_name
   }
   rider_kyc_documents {
     uuid id PK
@@ -294,6 +300,8 @@ erDiagram
   orders ||--o{ order_events : "order_id"
   menu_items |o--o{ order_items : "menu_item_id"
   orders ||--o{ order_items : "order_id"
+  profiles |o--o{ order_support_notes : "author_id"
+  orders ||--o{ order_support_notes : "order_id"
   profiles |o--o{ orders : "cancelled_by"
   profiles ||--o{ orders : "customer_id"
   merchants ||--o{ orders : "merchant_id"
@@ -389,6 +397,14 @@ erDiagram
     timestamptz offered_at
     timestamptz expires_at
     timestamptz responded_at
+  }
+  order_support_notes {
+    uuid id PK
+    uuid order_id FK
+    uuid author_id FK
+    app_role author_role
+    text body
+    timestamptz created_at
   }
 ```
 
@@ -651,6 +667,7 @@ Role helpers live in the `private` schema (`has_role`, `is_admin`, `is_merchant_
 | `order_events` | on | `order_events_select` (select · authenticated) |
 | `order_items` | on | `order_items_select` (select · authenticated) |
 | `order_status_transitions` | on | `order_status_transitions_read` (select · anon, authenticated) |
+| `order_support_notes` | on | `order_support_notes_select_ops` (select · authenticated) |
 | `orders` | on | `orders_select` (select · authenticated) |
 | `payments` | on | `payments_select` (select · authenticated) |
 | `payouts` | on | `payouts_select` (select · authenticated) |

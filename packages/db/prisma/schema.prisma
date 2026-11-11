@@ -260,6 +260,9 @@ model merchants {
   updated_at                DateTime                 @default(now()) @db.Timestamptz(6)
   service_radius_km         Decimal?                 @db.Decimal(4, 1)
   founding_commission_until DateTime?                @db.Timestamptz(6)
+  status_reason             String?
+  next_commission_bps       Int?
+  next_commission_from      DateTime?                @db.Timestamptz(6)
   invites                   invites[]
   menu_categories           menu_categories[]
   menu_items                menu_items[]
@@ -440,6 +443,7 @@ model orders {
   order_delivery_pins                                     order_delivery_pins?
   order_events                                            order_events[]
   order_items                                             order_items[]
+  order_support_notes                                     order_support_notes[]
   profiles_orders_cancelled_byToprofiles                  profiles?                    @relation("orders_cancelled_byToprofiles", fields: [cancelled_by], references: [id], onUpdate: NoAction)
   profiles_orders_customer_idToprofiles                   profiles                     @relation("orders_customer_idToprofiles", fields: [customer_id], references: [id], onUpdate: NoAction)
   merchants                                               merchants                    @relation(fields: [merchant_id], references: [id], onUpdate: NoAction)
@@ -526,6 +530,7 @@ model profiles {
   merchant_applications                      merchant_applications[]
   merchants                                  merchants[]
   notifications                              notifications[]
+  order_support_notes                        order_support_notes[]
   orders_orders_cancelled_byToprofiles       orders[]                    @relation("orders_cancelled_byToprofiles")
   orders_orders_customer_idToprofiles        orders[]                    @relation("orders_customer_idToprofiles")
   users                                      users                       @relation(fields: [id], references: [id], onDelete: Cascade, onUpdate: NoAction)
@@ -691,6 +696,8 @@ model riders {
   rating_count               Int                          @default(0)
   created_at                 DateTime                     @default(now()) @db.Timestamptz(6)
   updated_at                 DateTime                     @default(now()) @db.Timestamptz(6)
+  status_reason              String?
+  payout_account_name        String?
   dispatch_offers            dispatch_offers[]
   orders                     orders[]
   rider_kyc_documents        rider_kyc_documents[]
@@ -866,6 +873,23 @@ model order_delivery_pins {
   @@schema("public")
 }
 
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model order_support_notes {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  order_id    String    @db.Uuid
+  author_id   String?   @db.Uuid
+  author_role app_role
+  body        String
+  created_at  DateTime  @default(now()) @db.Timestamptz(6)
+  profiles    profiles? @relation(fields: [author_id], references: [id], onUpdate: NoAction)
+  orders      orders    @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([order_id, created_at], map: "order_support_notes_order_idx")
+  @@schema("public")
+}
+
 enum app_role {
   customer
   rider
@@ -909,6 +933,7 @@ enum kyc_document_type {
   drivers_license
   vehicle_registration
   selfie_with_id
+  payout_account
 
   @@schema("public")
 }

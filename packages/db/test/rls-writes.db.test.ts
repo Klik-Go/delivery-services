@@ -266,6 +266,21 @@ describeDb("row-level security: what each role may change", () => {
     expect(err).toMatch(/above the zone maximum/);
   });
 
+  it("support notes are written by the server only, never by a client (not even staff)", async () => {
+    for (const user of [w.users.coordA, w.users.admin, w.users.customer1]) {
+      const err = await asUser(db(), user, () =>
+        failureOf(db(), () =>
+          db().query(
+            `insert into public.order_support_notes (order_id, author_id, author_role, body)
+             values ($1, $2, 'admin', 'Sneaky')`,
+            [w.order1, user],
+          ),
+        ),
+      );
+      expect(err).toMatch(/permission denied/);
+    }
+  });
+
   it("delivery PINs are written by the database only, never by a client", async () => {
     for (const user of [w.users.customer1, w.users.riderA1, w.users.ownerA]) {
       const err = await asUser(db(), user, () =>

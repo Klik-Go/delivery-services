@@ -99,6 +99,7 @@ export const KYC_DOCUMENT_TYPES = [
   "drivers_license",
   "vehicle_registration",
   "selfie_with_id",
+  "payout_account",
 ] as const;
 export const KycDocumentTypeSchema = z.enum(KYC_DOCUMENT_TYPES);
 export type KycDocumentType = z.infer<typeof KycDocumentTypeSchema>;
