@@ -4,7 +4,7 @@
 
 Klik Go is a delivery platform for the Philippines, built for barangays and provincial towns, on a Hybrid Aggregator + Managed Logistics model. It starts with food delivery in one pilot zone, then grows into groceries, parcels, pharmacy and B2B.
 
-> Status: Phases 0–5 merged; Phase 6 (order lifecycle, store board, live updates, SLA) in review. See `docs/PROGRESS.md`.
+> Status: Phases 0–6 merged; Phase 6.1 (demo data for the hosted app) in review. See `docs/PROGRESS.md`.
 
 ## Docs
 | File | What it is |
@@ -75,6 +75,8 @@ Then put the values from `pnpm exec supabase status -o env` (`API_URL`, `ANON_KE
 ```bash
 ADMIN_EMAIL=you@example.com pnpm bootstrap:admin
 ```
+
+Demo stores for showing the app (9 stores across the launch zones, promo codes, one owner account): `DEMO_OWNER_EMAIL=you@example.com pnpm demo:data` locally, or GitHub Actions → **Load demo data** for the hosted project (`DEMO_ACTION=hide` takes them off again; docs/OPEN_QUESTIONS.md Q28).
 
 For the hosted project, use GitHub Actions → **Bootstrap first admin** instead (needs the `SUPABASE_PROJECT_REF`, `SUPABASE_SERVICE_ROLE_KEY` and `DATABASE_URL` repository secrets; see `docs/OPEN_QUESTIONS.md` Q13 step 8). It prints a one-time link: open it straight away, then delete the run's logs.
 

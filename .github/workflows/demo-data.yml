@@ -1,0 +1,87 @@
+name: Load demo data
+
+# Manual only. Loads (or hides) the demo stores on the hosted project with scripts/demo-data.ts:
+# 9 open stores with full menus across Makati, San Fernando and San Marcelino, delivery fee bands
+# for zones that have none, the promo codes DEMOKAIN, DEMOHATID and DEMO10, and one store owner
+# account (`owner_email`) that manages every demo store. For a new owner it prints a ONE-TIME link
+# in the step log: open it at once, set a password and enrol TOTP, then delete this run's logs.
+# Safe to run again. `hide` takes the demo stores and codes off the app (history is kept).
+# docs/OPEN_QUESTIONS.md Q28.
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "load: add or reopen the demo stores; hide: take them off the app"
+        required: true
+        default: load
+        type: choice
+        options: [load, hide]
+      owner_email:
+        description: "Demo store owner's email (an inbox you control; nothing is emailed). Needed for load."
+        required: false
+        type: string
+      store_phone:
+        description: "Optional mobile number for the stores (gets the 1-minute order texts), e.g. 0917 123 4567"
+        required: false
+        type: string
+      app_url:
+        description: Public https URL of the app the links open
+        required: true
+        default: https://delivery-services-web-nine.vercel.app
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: demo-data
+  cancel-in-progress: false
+
+jobs:
+  demo:
+    name: Load or hide the demo stores
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Same gate as database deploys: a required reviewer here approves each run.
+    environment: production
+    env:
+      SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      # Inputs reach the shell only as environment variables, never as inline expressions.
+      DEMO_ACTION: ${{ inputs.action }}
+      DEMO_OWNER_EMAIL: ${{ inputs.owner_email }}
+      DEMO_STORE_PHONE: ${{ inputs.store_phone }}
+      NEXT_PUBLIC_APP_URL: ${{ inputs.app_url }}
+    steps:
+      - name: Check the inputs and secrets
+        run: |
+          if [ -n "$DEMO_OWNER_EMAIL" ]; then echo "::add-mask::$DEMO_OWNER_EMAIL"; fi
+          if [ -n "$DEMO_STORE_PHONE" ]; then echo "::add-mask::$DEMO_STORE_PHONE"; fi
+          missing=""
+          for name in SUPABASE_PROJECT_REF SUPABASE_SERVICE_ROLE_KEY DATABASE_URL; do
+            if [ -z "${!name}" ]; then missing="$missing $name"; fi
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Add these repository secrets first:$missing (docs/OPEN_QUESTIONS.md Q13)."
+            exit 1
+          fi
+          if [ "$DEMO_ACTION" = "load" ] && ! printf '%s' "$DEMO_OWNER_EMAIL" | grep -Eq '^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$'; then
+            echo "::error::owner_email must be an email address to load the demo."
+            exit 1
+          fi
+          case "$NEXT_PUBLIC_APP_URL" in
+            https://*) ;;
+            *) echo "::error::app_url must start with https://"; exit 1 ;;
+          esac
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - name: Load or hide the demo data
+        run: |
+          if [ -n "$DEMO_OWNER_EMAIL" ]; then echo "::add-mask::$DEMO_OWNER_EMAIL"; fi
+          export NEXT_PUBLIC_SUPABASE_URL="https://${SUPABASE_PROJECT_REF}.supabase.co"
+          pnpm demo:data
+      - name: Next steps
+        if: inputs.action == 'load'
+        run: |
+          echo "::notice::If the step above printed a one-time link, open it now, set a password and enrol your authenticator app, then delete this run's logs (run page → ⋯ → Delete all logs). Customers sign in with any mobile number and the placeholder code (Q20)."
