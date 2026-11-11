@@ -266,6 +266,19 @@ describeDb("row-level security: what each role may change", () => {
     expect(err).toMatch(/above the zone maximum/);
   });
 
+  it("delivery PINs are written by the database only, never by a client", async () => {
+    for (const user of [w.users.customer1, w.users.riderA1, w.users.ownerA]) {
+      const err = await asUser(db(), user, () =>
+        failureOf(db(), () =>
+          db().query(`update public.order_delivery_pins set pin = '0000' where order_id = $1`, [
+            w.order1,
+          ]),
+        ),
+      );
+      expect(err).toMatch(/permission denied/);
+    }
+  });
+
   it("refunds and payments are written by the server only, never by a client", async () => {
     for (const actor of [w.users.customer1, w.users.admin, null]) {
       const insert = await asUser(db(), actor, () =>

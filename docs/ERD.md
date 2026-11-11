@@ -290,6 +290,7 @@ erDiagram
   orders ||--o| loyalty_stamps : "order_id"
   orders |o--o{ loyalty_stamps : "redeemed_order_id"
   orders |o--o{ notifications : "order_id"
+  orders ||--o| order_delivery_pins : "order_id"
   orders ||--o{ order_events : "order_id"
   menu_items |o--o{ order_items : "menu_item_id"
   orders ||--o{ order_items : "order_id"
@@ -346,6 +347,11 @@ erDiagram
     text reject_reason
     timestamptz sla_sms_at
     timestamptz sla_flagged_at
+    int4 rider_earnings_centavos
+    int4 dispatch_attempts
+    timestamptz dispatch_flagged_at
+    timestamptz arrived_store_at
+    text delivery_proof_path
   }
   order_items {
     uuid id PK
@@ -391,10 +397,16 @@ erDiagram
 ```mermaid
 erDiagram
   orders |o--o{ ledger_entries : "order_id"
+  orders ||--o| order_delivery_pins : "order_id"
   orders ||--o| payments : "order_id"
   orders ||--o{ refunds : "order_id"
   payments ||--o{ refunds : "payment_id"
   profiles |o--o{ refunds : "requested_by"
+  order_delivery_pins {
+    uuid order_id PK, FK
+    text pin
+    timestamptz created_at
+  }
   payments {
     uuid id PK
     uuid order_id FK
@@ -635,6 +647,7 @@ Role helpers live in the `private` schema (`has_role`, `is_admin`, `is_merchant_
 | `modifier_groups` | on | `modifier_groups_member_write` (all · authenticated)<br>`modifier_groups_select` (select · anon, authenticated) |
 | `modifier_options` | on | `modifier_options_member_write` (all · authenticated)<br>`modifier_options_select` (select · anon, authenticated) |
 | `notifications` | on | `notifications_mark_read` (update · authenticated)<br>`notifications_select` (select · authenticated) |
+| `order_delivery_pins` | on | `order_delivery_pins_select_customer` (select · authenticated) |
 | `order_events` | on | `order_events_select` (select · authenticated) |
 | `order_items` | on | `order_items_select` (select · authenticated) |
 | `order_status_transitions` | on | `order_status_transitions_read` (select · anon, authenticated) |

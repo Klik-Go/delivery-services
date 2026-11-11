@@ -427,11 +427,17 @@ model orders {
   reject_reason                                           String?
   sla_sms_at                                              DateTime?                    @db.Timestamptz(6)
   sla_flagged_at                                          DateTime?                    @db.Timestamptz(6)
+  rider_earnings_centavos                                 Int?
+  dispatch_attempts                                       Int                          @default(0)
+  dispatch_flagged_at                                     DateTime?                    @db.Timestamptz(6)
+  arrived_store_at                                        DateTime?                    @db.Timestamptz(6)
+  delivery_proof_path                                     String?
   dispatch_offers                                         dispatch_offers[]
   ledger_entries                                          ledger_entries[]
   loyalty_stamps_loyalty_stamps_order_idToorders          loyalty_stamps?              @relation("loyalty_stamps_order_idToorders")
   loyalty_stamps_loyalty_stamps_redeemed_order_idToorders loyalty_stamps[]             @relation("loyalty_stamps_redeemed_order_idToorders")
   notifications                                           notifications[]
+  order_delivery_pins                                     order_delivery_pins?
   order_events                                            order_events[]
   order_items                                             order_items[]
   profiles_orders_cancelled_byToprofiles                  profiles?                    @relation("orders_cancelled_byToprofiles", fields: [cancelled_by], references: [id], onUpdate: NoAction)
@@ -846,6 +852,17 @@ model refunds {
   profiles        profiles?     @relation(fields: [requested_by], references: [id], onUpdate: NoAction)
 
   @@index([order_id], map: "refunds_order_idx")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model order_delivery_pins {
+  order_id   String   @id @db.Uuid
+  pin        String
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  orders     orders   @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
   @@schema("public")
 }
 

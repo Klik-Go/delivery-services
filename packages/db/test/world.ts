@@ -180,6 +180,14 @@ export async function buildWorld(db: pg.ClientBase, fx: DbFixtures): Promise<Wor
     );
   }
 
+  // Delivery PINs (normally issued by the orders trigger for big orders): one per customer's order.
+  for (const orderId of [order1, order2]) {
+    await db.query(
+      `insert into public.order_delivery_pins (order_id, pin) values ($1, '4821') on conflict (order_id) do nothing`,
+      [orderId],
+    );
+  }
+
   const ledger = `insert into public.ledger_entries (txn_id, account, party_type, party_id, debit_centavos, credit_centavos, order_id)
     values ($1, 'rider_cash_on_hand', 'rider', $2, 23900, 0, $4),
            ($1, 'merchant_payable', 'merchant', $3, 0, 20000, $4),
