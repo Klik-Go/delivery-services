@@ -22,7 +22,9 @@ import type { GeoPoint } from "../merchant/ports";
 import type { NotifiableOrder } from "../notifications/notification-service";
 import type { NotificationMessage } from "../notifications/ports";
 import type { LedgerTxn } from "../ordering/ports";
+import { ServiceUnavailableError, type AppError } from "../shared/errors";
 import type { Centavos } from "../shared/money";
+import { err, ok, type Result } from "../shared/result";
 
 export interface FakeRider {
   id: string;
@@ -110,6 +112,8 @@ export class InMemoryDispatch
   readonly ledger: LedgerTxn[] = [];
   readonly photos: { path: string; bytes: number }[] = [];
   settings: DispatchSettings = DEFAULT_DISPATCH_SETTINGS;
+  /** Makes photo uploads fail (storage outage). */
+  storageDown = false;
   private sequence = 0;
 
   constructor(private readonly now: () => Date) {}
@@ -499,11 +503,14 @@ export class InMemoryDispatch
   save(
     orderId: string,
     photo: { readonly bytes: Uint8Array; readonly contentType: string },
-  ): Promise<string> {
+  ): Promise<Result<string, AppError>> {
+    if (this.storageDown) {
+      return Promise.resolve(err(new ServiceUnavailableError("Photo uploads are down.")));
+    }
     const ext = photo.contentType === "image/png" ? "png" : "jpg";
     const path = `${orderId}/proof-${String(this.photos.length + 1)}.${ext}`;
     this.photos.push({ path, bytes: photo.bytes.byteLength });
-    return Promise.resolve(path);
+    return Promise.resolve(ok(path));
   }
 
   // --- ITrackingRepository --------------------------------------------------------------------

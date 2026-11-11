@@ -1,7 +1,9 @@
 import type { OrderStatus, PaymentMethod, VehicleType } from "@klikgo/types";
 import type { GeoPoint } from "../merchant/ports";
 import type { LedgerTxn } from "../ordering/ports";
+import type { AppError } from "../shared/errors";
 import type { Centavos } from "../shared/money";
+import type { Result } from "../shared/result";
 
 /** Dispatch and delivery rules (feature flag `dispatch`; admin editor in Phase 8). */
 export interface DispatchSettings {
@@ -241,7 +243,7 @@ export interface IDeliveryProofStorage {
   save(
     orderId: string,
     photo: { readonly bytes: Uint8Array; readonly contentType: string },
-  ): Promise<string>;
+  ): Promise<Result<string, AppError>>;
 }
 
 /** Customer tracking facts. */

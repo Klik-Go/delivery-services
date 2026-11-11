@@ -15,7 +15,7 @@ import type {
 import type { PrismaClient } from "@klikgo/db";
 import type { OrderStatus, PaymentMethod, PaymentStatus, RefundStatus } from "@klikgo/types";
 
-type Tx = Parameters<Parameters<PrismaClient["$transaction"]>[0]>[0];
+export type Tx = Parameters<Parameters<PrismaClient["$transaction"]>[0]>[0];
 
 interface PaymentRow {
   id: string;
@@ -56,6 +56,7 @@ interface OrderRow {
   request_hash: string | null;
   created_at: Date;
   payments: PaymentRow | null;
+  order_delivery_pins: { pin: string } | null;
 }
 
 const toPayment = (row: PaymentRow): PaymentRecord => ({
@@ -100,9 +101,14 @@ const toOrder = (row: OrderRow): OrderRecord => ({
   requestHash: row.request_hash,
   createdAt: row.created_at,
   payment: row.payments ? toPayment(row.payments) : null,
+  deliveryPin: row.order_delivery_pins?.pin ?? null,
 });
 
-const ORDER_INCLUDE = { payments: true, merchants: { select: { name: true } } } as const;
+const ORDER_INCLUDE = {
+  payments: true,
+  merchants: { select: { name: true } },
+  order_delivery_pins: { select: { pin: true } },
+} as const;
 
 /** True when a database error is a unique violation of `constraint`. */
 function isUniqueViolation(error: unknown, constraint: string): boolean {
@@ -111,7 +117,7 @@ function isUniqueViolation(error: unknown, constraint: string): boolean {
 }
 
 /** Order status changes record who made them (orders_log_status reads these settings). */
-async function setActor(
+export async function setActor(
   tx: Tx,
   actorId: string | null,
   role: string | null,
@@ -123,7 +129,7 @@ async function setActor(
            set_config('klikgo.event_meta', ${JSON.stringify(meta)}, true)`;
 }
 
-async function postLedger(tx: Tx, txn: LedgerTxn): Promise<void> {
+export async function postLedger(tx: Tx, txn: LedgerTxn): Promise<void> {
   const txnId = randomUUID();
   // The deferred ledger_entries_balanced trigger checks debits = credits when this commits.
   await tx.ledger_entries.createMany({

@@ -249,7 +249,12 @@ export class RiderService {
 
     const facts = await this.deps.riders.settlementFacts(orderId);
     if (!facts) return err(new NotFoundError("Order", orderId));
-    const proofPath = proof.photo ? await this.deps.proofs.save(orderId, proof.photo) : null;
+    let proofPath: string | null = null;
+    if (proof.photo) {
+      const saved = await this.deps.proofs.save(orderId, proof.photo);
+      if (!saved.ok) return saved;
+      proofPath = saved.value;
+    }
     const ledger = this.deps.ledger.settlement({
       orderId,
       customerId: facts.customerId,

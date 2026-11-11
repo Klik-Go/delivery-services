@@ -210,6 +210,15 @@ describe("RiderService", () => {
     expect(!raced.ok && raced.error.code).toBe("CONFLICT");
   });
 
+  it("keeps the order with the rider when the photo cannot be stored", async () => {
+    const { w, rosa } = await onJob();
+    w.db.order("o1").status = "picked_up";
+    w.db.storageDown = true;
+    const failed = await w.riders.delivered(rosa, "o1", { photo: PHOTO });
+    expect(!failed.ok && failed.error.code).toBe("UNAVAILABLE");
+    expect(w.db.order("o1").status).toBe("picked_up");
+  });
+
   it("does not place calls until the relay exists", () => {
     const w = dispatchWorld();
     const call = w.riders.callCustomer();
