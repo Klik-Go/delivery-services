@@ -34,7 +34,7 @@
     "@klikgo/core": "workspace:*",
     "@klikgo/db": "workspace:*",
     "@klikgo/types": "workspace:*",
-    "@playwright/test": "1.64.1",
+    "@playwright/test": "1.65.0",
     "@supabase/supabase-js": "2.118.0",
     "@types/node": "26.6.6",
     "@types/pg": "8.23.1",
