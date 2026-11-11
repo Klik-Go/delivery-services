@@ -39,6 +39,6 @@ Feature: Rider applications are reviewed against the onboarding checklist
     And the audit log records "rider.suspend" by the coordinator because "Repeated no-shows"
 
   Scenario: Low-rated riders show up for coaching
-    Given "Rey Rider" has an average rating of 3.2 from 12 ratings
+    Given "Rico Rider" has an average rating of 3.2 from 12 ratings
     When the coordinator opens the coaching list
-    Then "Rey Rider" is on the coaching list
+    Then "Rico Rider" is on the coaching list

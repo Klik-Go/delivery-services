@@ -449,8 +449,10 @@ export class FakeZoneAdmin implements IZoneAdminRepository {
       const rules = zone.feeRules.map((rule) => {
         if (rule.id !== ruleId) return rule;
         found = true;
-        const defined = Object.fromEntries(Object.entries(patch).filter(([, v]) => v !== undefined));
-        return { ...rule, ...defined } as FeeRuleView;
+        const defined = Object.fromEntries(
+          Object.entries(patch).filter(([, v]) => v !== undefined),
+        );
+        return { ...rule, ...defined };
       });
       this.patch(zone.id, { feeRules: rules });
     }

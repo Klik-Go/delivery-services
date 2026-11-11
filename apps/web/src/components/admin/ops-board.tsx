@@ -25,6 +25,7 @@ export function OpsBoard({
   readonly zones: readonly { readonly id: string; readonly name: string }[];
 }): JSX.Element {
   const t = useTranslations("Ops.board");
+  const tOps = useTranslations("Ops");
   const tStatus = useTranslations("Customer.order.status");
   const locale = useLocale();
   const queryClient = useQueryClient();
@@ -35,7 +36,7 @@ export function OpsBoard({
   const live = useLiveTopic(zoneId ? `zone:${zoneId}` : null, refresh, ["status", "location"]);
   const map = useQuery({
     queryKey: ["ops-live", zoneId],
-    queryFn: () => fetchData<Wire<LiveMap>>("/api/admin/live", t("failed")),
+    queryFn: () => fetchData<Wire<LiveMap>>("/api/admin/live", tOps("failed")),
     refetchInterval: live === "live" ? 30_000 : 10_000,
   });
 
@@ -78,7 +79,7 @@ export function OpsBoard({
     [riders, orders],
   );
 
-  if (map.isPending) return <p className="text-ink-muted">{t("loading")}</p>;
+  if (map.isPending) return <p className="text-ink-muted">{tOps("loading")}</p>;
   if (map.isError) return <FormError message={map.error.message} />;
 
   return (

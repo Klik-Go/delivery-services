@@ -108,48 +108,52 @@ function RiderCard({ rider }: { readonly rider: Wire<RiderReview> }): JSX.Elemen
           {rider.checklist.map((item) => (
             <li
               key={item.type}
-              className="bg-surface-muted flex flex-wrap items-center gap-2 rounded-lg p-2"
+              className="bg-surface-muted flex flex-col gap-2 rounded-lg p-2 sm:flex-row sm:items-center"
               data-doc={item.type}
             >
-              <span className="text-ink flex-1 text-sm font-semibold">{t(`doc.${item.type}`)}</span>
-              <span className="text-ink-muted text-xs" data-state={item.state}>
-                {t(`state.${item.state}`)}
-              </span>
-              {item.document ? (
-                <Button
-                  variant="secondary"
-                  disabled={busy}
-                  onClick={() => void view(item.document?.id ?? "")}
-                >
-                  {t("view")}
-                </Button>
-              ) : null}
-              {item.document && item.state === "pending" ? (
-                <>
-                  <Button
-                    disabled={busy}
-                    onClick={() =>
-                      void run("POST", `/api/admin/kyc/${item.document?.id ?? ""}`, {
-                        decision: "approve",
-                      })
-                    }
-                  >
-                    {t("accept")}
-                  </Button>
+              <div className="flex flex-1 items-center justify-between gap-2">
+                <span className="text-ink text-sm font-semibold">{t(`doc.${item.type}`)}</span>
+                <span className="text-ink-muted text-xs" data-state={item.state}>
+                  {t(`state.${item.state}`)}
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {item.document ? (
                   <Button
                     variant="secondary"
-                    disabled={busy || reason.trim().length < 3}
-                    onClick={() =>
-                      void run("POST", `/api/admin/kyc/${item.document?.id ?? ""}`, {
-                        decision: "reject",
-                        reason,
-                      })
-                    }
+                    disabled={busy}
+                    onClick={() => void view(item.document?.id ?? "")}
                   >
-                    {t("reject")}
+                    {t("view")}
                   </Button>
-                </>
-              ) : null}
+                ) : null}
+                {item.document && item.state === "pending" ? (
+                  <>
+                    <Button
+                      disabled={busy}
+                      onClick={() =>
+                        void run("POST", `/api/admin/kyc/${item.document?.id ?? ""}`, {
+                          decision: "approve",
+                        })
+                      }
+                    >
+                      {t("accept")}
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      disabled={busy || reason.trim().length < 3}
+                      onClick={() =>
+                        void run("POST", `/api/admin/kyc/${item.document?.id ?? ""}`, {
+                          decision: "reject",
+                          reason,
+                        })
+                      }
+                    >
+                      {t("reject")}
+                    </Button>
+                  </>
+                ) : null}
+              </div>
             </li>
           ))}
         </ul>

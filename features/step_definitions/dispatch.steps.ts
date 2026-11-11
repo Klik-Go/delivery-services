@@ -73,7 +73,7 @@ async function resetDispatch(world: KlikWorld): Promise<void> {
   );
 }
 
-Before({ tags: "@dispatch or @rider" }, async function (this: KlikWorld) {
+Before({ tags: "@dispatch or @rider or @ops" }, async function (this: KlikWorld) {
   if (!CRON_SECRET) return "skipped";
   await resetDispatch(this);
   // Cash collected in earlier scenarios is never remitted (remittances are Phase 10), so each
@@ -90,7 +90,7 @@ Before({ tags: "@dispatch or @rider" }, async function (this: KlikWorld) {
 
 // Put the riders back as seeded but out of reach (their last position is old), so scenarios in
 // other features never dispatch to them by accident.
-After({ tags: "@dispatch or @rider" }, async function (this: KlikWorld) {
+After({ tags: "@dispatch or @rider or @ops" }, async function (this: KlikWorld) {
   await resetDispatch(this);
   await this.db.query(
     `update public.riders set is_online = true, cash_limit_centavos = 300000 where id = any($1::uuid[])`,

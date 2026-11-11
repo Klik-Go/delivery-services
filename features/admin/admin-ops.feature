@@ -22,7 +22,7 @@ Feature: Zone coordinators run live orders from the admin console
 
   Scenario: The order detail tells its story
     When the coordinator opens the order
-    Then the order history reads "placed by customer, accepted by merchant_owner, preparing by merchant_owner"
+    Then the console history reads "placed by customer, accepted by merchant_owner, preparing by merchant_owner"
 
   Scenario: Assign a rider by hand
     When the coordinator assigns "Rico Rider" to the order because "Rico is at the store already"

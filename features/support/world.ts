@@ -80,6 +80,15 @@ export interface DispatchScenario {
   before?: { cashHeld: number; earned: number; jobs: number };
 }
 
+/** State for the ops console steps (Phase 8). */
+export interface OpsScenario {
+  coordinator?: { client: ApiClient; userId: string };
+  admin?: { client: ApiClient; userId: string };
+  /** A rider who applied in the scenario. */
+  applicant?: { client: ApiClient; userId: string; riderId: string };
+  link?: string;
+}
+
 export const BASE_URL = process.env.BASE_URL ?? "http://localhost:3000";
 
 setDefaultTimeout(30_000);
@@ -99,6 +108,7 @@ export class KlikWorld extends World {
   readonly merchant: MerchantScenario = { applications: new Map(), items: new Map(), cleanups: [] };
   readonly checkout: CheckoutScenario = {};
   readonly dispatch: DispatchScenario = { riders: new Map() };
+  readonly ops: OpsScenario = {};
   private context: BrowserContext | undefined;
   private currentPage: Page | undefined;
 
