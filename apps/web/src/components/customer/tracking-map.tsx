@@ -126,9 +126,11 @@ export function TrackingMap({ orderId }: { readonly orderId: string }): JSX.Elem
       <div
         ref={container}
         className="border-border h-56 w-full overflow-hidden rounded-xl border"
-        role="img"
-        aria-label={t("mapLabel")}
+        aria-describedby="tracking-map-label"
       />
+      <p id="tracking-map-label" className="sr-only">
+        {t("mapLabel")}
+      </p>
       {rider ? (
         <div
           className="bg-brand-50 flex items-center gap-3 rounded-xl p-3"

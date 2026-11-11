@@ -164,12 +164,12 @@ describeDb("order lifecycle: SLA escalation, realtime topics, notification queue
     expect((await order(id))?.status).toBe("placed");
   });
 
-  it("runs the escalation and the app jobs every 30 seconds", async () => {
+  it("runs the escalation every 30 seconds and the app jobs every 10 (Phase 7 dispatch)", async () => {
     const { rows } = await db().query<{ jobname: string; schedule: string }>(
       "select jobname, schedule from cron.job where jobname in ('merchant-sla', 'app-jobs') order by jobname",
     );
     expect(rows).toEqual([
-      { jobname: "app-jobs", schedule: "30 seconds" },
+      { jobname: "app-jobs", schedule: "10 seconds" },
       { jobname: "merchant-sla", schedule: "30 seconds" },
     ]);
     // Without the Vault secrets (local, CI) calling the app is a no-op.
