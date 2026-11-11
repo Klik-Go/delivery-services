@@ -16,7 +16,7 @@ Phases are defined in `docs/BUILD_PLAN.md` §6. Agents update this file in every
 | 5 | Checkout and payments (PayMongo + COD) | ✅ Done (merged) | [Klik-Go/delivery-services#14](https://github.com/Klik-Go/delivery-services/pull/14) | Owner: PayMongo keys + webhook (Q22), BSP/legal check on holding payments (Q23) |
 | 6 | Order lifecycle, merchant queue, SLA | ✅ Done (merged) | [Klik-Go/delivery-services#15](https://github.com/Klik-Go/delivery-services/pull/15) | Owner: Vault secrets + `CRON_SECRET`, VAPID keys, store phones (Q25); SLA penalty (Q26) |
 | 6.1 | Follow-up: demo data for the hosted app | 🟡 In progress (PR open) | [Klik-Go/delivery-services#16](https://github.com/Klik-Go/delivery-services/pull/16) | Owner: run **Load demo data** (Q28) |
-| 6.2 | Follow-up: notifications never fail an order | 🟡 In progress (PR open) | branch `phase-6.2-notify-failsafe` | Found when production checkout returned 500 (database not yet migrated) |
+| 6.2 | Follow-up: notifications never fail an order | 🟡 In progress (PR open) | [Klik-Go/delivery-services#22](https://github.com/Klik-Go/delivery-services/pull/22) | Found when production checkout returned 500 (database not yet migrated) |
 | 7 | Rider app, dispatch, live tracking | ⬜ Not started | | |
 | 8 | Coordinator and Admin console | ⬜ Not started | | |
 | 9 | Ratings, reorder, promos, referrals, loyalty | ⬜ Not started | | |
