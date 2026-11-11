@@ -101,10 +101,21 @@ export class NotificationService implements IOrderNotifier {
       ...params,
     };
     for (const { audience, template } of rules) {
-      const userIds =
-        audience === "customer"
-          ? [order.customerId]
-          : await this.deps.recipients.merchantTeam(order.merchantId);
+      let userIds: readonly string[];
+      try {
+        userIds =
+          audience === "customer"
+            ? [order.customerId]
+            : await this.deps.recipients.merchantTeam(order.merchantId);
+      } catch (error) {
+        // One audience failing must not stop the other, nor fail the order change.
+        this.deps.logger.error("notification.recipients_failed", {
+          orderId: order.id,
+          template,
+          err: errorName(error),
+        });
+        continue;
+      }
       for (const userId of userIds) {
         await this.notify({ userId, template, orderId: order.id, params: filled });
       }
@@ -116,7 +127,8 @@ export class NotificationService implements IOrderNotifier {
     for (const channel of this.policy[message.template]) {
       const sender = this.senders.get(channel);
       if (!sender) continue;
-      const id = await this.deps.log.start(message, channel);
+      // A message that cannot be recorded is still sent: the alert matters more than its log row.
+      const id = await this.record(message, channel);
       await this.deliver(id, sender, message);
     }
   }
@@ -127,21 +139,58 @@ export class NotificationService implements IOrderNotifier {
     for (const message of queued) {
       const sender = this.senders.get(message.channel);
       if (sender) await this.deliver(message.id, sender, message);
-      else await this.deps.log.finish(message.id, { ok: false, error: "channel not configured" });
+      else await this.finish(message.id, { ok: false, error: "channel not configured" }, message);
     }
     return queued.length;
   }
 
+  /** Starts the log row; null when the log is unavailable (logged, never thrown). */
+  private async record(
+    message: NotificationMessage,
+    channel: NotificationChannel,
+  ): Promise<string | null> {
+    try {
+      return await this.deps.log.start(message, channel);
+    } catch (error) {
+      this.deps.logger.error("notification.record_failed", {
+        orderId: message.orderId,
+        template: message.template,
+        channel,
+        err: errorName(error),
+      });
+      return null;
+    }
+  }
+
+  /** Finishes the log row, if there is one; a failing log never stops delivery. */
+  private async finish(
+    id: string | null,
+    outcome: { readonly ok: true } | { readonly ok: false; readonly error: string },
+    message: NotificationMessage,
+  ): Promise<void> {
+    if (id === null) return;
+    try {
+      await this.deps.log.finish(id, outcome);
+    } catch (error) {
+      this.deps.logger.error("notification.record_failed", {
+        orderId: message.orderId,
+        template: message.template,
+        err: errorName(error),
+      });
+    }
+  }
+
   private async deliver(
-    id: string,
+    id: string | null,
     sender: INotificationSender,
     message: NotificationMessage,
   ): Promise<void> {
     try {
       const sent = await sender.send(message, renderNotification(message.template, message.params));
-      await this.deps.log.finish(
+      await this.finish(
         id,
         sent.ok ? { ok: true } : { ok: false, error: sent.error.code },
+        message,
       );
       // NOT_FOUND: nowhere to deliver (no device subscribed, no phone): expected, not a failure.
       if (!sent.ok && sent.error.code !== "NOT_FOUND") {
@@ -153,7 +202,7 @@ export class NotificationService implements IOrderNotifier {
         });
       }
     } catch (error) {
-      await this.deps.log.finish(id, { ok: false, error: "exception" });
+      await this.finish(id, { ok: false, error: "exception" }, message);
       this.deps.logger.error("notification.exception", {
         notificationId: id,
         channel: sender.channel,
@@ -161,4 +210,9 @@ export class NotificationService implements IOrderNotifier {
       });
     }
   }
+}
+
+/** The error's class name only: messages can carry personal data or credentials. */
+function errorName(error: unknown): string {
+  return error instanceof Error ? error.name : "unknown";
 }
