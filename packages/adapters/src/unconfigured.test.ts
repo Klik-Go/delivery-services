@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { UnconfiguredMenuParser, UnconfiguredPhotoStorage } from "./unconfigured";
+import {
+  UnconfiguredDeliveryProofStorage,
+  UnconfiguredMenuParser,
+  UnconfiguredPhotoStorage,
+} from "./unconfigured";
 
 describe("unconfigured adapters", () => {
   it("say menu import and uploads are not set up yet instead of failing", async () => {
@@ -7,6 +11,8 @@ describe("unconfigured adapters", () => {
     const upload = await new UnconfiguredPhotoStorage(undefined).createUpload();
     expect(!parsed.ok && parsed.error.code).toBe("UNAVAILABLE");
     expect(!upload.ok && upload.error.code).toBe("UNAVAILABLE");
+    const proof = await new UnconfiguredDeliveryProofStorage().save();
+    expect(!proof.ok && proof.error.code).toBe("UNAVAILABLE");
   });
 
   it("still builds public photo URLs from the project URL", () => {

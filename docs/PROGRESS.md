@@ -15,9 +15,9 @@ Phases are defined in `docs/BUILD_PLAN.md` §6. Agents update this file in every
 | 4.1 | Follow-up: deploy fixes (readiness, migration deploy) + placeholder sign-in code | ✅ Done (merged) | [Klik-Go/delivery-services#11](https://github.com/Klik-Go/delivery-services/pull/11), [#12](https://github.com/Klik-Go/delivery-services/pull/12), [#13](https://github.com/Klik-Go/delivery-services/pull/13) | 4.1.1 readiness fix, 4.1.2 bootstrap-admin workflow; owner confirmed sign-in works on production |
 | 5 | Checkout and payments (PayMongo + COD) | ✅ Done (merged) | [Klik-Go/delivery-services#14](https://github.com/Klik-Go/delivery-services/pull/14) | Owner: PayMongo keys + webhook (Q22), BSP/legal check on holding payments (Q23) |
 | 6 | Order lifecycle, merchant queue, SLA | ✅ Done (merged) | [Klik-Go/delivery-services#15](https://github.com/Klik-Go/delivery-services/pull/15) | Owner: Vault secrets + `CRON_SECRET`, VAPID keys, store phones (Q25); SLA penalty (Q26) |
-| 6.1 | Follow-up: demo data for the hosted app | 🟡 In progress (PR open) | [Klik-Go/delivery-services#16](https://github.com/Klik-Go/delivery-services/pull/16) | Owner: run **Load demo data** (Q28) |
-| 6.2 | Follow-up: notifications never fail an order | 🟡 In progress (PR open) | [Klik-Go/delivery-services#22](https://github.com/Klik-Go/delivery-services/pull/22) | Found when production checkout returned 500 (database not yet migrated) |
-| 7 | Rider app, dispatch, live tracking | ⬜ Not started | | |
+| 6.1 | Follow-up: demo data for the hosted app | ✅ Done (merged) | [Klik-Go/delivery-services#16](https://github.com/Klik-Go/delivery-services/pull/16) | Owner: run **Load demo data** (Q28) |
+| 6.2 | Follow-up: notifications never fail an order | ✅ Done (merged) | [Klik-Go/delivery-services#22](https://github.com/Klik-Go/delivery-services/pull/22) | Found when production checkout returned 500 (database not yet migrated) |
+| 7 | Rider app, dispatch, live tracking | 🟡 In progress (PR open) | [Klik-Go/delivery-services#23](https://github.com/Klik-Go/delivery-services/pull/23) | Owner: rider sign-in needs SMS (Q30); rider pay rule (Q29); Vault secrets from Q25 now also drive dispatch |
 | 8 | Coordinator and Admin console | ⬜ Not started | | |
 | 9 | Ratings, reorder, promos, referrals, loyalty | ⬜ Not started | | |
 | 10 | Finance: settlements, payouts, reports | ⬜ Not started | | |
@@ -189,7 +189,25 @@ Owner request 2026-11-06: "Fill out all the data needed for a test demo."
 - [x] Demo walkthrough in OPEN_QUESTIONS Q28.
 - [ ] Owner: run **Load demo data** with `action: load`.
 
-Next: Phase 7, rider app, dispatch and live tracking.
+### Phase 7 — Rider app, dispatch and live tracking (branch `phase-7-rider-dispatch`)
+Acceptance (docs/BUILD_PLAN.md §6, Gherkin in `features/dispatch/`):
+- [x] With 3 seeded riders the offer goes to the nearest online rider under their cash limit: `dispatch.feature` (Rosa nearest, Rico next, Rey pending approval never offered; Rosa skipped when the order's cash would take her over her limit; offline riders skipped). Unit tests in `dispatch-service.test.ts`.
+- [x] A declined or expired offer cascades within 30 s: a decline re-dispatches at once; an offer past its 30 seconds expires on the next background run (every 10 seconds) and goes to the next rider (`dispatch.feature`, `dispatch-repositories.db.test.ts`). When nobody is left (or after 5 offers) the zone coordinator is alerted once and dispatch keeps trying.
+- [x] The customer's map shows the rider moving, throttled: `e2e/rider-tracking.spec.ts` moves the rider's mocked GPS and the customer's map follows (positions every 7 s when moving, server keeps one per 4 s, the map refetches at most every 5 s), on Pixel 7 and desktop.
+- [x] Location stops when offline or after delivery: the app stops watching GPS when offline and the server refuses positions from offline riders (409, `rider-flow.feature`, e2e); the customer's tracking hides the rider once delivered.
+- [x] A delivery PIN is required above a configurable amount: the `dispatch` flag's `pin_threshold_centavos` (₱500.00); the PIN is issued by the database, shown only to the customer, checked by the server with 5 tries per 10 minutes (`rider-flow.feature`, `rider-dispatch.db.test.ts`).
+
+Deliverables:
+- [x] Core: `DispatchService` (offer, answer, tick), `IDispatchStrategy` → `NearestAvailableStrategy`, `IRiderPayRule` → `DistancePayRule` (₱35 + ₱10/km after 2 km, shown on the offer), `RiderService` (online switch, location, offers, arrived / picked up / delivered, settlement in the ledger, earnings), `TrackingService` (rider visible only while assigned, ETA), in-memory fakes; dispatch starts when the store accepts (or `lead_minutes` before ready, configurable).
+- [x] Adapters: `PrismaDispatchRepository` (PostGIS `nearest_available_riders`, conditional offers and answers, rider transitions as the actor), `SupabaseDeliveryProofStorage` (private `delivery-proofs` bucket).
+- [x] BFF: `/api/rider/{me,status,location,offers/current,offers/:id/accept|decline,job,jobs/:id/arrived|picked-up|delivered,earnings}`, `/api/orders/:id/tracking`; zod schemas in `packages/types/src/rider.ts`.
+- [x] Rider PWA `/rider`: online switch, Screen Wake Lock, GPS every 7 s while moving (heartbeat every minute), offer card with countdown, pay and cash to collect, slide-to-confirm steps, Waze / Google Maps links, masked contact (call relay stub), PIN or photo proof, earnings and cash on hand; live over `rider:<id>`.
+- [x] Customer order page: live map (Leaflet) with the rider and arrival estimate, delivery PIN for big orders.
+- [x] Migration `20261113100000_rider_dispatch.sql` with DB tests; Prisma schema + ERD regenerated; `pg_cron` app jobs every 10 s.
+- [x] Docs: ARCHITECTURE §4h (incl. PWA background-GPS limits and when to build an Expo rider app), OPEN_QUESTIONS Q29–Q31.
+- [ ] Owner: rider sign-in on production needs SMS (Q30); confirm the rider pay rule (Q29).
+
+Next: Phase 8, coordinator and admin console (after review).
 
 ## Business validation (parallel, doc §8)
 - [ ] 20–30 customer interviews in the pilot barangay

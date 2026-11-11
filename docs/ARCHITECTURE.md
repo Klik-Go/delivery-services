@@ -231,6 +231,36 @@ sequenceDiagram
 - **Background jobs.** `POST /api/internal/jobs` (bearer `CRON_SECRET`, constant-time check) sends queued messages (`FOR UPDATE SKIP LOCKED` claims) and refunds paid orders that ended early. `pg_cron` calls it every 30 seconds through `pg_net`, reading the app URL and secret from Supabase Vault, so no extra scheduler is needed (OPEN_QUESTIONS Q25).
 - **Store board.** `/merchant/orders`: New (3-minute countdown, prep chips 10/15/20/30, reject reasons, quick "sold out" per item), Preparing (ready-by time, Mark ready), Ready, Picked up (Phase 7). A Web Audio chime rings every 2.5 s while any order is new; browsers need one tap ("Turn on sound") to allow it. "Get alerts on this device" subscribes the browser to Web Push via the service worker.
 
+## 4h. Dispatch, rider app and live tracking (Phase 7)
+
+```mermaid
+sequenceDiagram
+  participant M as Store (board)
+  participant B as BFF
+  participant DB as Postgres + PostGIS
+  participant R as Rider app (/rider)
+  participant C as Customer (/orders/[id])
+  M->>B: POST /api/orders/:id/accept
+  B->>DB: nearest_available_riders(store, 5 km) → offer (expires in 30 s)
+  DB-->>R: broadcast rider:<id> "offer" (+ Web Push)
+  R->>B: POST /api/rider/offers/:id/accept
+  B->>DB: assign rider, fix pay (conditional on the offer being open)
+  loop every 7 s while moving
+    R->>B: POST /api/rider/location
+    B->>DB: upsert rider_locations (≥ 4 s apart)
+    DB-->>C: broadcast order:<id> "location" → GET /api/orders/:id/tracking
+  end
+  R->>B: arrived → picked up → delivered (PIN or photo)
+  B->>DB: ready → picked_up → delivered as the rider + settlement ledger (one transaction)
+```
+
+- **Who gets the job.** `DispatchService` asks `nearest_available_riders` (active, online, seen in the last 2 minutes, not on an unfinished order, within `max_distance_m`) for riders in the order's zone who were not offered this order and have no open offer, then lets an `IDispatchStrategy` choose. `NearestAvailableStrategy` takes the nearest rider who can carry the order's cash: for cash on delivery, cash already held (the ledger's `rider_cash_on_hand` balance) plus the order total must stay within the rider's `cash_limit_centavos`. A new rule (zone priority, ratings, batching) is a new strategy.
+- **Offers.** One rider at a time; the pay from `IRiderPayRule` (`DistancePayRule`) is shown upfront and fixed on the order when accepted; tips go to the rider on top. Offers last `offer_seconds` (30). A decline re-dispatches at once; an expired offer is moved on by the background job, which `pg_cron` now runs every **10 seconds** (was 30) so an offer never waits more than ~40 s. Every change is conditional (`FOR UPDATE` on the order and the offer), so two riders cannot both win and a late accept is refused. After `max_attempts` offers, or when nobody is left nearby, the zone's coordinators get a push/in-app alert once (`dispatch_flagged_at`), and dispatch keeps trying riders who come free. Dispatch starts when the store accepts, or `lead_minutes` before the food is ready when `start` is `before_ready`. All settings live in the `dispatch` feature flag (`rollout` JSON; admin editor in Phase 8).
+- **The job.** Arrived at store (`dispatch_status = at_store`), picked up (only once the store marked it ready) and delivered are the rider's transitions in `OrderStateMachine`; the repository sets the rider as the actor so the database guard and `order_events` record them. Delivery needs the customer's PIN for orders at or above `pin_threshold_centavos` (issued by a trigger into `order_delivery_pins`, readable only by the customer; 5 tries per 10 minutes through `IRateLimiter`), otherwise a photo stored by the server in the private `delivery-proofs` bucket. Delivery and the settlement ledger (merchant payable less commission, rider pay + tip, platform revenue, cash with the rider for COD) are one transaction. Founding stores pay no commission until their date.
+- **Privacy.** Offers show the store and only the drop-off's barangay; the address, landmark and notes come after accepting. The rider sees the customer's number masked to the last 4 digits; calling goes through a relay later (stub). The customer sees the rider (first name, plate, position) only between assignment and delivery. Positions are refused while offline and stop being shown after delivery.
+- **Live updates.** New topic `rider:<id>` (the rider only): `offer` events and status changes of their job. The rider's position upsert broadcasts `location` on `order:<id>` for their active orders; payloads carry ids only and clients refetch through the BFF. The customer's map refetches at most every 5 seconds.
+- **PWA limits and when to build an Expo app.** Browsers do not run GPS in the background: when the rider locks the phone or switches apps, `watchPosition` stops and Klik Go stops receiving positions (dispatch then treats the rider as unavailable after 2 minutes). The rider app keeps the screen on with the Screen Wake Lock API and asks riders to keep it open; iOS Safari supports Wake Lock from 16.4, older phones need a longer screen timeout. This is acceptable for the pilot (one zone, riders on the app during shifts). Build a native rider app (Expo, background location + foreground service, push for offers) when any of these hold: riders regularly lose offers because the screen was off, live-map gaps exceed a minute during deliveries, the fleet passes ~30 active riders, or riders need navigation in another app while still being tracked. The BFF routes stay the same, so the native app is a new client, not a new backend.
+
 ## 5. Folder map
 
 ```
@@ -352,6 +382,9 @@ CI (`.github/workflows/ci.yml`) runs on Node 26 with pnpm 12 installed from npm 
 | 2026-11-06 | Realtime broadcast from a DB trigger, private topics, refetch through the BFF | Every status change is announced whoever made it; payloads carry no personal data; the BFF stays the only data path |
 | 2026-11-06 | Browser gets its access token from `/api/realtime/token` | Private channels need the user's JWT; the browser still never calls Supabase Auth |
 | 2026-11-06 | pg_net + Vault trigger the app's jobs every 30 s | Vercel Hobby cron runs daily at most; GitHub Actions schedules are 5 min+ and best-effort |
+| 2026-11-13 | Dispatch in the app, candidates in SQL | PostGIS finds nearby riders; strategy, pay rule and cascade stay testable in `packages/core` |
+| 2026-11-13 | Background jobs every 10 s | 30-second offers must move on promptly; the jobs endpoint is cheap when idle |
+| 2026-11-13 | PWA rider app first, Expo later | ships with the web app; background GPS limits documented with the triggers for a native app (§4h) |
 | 2026-11-06 | `web-push` library for VAPID | Payload encryption (RFC 8291) is easy to get subtly wrong by hand |
 | 2026-11-06 | Accept = accepted then preparing in one call | docs/BUSINESS.md §5.2 step 3: confirming and starting preparation are one action for the store |
 | 2026-11-04 | Cookie-based locale (no `/fil/...` URLs) | short shareable links; SEO not a pilot goal |

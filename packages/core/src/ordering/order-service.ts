@@ -84,6 +84,8 @@ export interface OrderView {
   readonly timeline: Readonly<Record<keyof OrderTimeline, string | null>>;
   /** True while the customer can still cancel (before the store accepts). */
   readonly canCancel: boolean;
+  /** The PIN to tell the rider at the door: the customer only, until delivery. */
+  readonly deliveryPin: string | null;
 }
 
 /** Return addresses for the hosted payment page. */
@@ -100,6 +102,15 @@ interface Priced {
   readonly tipCentavos: Centavos;
   readonly totalCentavos: Centavos;
 }
+
+/** Statuses in which the customer may still need their delivery PIN. */
+const LIVE_FOR_PIN: readonly OrderStatus[] = [
+  "placed",
+  "accepted",
+  "preparing",
+  "ready",
+  "picked_up",
+];
 
 const invalid = (path: string, message: string): ValidationError =>
   new ValidationError(message, [{ path, message }]);
@@ -195,6 +206,10 @@ export class OrderService {
       canCancel:
         order.customerId === actor.id &&
         (order.status === "awaiting_payment" || order.status === "placed"),
+      deliveryPin:
+        order.customerId === actor.id && LIVE_FOR_PIN.includes(order.status)
+          ? order.deliveryPin
+          : null,
     });
   }
 

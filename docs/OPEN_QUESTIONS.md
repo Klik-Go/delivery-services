@@ -4,6 +4,15 @@ Agents add items here when a decision is blocked, docs conflict, or the plan cou
 
 ## Open
 
+### Q29. Rider pay per job (decision taken; please confirm the numbers)
+Riders see their pay before accepting: **₱35 base + ₱10 per started km after the first 2 km** (road distance store → customer, estimated as straight line × 1.3), plus the full tip. The values are in the `dispatch` feature flag (`rider_base_centavos`, `rider_per_km_centavos`, `rider_free_km`) and change without a deploy; the rule itself is `DistancePayRule` (a different rule is a new class). Klik Go keeps the delivery and service fees and the commission and pays the rider from them; on short, cheap orders the platform can make a loss on delivery (the ledger records it). Please confirm or give the pilot numbers.
+
+### Q30. Riders signing in on the hosted app (owner action before rider testing)
+Riders sign in with a texted code only: the placeholder code (Q20) is for customers and refuses riders on purpose. Until `SEMAPHORE_API_KEY` is set in Vercel, riders cannot sign in on production. For a demo before SMS is live, add the rider's number in Supabase → Authentication → Phone → **Test phone numbers and OTPs** (number without "+", a 6-digit code), then approve them as a rider (they need a `riders` row with status `active`; the rider approval screen is Phase 8). Remove test numbers before launch.
+
+### Q31. Cash on hand and remittances (recorded; Phase 10)
+Cash collected on delivery is booked as `rider_cash_on_hand` and counts against the rider's cash limit (default ₱3,000), so a rider who keeps cash stops getting cash orders. Riders hand cash in through remittances, which arrive with finance in Phase 10; until then a coordinator can raise a rider's `cash_limit_centavos` in the database if needed. The background jobs now run every 10 seconds (pg_cron → `/api/internal/jobs`); that is ~260k light requests a month on Vercel, which fits the Hobby/Pro limits but is worth watching.
+
 ### Q28. Demo data for showing Klik Go — how to load it and run a demo (owner, 2026-11-06)
 Owner request: "Fill out all the data needed for a test demo." The hosted database only gets migrations (never the local seed), so demo stores are loaded on purpose with **Actions → Load demo data**.
 - **What it adds** (safe to run again; nothing is duplicated):
@@ -35,7 +44,7 @@ Without these, the board still updates live and in-app messages work, but there 
 docs/BUSINESS.md §5.4 says an unconfirmed order is "auto-cancelled with penalty". Phase 6 cancels it, refunds the customer and records `merchant_timeout` on the order, but charges nothing yet. **Question:** what is the penalty (a fee per miss, a strike count before suspension, a lower ranking in the feed)? Phase 10 (finance) can apply it from these records.
 
 ### Q27. Phase 6 timing and Phase 7 hand-off (recorded)
-Stores confirm at 60/120/180 seconds as BUILD_PLAN says. Orders can reach "ready" now; "picked up" and "delivered" need the rider app (Phase 7), so the board's Picked up column stays empty until then. Customers can cancel only until the store accepts; after that, support (coordinator/admin) cancels (Phase 8 console).
+Stores confirm at 60/120/180 seconds as BUILD_PLAN says. Since Phase 7 riders pick up and deliver, so the board's Picked up column fills. Customers can cancel only until the store accepts; after that, support (coordinator/admin) cancels (Phase 8 console).
 
 ### Q22. PayMongo account, keys and webhook — owner checklist (Phase 5; later, by owner decision)
 Owner 2026-11-06: no PayMongo account yet; launch testing starts with **cash on delivery**. Until these are set, production checkout offers cash on delivery only (online methods are hidden, nothing breaks).

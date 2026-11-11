@@ -75,7 +75,7 @@
     "merchantTitle": "Merchant dashboard",
     "merchantLead": "Your order board and menu manager arrive in Phases 3 and 6.",
     "riderTitle": "Rider app",
-    "riderLead": "Job offers, navigation and earnings arrive in Phase 7.",
+    "riderLead": "Go online to get jobs near you. Your pay is shown before you accept.",
     "adminTitle": "Admin console",
     "adminLead": "Live map, approvals and finance arrive in Phase 8. For now: invite staff.",
     "forbiddenTitle": "You can't open this page",
@@ -562,7 +562,20 @@
       "reason": {
         "merchant_timeout": "The store didn't confirm in time. Any payment is refunded.",
         "payment_timeout": "The payment wasn't finished in time."
-      }
+      },
+      "tracking": {
+        "title": "Live map",
+        "failed": "We couldn't load the map.",
+        "mapLabel": "Map of the store, your address and your rider",
+        "store": "Store",
+        "you": "You",
+        "rider": "{name} is delivering your order · {plate}",
+        "yourRider": "Your rider",
+        "eta": "Arriving in about {minutes} min",
+        "noFix": "Waiting for your rider's location…",
+        "finding": "Finding a rider near the store…"
+      },
+      "pin": "Your delivery PIN is <b>{pin}</b>. Tell it to your rider at the door, not before."
     },
     "devPay": {
       "title": "Test checkout",
@@ -579,5 +592,68 @@
     "on": "Get alerts on this device",
     "off": "Turn off alerts",
     "blocked": "Alerts are blocked in this browser's settings."
+  },
+  "Rider": {
+    "loading": "Loading…",
+    "failed": "Something went wrong. Check your connection and try again.",
+    "online": "You're online",
+    "offline": "You're offline",
+    "live": "Live",
+    "goOnline": "Go online",
+    "goOffline": "Go offline",
+    "pendingApproval": "Your rider account is waiting for approval. We'll text you once you can go online.",
+    "keepOpen": "Keep Klik Go open on your screen: phones stop sharing your location when the app is in the background.",
+    "finishFirst": "Finish your delivery before going offline.",
+    "waiting": "Waiting for jobs near you…",
+    "collect": "Collect {amount} in cash",
+    "gps": {
+      "idle": "Starting location…",
+      "sharing": "Sharing your location",
+      "denied": "Location is blocked. Allow location for Klik Go in your browser settings to get jobs.",
+      "unavailable": "We can't get your location. Move to an open area or turn on GPS."
+    },
+    "wake": {
+      "on": "Screen stays on while you're online",
+      "off": "Your screen may turn off: keep it on to keep getting jobs",
+      "unsupported": "This browser can't keep the screen on: set a longer screen timeout"
+    },
+    "offer": {
+      "title": "New job",
+      "seconds": "{seconds}s",
+      "earn": "Earn {amount}",
+      "tip": "Plus a {amount} tip",
+      "trip": "{km} km to the customer · {area}",
+      "nearby": "nearby",
+      "accept": "Slide to accept",
+      "decline": "Decline"
+    },
+    "job": {
+      "title": "Your job",
+      "failed": "We couldn't finish this step. Try again.",
+      "pay": "You earn {amount} for this job",
+      "step": {
+        "toStore": "Go to the store",
+        "atStore": "At the store: pick up the order",
+        "toCustomer": "Deliver to the customer"
+      },
+      "landmark": "Landmark: {landmark}",
+      "notes": "Notes: {notes}",
+      "callSoon": "calling through Klik Go is coming soon",
+      "waze": "Waze",
+      "googleMaps": "Google Maps",
+      "arrived": "Slide: I'm at the store",
+      "pickedUp": "Slide: I have the order",
+      "waitingForStore": "Waiting for the store to mark the order ready…",
+      "pin": "Customer's 4-digit PIN",
+      "photo": "Photo of the order at the door",
+      "photoOptional": "Photo (optional)",
+      "delivered": "Slide: delivered"
+    },
+    "earnings": {
+      "title": "Earnings",
+      "today": "Today · {jobs, plural, one {# job} other {# jobs}}",
+      "week": "This week · {jobs, plural, one {# job} other {# jobs}}",
+      "cash": "Cash on hand: {held} of your {limit} limit"
+    }
   }
 }

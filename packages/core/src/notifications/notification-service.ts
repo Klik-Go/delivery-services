@@ -26,6 +26,12 @@ export const DEFAULT_NOTIFICATION_POLICY: NotificationPolicy = {
   // Stores may have no app open: the SLA reminder is a text message.
   merchant_order_waiting: ["sms"],
   order_unacknowledged: ["push", "in_app"],
+  order_rider_assigned: ["push", "in_app"],
+  order_picked_up: ["push", "in_app"],
+  order_delivered: ["push", "in_app"],
+  // Offers last 30 seconds; a text would arrive too late to matter.
+  rider_offer: ["push", "in_app"],
+  dispatch_unassigned: ["push", "in_app"],
 };
 
 /** The order facts a status message needs. */
@@ -57,6 +63,8 @@ const ON_STATUS: Readonly<
   preparing: [{ audience: "customer", template: "order_preparing" }],
   ready: [{ audience: "customer", template: "order_ready" }],
   rejected: [{ audience: "customer", template: "order_rejected" }],
+  picked_up: [{ audience: "customer", template: "order_picked_up" }],
+  delivered: [{ audience: "customer", template: "order_delivered" }],
   cancelled: [
     { audience: "customer", template: "order_cancelled" },
     { audience: "merchant", template: "order_cancelled" },

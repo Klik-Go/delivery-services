@@ -10,9 +10,13 @@ import { useCallback, useState, type JSX } from "react";
 import { FormError } from "@/components/auth/form-error";
 import { fetchData, postJson } from "@/lib/post-json";
 import { useLiveTopic } from "@/lib/realtime";
+import { TrackingMap } from "./tracking-map";
 
 /** Statuses that still change without the customer doing anything (keep listening). */
 const LIVE = new Set(["awaiting_payment", "placed", "accepted", "preparing", "ready", "picked_up"]);
+
+/** Statuses with a live map: the store took the order and it is not delivered yet. */
+const ON_MAP = new Set(["accepted", "preparing", "ready", "picked_up"]);
 
 /** The tracking stepper: each step and the timeline field that says when it happened. */
 const STEPS = [
@@ -108,6 +112,15 @@ export function OrderStatusView({
           {reason}
         </p>
       ) : null}
+      {o.deliveryPin ? (
+        <p className="bg-accent-400 text-ink rounded-xl p-3" data-testid="delivery-pin">
+          {t.rich("pin", {
+            pin: o.deliveryPin,
+            b: (chunks) => <strong className="text-xl tracking-widest">{chunks}</strong>,
+          })}
+        </p>
+      ) : null}
+      {ON_MAP.has(o.status) ? <TrackingMap orderId={orderId} /> : null}
       {waiting && returned === "paid" ? <p className="text-ink-muted">{t("confirming")}</p> : null}
       {waiting && returned === "cancelled" ? (
         <p className="text-ink-muted">{t("paymentCancelled")}</p>

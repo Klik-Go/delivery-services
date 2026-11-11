@@ -131,6 +131,8 @@ export interface OrderRecord {
   readonly requestHash: string | null;
   readonly createdAt: Date;
   readonly payment: PaymentRecord | null;
+  /** The 4-digit PIN the customer tells the rider (big orders only); never shown to staff. */
+  readonly deliveryPin: string | null;
 }
 
 /** A payment to record once the gateway has started a checkout. */

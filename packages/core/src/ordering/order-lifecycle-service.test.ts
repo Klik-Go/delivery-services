@@ -113,7 +113,12 @@ describe("OrderLifecycleService", () => {
     expect((await w.lifecycle.reject(orderId, w.owner, { reason: "Closing early" })).ok).toBe(true);
     expect(await w.store.refundsDue(10)).toEqual([{ orderId, reason: "Closing early" }]);
     w.online.failRefund = false;
-    expect(await w.jobs.run()).toEqual({ notifications: 0, refundsStarted: 1, refundsFailed: 0 });
+    expect(await w.jobs.run()).toEqual({
+      notifications: 0,
+      refundsStarted: 1,
+      refundsFailed: 0,
+      dispatch: { expired: 0, offered: 0, flagged: 0 },
+    });
     expect(await w.store.refundsDue(10)).toEqual([]);
   });
 
@@ -121,7 +126,12 @@ describe("OrderLifecycleService", () => {
     const { w, orderId } = await paid();
     w.online.failRefund = true;
     await w.lifecycle.reject(orderId, w.owner, { reason: "Closing early" });
-    expect(await w.jobs.run()).toEqual({ notifications: 0, refundsStarted: 0, refundsFailed: 1 });
+    expect(await w.jobs.run()).toEqual({
+      notifications: 0,
+      refundsStarted: 0,
+      refundsFailed: 1,
+      dispatch: { expired: 0, offered: 0, flagged: 0 },
+    });
     expect(w.logger.lines.map((l) => l.message)).toContain("jobs.refund_failed");
   });
 
@@ -210,5 +220,28 @@ describe("OrderLifecycleService", () => {
     expect(!forbidden.ok && forbidden.error.code).toBe("FORBIDDEN");
     const guest = await w.lifecycle.board("kape", null);
     expect(!guest.ok && guest.error.code).toBe("UNAUTHORIZED");
+  });
+
+  it("starts looking for a rider once the store accepts", async () => {
+    const { w, orderId } = await placed();
+    await w.lifecycle.accept(orderId, w.owner, { prepMinutes: 15 });
+    expect(w.dispatch.accepted).toEqual([orderId]);
+  });
+
+  it("keeps the store's accept when dispatch fails, for the background job to retry", async () => {
+    const { w, orderId } = await placed();
+    w.dispatch.fail = true;
+    const accepted = await w.lifecycle.accept(orderId, w.owner, { prepMinutes: 15 });
+    expect(accepted.ok).toBe(true);
+    expect(w.logger.lines.map((l) => l.message)).toContain("dispatch.start_failed");
+  });
+
+  it("runs dispatch with every background job run, and survives it failing", async () => {
+    const w = orderingWorld();
+    await w.jobs.run();
+    expect(w.dispatch.ticks).toBe(1);
+    w.dispatch.fail = true;
+    expect((await w.jobs.run()).dispatch).toEqual({ expired: 0, offered: 0, flagged: 0 });
+    expect(w.logger.lines.map((l) => l.message)).toContain("jobs.dispatch_failed");
   });
 });

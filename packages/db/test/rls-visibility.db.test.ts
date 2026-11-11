@@ -37,6 +37,17 @@ describeDb("row-level security: who can see which rows", () => {
     expect(await seen("anon", q, [all])).toEqual([]);
   });
 
+  it("a delivery PIN is seen only by the order's customer: not the rider, store or other customers", async () => {
+    const q = "select order_id as id from public.order_delivery_pins where order_id = any($1)";
+    const both = [[w.order1, w.order2]];
+    expect(await seen("customer1", q, both)).toEqual([w.order1]);
+    expect(await seen("customer2", q, both)).toEqual([w.order2]);
+    // Anonymous visitors have no grant on the table at all.
+    for (const viewer of ["riderA1", "ownerA", "staffA", "coordA"] as const) {
+      expect(await seen(viewer, q, both)).toEqual([]);
+    }
+  });
+
   it("order items, events, payments and refunds follow the order they belong to", async () => {
     for (const table of ["order_items", "order_events", "payments", "refunds"]) {
       const q = `select distinct order_id as id from public.${table} where order_id = any($1)`;

@@ -15,8 +15,10 @@ import {
   PrismaMerchantApplicationRepository,
   PrismaStoreRepository,
   PrismaZoneLocator,
+  SupabaseDeliveryProofStorage,
   SupabasePhotoStorage,
   UnconfiguredMenuParser,
+  UnconfiguredDeliveryProofStorage,
   UnconfiguredPhotoStorage,
   PostgresRateLimiter,
   PrismaInviteRepository,
@@ -31,6 +33,7 @@ import {
   NodeContentHasher,
   PayMongoGateway,
   PayMongoWebhookVerifier,
+  PrismaDispatchRepository,
   PrismaOrderRepository,
   PrismaPromoRepository,
   PrismaWebhookEventStore,
@@ -79,7 +82,12 @@ import {
   PromoService,
   RefundService,
   BackgroundJobs,
+  DispatchService,
+  DistancePayRule,
+  NearestAvailableStrategy,
   NotificationService,
+  RiderService,
+  TrackingService,
   OrderLifecycleService,
   PushSubscriptionService,
   type IMenuParser,
@@ -134,7 +142,13 @@ export interface Container {
   readonly refunds: RefundService;
   /** Accept, reject, ready and cancel; the store's order board. */
   readonly lifecycle: OrderLifecycleService;
-  /** Queued messages and unfinished refunds (POST /api/internal/jobs). */
+  /** Rider offers, expiry cascade and coordinator alerts (Phase 7). */
+  readonly dispatch: DispatchService;
+  /** The rider app: online switch, location, offers, job steps, delivery and earnings. */
+  readonly riders: RiderService;
+  /** The customer's live map. */
+  readonly tracking: TrackingService;
+  /** Dispatch ticks, queued messages and unfinished refunds (POST /api/internal/jobs). */
   readonly jobs: BackgroundJobs;
   readonly pushSubscriptions: PushSubscriptionService;
   /** CRON_SECRET for the jobs endpoint; null disables it. */
@@ -224,6 +238,18 @@ export function createContainer(env: ServerEnv): Container {
     senders,
     log: new PrismaNotificationLog(prisma),
     recipients,
+    logger,
+  });
+  const dispatchStore = new PrismaDispatchRepository(prisma);
+  // Nearest free rider under their cash limit; pay by road distance (OCP: swap either strategy).
+  const dispatch = new DispatchService({
+    repo: dispatchStore,
+    settings: dispatchStore,
+    strategy: new NearestAvailableStrategy(),
+    payRule: new DistancePayRule(),
+    orders: orderStore,
+    messages: notifications,
+    clock,
     logger,
   });
   const refunds = new RefundService({
@@ -343,9 +369,30 @@ export function createContainer(env: ServerEnv): Container {
       authz,
       refunds,
       notifier: notifications,
+      dispatch,
       logger,
     }),
-    jobs: new BackgroundJobs({ notifications, lifecycle: orderStore, refunds, logger }),
+    dispatch,
+    riders: new RiderService({
+      riders: dispatchStore,
+      dispatch,
+      orders: orderStore,
+      notifier: notifications,
+      ledger,
+      proofs: admin
+        ? new SupabaseDeliveryProofStorage(admin, logger)
+        : new UnconfiguredDeliveryProofStorage(),
+      limiter: rateLimiter,
+      clock,
+      logger,
+    }),
+    tracking: new TrackingService({
+      tracking: dispatchStore,
+      settings: dispatchStore,
+      authz,
+      clock,
+    }),
+    jobs: new BackgroundJobs({ notifications, lifecycle: orderStore, refunds, dispatch, logger }),
     pushSubscriptions: new PushSubscriptionService({
       store: pushStore,
       publicKey: vapid?.publicKey ?? null,
