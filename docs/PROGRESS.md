@@ -17,7 +17,7 @@ Phases are defined in `docs/BUILD_PLAN.md` §6. Agents update this file in every
 | 6 | Order lifecycle, merchant queue, SLA | ✅ Done (merged) | [Klik-Go/delivery-services#15](https://github.com/Klik-Go/delivery-services/pull/15) | Owner: Vault secrets + `CRON_SECRET`, VAPID keys, store phones (Q25); SLA penalty (Q26) |
 | 6.1 | Follow-up: demo data for the hosted app | ✅ Done (merged) | [Klik-Go/delivery-services#16](https://github.com/Klik-Go/delivery-services/pull/16) | Owner: run **Load demo data** (Q28) |
 | 6.2 | Follow-up: notifications never fail an order | ✅ Done (merged) | [Klik-Go/delivery-services#22](https://github.com/Klik-Go/delivery-services/pull/22) | Found when production checkout returned 500 (database not yet migrated) |
-| 7 | Rider app, dispatch, live tracking | 🟡 In progress (PR open) | branch `phase-7-rider-dispatch` | Owner: rider sign-in needs SMS (Q30); rider pay rule (Q29); Vault secrets from Q25 now also drive dispatch |
+| 7 | Rider app, dispatch, live tracking | 🟡 In progress (PR open) | [Klik-Go/delivery-services#23](https://github.com/Klik-Go/delivery-services/pull/23) | Owner: rider sign-in needs SMS (Q30); rider pay rule (Q29); Vault secrets from Q25 now also drive dispatch |
 | 8 | Coordinator and Admin console | ⬜ Not started | | |
 | 9 | Ratings, reorder, promos, referrals, loyalty | ⬜ Not started | | |
 | 10 | Finance: settlements, payouts, reports | ⬜ Not started | | |
