@@ -1,3 +1,4 @@
+import { randomInt } from "node:crypto";
 import AxeBuilder from "@axe-core/playwright";
 import {
   devices,
@@ -160,6 +161,8 @@ test.describe("Feature: rider app, dispatch and live tracking", () => {
       baseURL: baseURL ?? "",
       geolocation: { latitude: store.lat + 0.0002, longitude: store.lng },
       permissions: ["geolocation"],
+      // Its own network, so its sign-in does not count against the other browsers' budget.
+      extraHTTPHeaders: { "x-forwarded-for": `198.51.100.${String(randomInt(1, 255))}` },
     });
     const riderUserId = await signInWithPhone(riderContext.request, phones.rider);
     await approvedRider(riderUserId, merchantId);

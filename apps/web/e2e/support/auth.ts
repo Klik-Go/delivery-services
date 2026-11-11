@@ -31,11 +31,14 @@ export async function sql(text: string, params: unknown[] = []): Promise<pg.Quer
   }
 }
 
-/** Clears rate-limit counters for the reserved test numbers and localhost so reruns are not blocked. */
+/**
+ * Clears rate-limit counters for the reserved test numbers and localhost (every browser sign-in in
+ * the run comes from the same local address), so parallel specs and reruns are not blocked.
+ */
 export async function resetTestNumberLimits(): Promise<void> {
   await sql(
     `delete from private.rate_limit_counters where key like 'otp:phone:+6391700001%' or key like 'otp-verify:phone:+6391700001%' or key = 'otp:ip:unknown'
-       or key ~ '^(partner-apply|waitlist):ip:(unknown|::1|::ffff:127\\.0\\.0\\.1|127\\.0\\.0\\.1)$'`,
+       or key ~ '^(otp|partner-apply|waitlist):ip:(unknown|::1|::ffff:127\\.0\\.0\\.1|127\\.0\\.0\\.1)$'`,
   );
 }
 
