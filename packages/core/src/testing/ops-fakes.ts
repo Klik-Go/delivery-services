@@ -147,9 +147,10 @@ export class OpsState {
     const row: ZoneView = {
       name: zone.id,
       slug: zone.id,
+      zoneType: "city",
       baseFeeCentavos: 3900,
       perKmCentavos: 1000,
-      maxRadiusKm: 5,
+      maxRadiusKm: 8,
       isActive: true,
       coordinatorId: null,
       coordinatorName: null,

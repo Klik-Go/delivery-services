@@ -104,6 +104,9 @@ describe("ZoneAdminService", () => {
       meta: { baseFeeCentavos: 4500 },
     });
     expect((await w.zones.update(w.admin, "nowhere", { name: "X" })).ok).toBe(false);
+    const radius = await w.zones.update(w.admin, "makati", { maxRadiusKm: 30 });
+    expect(!radius.ok && radius.error.message).toMatch(/city zone serves 8–15 km/);
+    expect((await w.zones.update(w.admin, "makati", { maxRadiusKm: 12 })).ok).toBe(true);
   });
 
   it("redraws a zone, refusing outlines that cross themselves", async () => {

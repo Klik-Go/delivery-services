@@ -2,7 +2,13 @@ import type { SessionUser } from "../auth/session-user";
 import { NotFoundError, ValidationError, type AppError } from "../shared/errors";
 import { err, ok, type Result } from "../shared/result";
 import type { ConsoleAccess } from "./console-access";
-import type { FeeRuleFields, IZoneAdminRepository, ZonePatch, ZoneView } from "./ports";
+import {
+  ZONE_RADIUS_KM,
+  type FeeRuleFields,
+  type IZoneAdminRepository,
+  type ZonePatch,
+  type ZoneView,
+} from "./ports";
 import { checkOutline, type LngLat } from "./zone-outline";
 
 const invalid = (path: string, message: string): ValidationError =>
@@ -29,8 +35,22 @@ export class ZoneAdminService {
   ): Promise<Result<ZoneView, AppError>> {
     const admin = this.deps.access.platform(user);
     if (!admin.ok) return admin;
-    if (!(await this.deps.zones.update(zoneId, patch)))
+    const zone = await this.deps.zones.zone(zoneId);
+    if (!zone) return err(new NotFoundError("Zone", zoneId));
+    if (patch.maxRadiusKm !== undefined) {
+      const [min, max] = ZONE_RADIUS_KM[zone.zoneType];
+      if (patch.maxRadiusKm < min || patch.maxRadiusKm > max) {
+        return err(
+          invalid(
+            "maxRadiusKm",
+            `A ${zone.zoneType} zone serves ${String(min)}–${String(max)} km.`,
+          ),
+        );
+      }
+    }
+    if (!(await this.deps.zones.update(zoneId, patch))) {
       return err(new NotFoundError("Zone", zoneId));
+    }
     await this.deps.access.record(
       admin.value,
       "zone.update",

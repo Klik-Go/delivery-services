@@ -135,10 +135,20 @@ export interface FeeRuleView {
   readonly isActive: boolean;
 }
 
+/** Service radius per zone type (docs/BUSINESS.md §5.5), the same bands the database enforces. */
+export const ZONE_RADIUS_KM: Readonly<
+  Record<"barangay" | "city" | "provincial", readonly [number, number]>
+> = {
+  barangay: [3, 5],
+  city: [8, 15],
+  provincial: [20, 40],
+};
+
 export interface ZoneView {
   readonly id: string;
   readonly name: string;
   readonly slug: string;
+  readonly zoneType: "barangay" | "city" | "provincial";
   readonly baseFeeCentavos: Centavos;
   readonly perKmCentavos: Centavos;
   readonly maxRadiusKm: number;
