@@ -10,6 +10,7 @@ import {
 import { Button } from "@klikgo/ui";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Banknote, MapPin, Navigation, Phone, Store } from "lucide-react";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState, type JSX } from "react";
 import { FormError } from "@/components/auth/form-error";
@@ -108,7 +109,14 @@ export function RiderApp(): JSX.Element {
           ) : null}
         </div>
         {rider.status !== "active" ? (
-          <p className="text-ink">{t("pendingApproval")}</p>
+          <div className="flex flex-col gap-2">
+            <p className="text-ink">{t("pendingApproval")}</p>
+            {rider.status === "pending_kyc" ? (
+              <Link href="/become-a-rider" className="text-brand-800 font-semibold underline">
+                {t("applyLink")}
+              </Link>
+            ) : null}
+          </div>
         ) : (
           <Button
             size="lg"

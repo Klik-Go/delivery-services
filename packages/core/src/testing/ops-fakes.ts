@@ -3,6 +3,7 @@ import type {
   AuditEntry,
   FeatureFlagView,
   FeeRuleFields,
+  FeeRulePatch,
   FeeRuleView,
   IAuditLog,
   IKycStorage,
@@ -442,13 +443,14 @@ export class FakeZoneAdmin implements IZoneAdminRepository {
     return Promise.resolve(id);
   }
 
-  updateFeeRule(ruleId: string, patch: Partial<FeeRuleFields>): Promise<boolean> {
+  updateFeeRule(ruleId: string, patch: FeeRulePatch): Promise<boolean> {
     let found = false;
     for (const zone of [...this.s.zones]) {
       const rules = zone.feeRules.map((rule) => {
         if (rule.id !== ruleId) return rule;
         found = true;
-        return { ...rule, ...patch };
+        const defined = Object.fromEntries(Object.entries(patch).filter(([, v]) => v !== undefined));
+        return { ...rule, ...defined } as FeeRuleView;
       });
       this.patch(zone.id, { feeRules: rules });
     }

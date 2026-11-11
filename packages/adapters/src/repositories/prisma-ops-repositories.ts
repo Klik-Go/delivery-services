@@ -2,6 +2,7 @@ import type {
   AuditEntry,
   FeatureFlagView,
   FeeRuleFields,
+  FeeRulePatch,
   FeeRuleView,
   IAuditLog,
   IMerchantAdminRepository,
@@ -411,7 +412,7 @@ export class PrismaZoneAdmin implements IZoneAdminRepository {
     return rule.id;
   }
 
-  async updateFeeRule(ruleId: string, patch: Partial<FeeRuleFields>): Promise<boolean> {
+  async updateFeeRule(ruleId: string, patch: FeeRulePatch): Promise<boolean> {
     const result = await this.prisma.fee_rules.updateMany({
       where: { id: ruleId },
       data: feeRuleData(patch),
@@ -446,7 +447,7 @@ function toFeeRule(rule: {
   };
 }
 
-function feeRuleData(fields: Partial<FeeRuleFields>): {
+function feeRuleData(fields: FeeRulePatch): {
   name?: string;
   kind?: FeeRuleView["kind"];
   min_distance_m?: number | null;

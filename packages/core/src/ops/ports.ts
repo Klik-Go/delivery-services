@@ -169,6 +169,8 @@ export interface ZonePatch {
 }
 
 export type FeeRuleFields = Omit<FeeRuleView, "id" | "zoneId">;
+/** A partial change to a fee rule (absent or undefined fields stay as they are). */
+export type FeeRulePatch = { readonly [K in keyof FeeRuleFields]?: FeeRuleFields[K] | undefined };
 
 export interface IZoneAdminRepository {
   zones(scope: ZoneScope): Promise<ZoneView[]>;
@@ -184,7 +186,7 @@ export interface IZoneAdminRepository {
   setCoordinator(zoneId: string, userId: string | null): Promise<boolean>;
   feeRule(ruleId: string): Promise<FeeRuleView | null>;
   createFeeRule(zoneId: string, fields: FeeRuleFields): Promise<string>;
-  updateFeeRule(ruleId: string, patch: Partial<FeeRuleFields>): Promise<boolean>;
+  updateFeeRule(ruleId: string, patch: FeeRulePatch): Promise<boolean>;
 }
 
 // ---------------------------------------------------------------------------

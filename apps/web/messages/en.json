@@ -77,7 +77,7 @@
     "riderTitle": "Rider app",
     "riderLead": "Go online to get jobs near you. Your pay is shown before you accept.",
     "adminTitle": "Admin console",
-    "adminLead": "Live map, approvals and finance arrive in Phase 8. For now: invite staff.",
+    "adminLead": "Run live orders, riders, zones and stores.",
     "forbiddenTitle": "You can't open this page",
     "forbiddenLead": "Your account doesn't have access here. If you think it should, ask your Klik Go admin.",
     "goHome": "Go to Home"
@@ -654,6 +654,211 @@
       "today": "Today · {jobs, plural, one {# job} other {# jobs}}",
       "week": "This week · {jobs, plural, one {# job} other {# jobs}}",
       "cash": "Cash on hand: {held} of your {limit} limit"
+    },
+    "applyLink": "See your application"
+  },
+  "Ops": {
+    "nav": {
+      "live": "Live orders",
+      "riders": "Riders",
+      "zones": "Zones",
+      "stores": "Stores",
+      "applications": "Applications",
+      "settings": "Settings",
+      "staff": "Staff",
+      "label": "Console sections"
+    },
+    "loading": "Loading…",
+    "failed": "Something went wrong. Try again.",
+    "reason": "Reason (saved in the audit log)",
+    "save": "Save",
+    "saving": "Saving…",
+    "saved": "Saved",
+    "cancel": "Cancel",
+    "board": {
+      "title": "Live orders",
+      "lead": "Orders in your zones, oldest first. Amber means 80% of the time is used, red means late.",
+      "allZones": "All zones",
+      "zone": "Zone",
+      "empty": "No live orders right now.",
+      "noRider": "No rider yet",
+      "rider": "Rider: {name}",
+      "open": "Open",
+      "due": "Due {time}",
+      "unassigned": "No rider took it",
+      "storeLate": "Store slow to confirm",
+      "live": "Live",
+      "map": "Map of riders and live orders",
+      "ridersOnline": "{count, plural, =0 {No riders online} one {# rider online} other {# riders online}}",
+      "sla": {
+        "on_time": "On time",
+        "at_risk": "At risk",
+        "late": "Late"
+      }
+    },
+    "order": {
+      "title": "Order {code}",
+      "back": "← Live orders",
+      "status": "Status",
+      "store": "Store",
+      "payment": "Payment",
+      "total": "Total",
+      "history": "History",
+      "by": "by {role}",
+      "customer": "customer",
+      "system": "system",
+      "notes": "Support notes",
+      "noNotes": "No notes yet.",
+      "addNote": "Add note",
+      "note": "Note",
+      "assign": "Assign a rider",
+      "reassign": "Move to another rider",
+      "chooseRider": "Choose a rider",
+      "riderOption": "{name} · {state}",
+      "online": "online",
+      "offline": "offline",
+      "busy": "on a job",
+      "assignButton": "Assign",
+      "cancelOrder": "Cancel order",
+      "cancelButton": "Cancel the order",
+      "refund": "Refund",
+      "refundAmount": "Amount in ₱ (empty = everything left)",
+      "refundButton": "Refund",
+      "codNoRefund": "Cash orders have nothing to refund online.",
+      "ended": "This order has ended; only notes can be added."
+    },
+    "riders": {
+      "title": "Riders",
+      "lead": "Check new riders' documents, approve them, and keep an eye on ratings.",
+      "tabs": {
+        "pending": "Waiting for review",
+        "active": "Active",
+        "suspended": "Suspended",
+        "coaching": "Coaching"
+      },
+      "empty": "Nobody here.",
+      "vehicle": "{vehicle} · {plate}",
+      "payoutName": "Payout account name: {name}",
+      "rating": "Rating {rating} from {count}",
+      "doc": {
+        "government_id": "Government ID",
+        "drivers_license": "Driver's license",
+        "vehicle_registration": "OR/CR",
+        "selfie_with_id": "Selfie with ID",
+        "payout_account": "GCash/Maya account"
+      },
+      "state": {
+        "missing": "Not uploaded",
+        "pending": "To check",
+        "approved": "Accepted",
+        "rejected": "Rejected"
+      },
+      "view": "View",
+      "accept": "Accept",
+      "reject": "Reject",
+      "rejectReason": "Why is it rejected? The rider sees this.",
+      "approve": "Approve rider",
+      "suspend": "Suspend",
+      "reactivate": "Reactivate",
+      "suspendReason": "Why suspend? (audited)",
+      "linkNote": "Links open for 60 seconds and every view is recorded."
+    },
+    "zones": {
+      "title": "Zones",
+      "lead": "Draw each zone and set its fees. Fee changes reach new quotes only; placed orders keep their fees.",
+      "baseFee": "Base delivery fee (₱)",
+      "perKm": "Per km (₱)",
+      "radius": "Max radius (km)",
+      "active": "Taking orders",
+      "coordinator": "Coordinator",
+      "noCoordinator": "No coordinator",
+      "feeRules": "Fee rules",
+      "fee": "Fee (₱)",
+      "band": "{from}–{to} km",
+      "bandOpen": "From {from} km",
+      "minSubtotal": "Under ₱{amount}",
+      "area": "Area",
+      "areaHelp": "Click the map to add a corner, drag corners to move them. Edges must not cross.",
+      "undo": "Remove last corner",
+      "reset": "Start over",
+      "saveArea": "Save area",
+      "corners": "{count} corners",
+      "readOnly": "Only admins can change zones."
+    },
+    "stores": {
+      "title": "Stores",
+      "lead": "Suspend a store or change its commission from a date.",
+      "status": {
+        "pending": "Pending",
+        "active": "Active",
+        "suspended": "Suspended"
+      },
+      "commission": "Commission {rate}%",
+      "next": "{rate}% from {date}",
+      "founding": "Founding partner until {date}",
+      "suspend": "Suspend",
+      "reactivate": "Reactivate",
+      "newRate": "New commission (%)",
+      "from": "Starts on",
+      "schedule": "Set commission"
+    },
+    "settings": {
+      "title": "Settings",
+      "lead": "Feature flags and their settings. Known settings are checked before saving.",
+      "enabled": "On",
+      "flagHelp": {
+        "dispatch": "Rider offers, pay and the delivery PIN.",
+        "merchant_sla": "When stores are texted, flagged and cancelled."
+      }
+    },
+    "staff": {
+      "title": "Staff",
+      "lead": "Who can run stores, zones and the platform. New staff join by invite.",
+      "revoke": "Remove access",
+      "confirmRevoke": "Remove {role} access for {name}?",
+      "scope": {
+        "zone": "Zone: {name}",
+        "store": "Store: {name}",
+        "all": "Everywhere"
+      }
+    }
+  },
+  "RiderApply": {
+    "title": "Become a Klik Go rider",
+    "lead": "Apply in a few minutes. Your coordinator checks your documents, then you can go online.",
+    "zone": "Where will you ride?",
+    "vehicle": "Vehicle",
+    "vehicles": {
+      "motorcycle": "Motorcycle",
+      "bicycle": "Bicycle",
+      "tricycle": "Tricycle"
+    },
+    "plate": "Plate number",
+    "fullName": "Full name (as on your ID)",
+    "payoutName": "GCash/Maya account name",
+    "apply": "Apply",
+    "applying": "Sending…",
+    "documents": "Your documents",
+    "documentsLead": "Upload a clear photo of each. Your coordinator checks them.",
+    "upload": "Upload",
+    "replace": "Upload again",
+    "rejected": "Rejected: {reason}",
+    "approved": "You're approved! Open the rider app to go online.",
+    "openApp": "Open the rider app",
+    "suspended": "Your rider account is on hold. Please contact your coordinator.",
+    "signIn": "Sign in first to apply.",
+    "doc": {
+      "government_id": "Government ID",
+      "drivers_license": "Driver's license",
+      "vehicle_registration": "OR/CR",
+      "selfie_with_id": "Selfie with ID",
+      "payout_account": "GCash/Maya account"
+    },
+    "state": {
+      "missing": "Not uploaded",
+      "pending": "To check",
+      "approved": "Accepted",
+      "rejected": "Rejected"
     }
   }
 }

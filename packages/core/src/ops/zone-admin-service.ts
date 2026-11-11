@@ -5,6 +5,7 @@ import type { ConsoleAccess } from "./console-access";
 import {
   ZONE_RADIUS_KM,
   type FeeRuleFields,
+  type FeeRulePatch,
   type IZoneAdminRepository,
   type ZonePatch,
   type ZoneView,
@@ -141,7 +142,7 @@ export class ZoneAdminService {
   async updateFeeRule(
     user: SessionUser | null,
     ruleId: string,
-    patch: Partial<FeeRuleFields>,
+    patch: FeeRulePatch,
   ): Promise<Result<{ readonly id: string }, AppError>> {
     const admin = this.deps.access.platform(user);
     if (!admin.ok) return admin;

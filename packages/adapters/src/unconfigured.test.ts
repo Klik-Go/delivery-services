@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   UnconfiguredDeliveryProofStorage,
+  UnconfiguredKycStorage,
   UnconfiguredMenuParser,
   UnconfiguredPhotoStorage,
 } from "./unconfigured";
@@ -13,6 +14,9 @@ describe("unconfigured adapters", () => {
     expect(!upload.ok && upload.error.code).toBe("UNAVAILABLE");
     const proof = await new UnconfiguredDeliveryProofStorage().save();
     expect(!proof.ok && proof.error.code).toBe("UNAVAILABLE");
+    const kyc = new UnconfiguredKycStorage();
+    expect((await kyc.signedUrl()).ok).toBe(false);
+    expect((await kyc.upload()).ok).toBe(false);
   });
 
   it("still builds public photo URLs from the project URL", () => {
