@@ -2,6 +2,7 @@ import {
   err,
   ServiceUnavailableError,
   type AppError,
+  type IDeliveryProofStorage,
   type IMenuParser,
   type IPhotoStorage,
   type ParsedMenuItem,
@@ -35,5 +36,14 @@ export class UnconfiguredPhotoStorage implements IPhotoStorage {
   publicUrl(path: string): string {
     const base = this.supabaseUrl?.replace(/\/$/, "") ?? "";
     return `${base}/storage/v1/object/public/menu-photos/${path}`;
+  }
+}
+
+/** Delivery photos without the service-role key: riders are told to use the PIN or try later. */
+export class UnconfiguredDeliveryProofStorage implements IDeliveryProofStorage {
+  save(): Promise<Result<string, AppError>> {
+    return Promise.resolve(
+      err(new ServiceUnavailableError("Delivery photos aren't set up yet. Ask support for help.")),
+    );
   }
 }

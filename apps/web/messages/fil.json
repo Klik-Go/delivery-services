@@ -75,7 +75,7 @@
     "merchantTitle": "Dashboard ng merchant",
     "merchantLead": "Darating sa Phase 3 at 6 ang order board at menu manager.",
     "riderTitle": "Rider app",
-    "riderLead": "Darating sa Phase 7 ang mga job offer, navigation at kita.",
+    "riderLead": "Mag-online para makakuha ng job malapit sa iyo. Makikita ang kita bago mo tanggapin.",
     "adminTitle": "Admin console",
     "adminLead": "Darating sa Phase 8 ang live map, approvals at finance. Sa ngayon: mag-imbita ng staff.",
     "forbiddenTitle": "Hindi mo mabubuksan ang page na ito",
@@ -562,7 +562,20 @@
       "reason": {
         "merchant_timeout": "Hindi kinumpirma ng tindahan sa oras. Ire-refund ang anumang bayad.",
         "payment_timeout": "Hindi natapos ang bayad sa oras."
-      }
+      },
+      "tracking": {
+        "title": "Live na mapa",
+        "failed": "Hindi ma-load ang mapa.",
+        "mapLabel": "Mapa ng tindahan, address mo at ng rider mo",
+        "store": "Tindahan",
+        "you": "Ikaw",
+        "rider": "Si {name} ang maghahatid ng order mo · {plate}",
+        "yourRider": "Ang rider mo",
+        "eta": "Darating sa loob ng mga {minutes} min",
+        "noFix": "Hinihintay ang lokasyon ng rider mo…",
+        "finding": "Naghahanap ng rider malapit sa tindahan…"
+      },
+      "pin": "Ang delivery PIN mo ay <b>{pin}</b>. Sabihin ito sa rider mo pagdating sa pinto, hindi bago."
     },
     "devPay": {
       "title": "Test checkout",
@@ -579,5 +592,68 @@
     "on": "Tumanggap ng alerto dito",
     "off": "Patayin ang alerto",
     "blocked": "Naka-block ang alerto sa settings ng browser."
+  },
+  "Rider": {
+    "loading": "Naglo-load…",
+    "failed": "May nangyaring mali. Tingnan ang koneksyon at subukan ulit.",
+    "online": "Online ka",
+    "offline": "Offline ka",
+    "live": "Live",
+    "goOnline": "Mag-online",
+    "goOffline": "Mag-offline",
+    "pendingApproval": "Hinihintay pa ang pag-apruba ng rider account mo. Ite-text ka namin kapag puwede ka nang mag-online.",
+    "keepOpen": "Panatilihing bukas ang Klik Go sa screen: humihinto ang pag-share ng lokasyon kapag nasa background ang app.",
+    "finishFirst": "Tapusin muna ang delivery bago mag-offline.",
+    "waiting": "Naghihintay ng mga job malapit sa iyo…",
+    "collect": "Maningil ng {amount} na cash",
+    "gps": {
+      "idle": "Kinukuha ang lokasyon…",
+      "sharing": "Ini-share ang lokasyon mo",
+      "denied": "Naka-block ang lokasyon. Payagan ang lokasyon para sa Klik Go sa settings ng browser para makakuha ng job.",
+      "unavailable": "Hindi makuha ang lokasyon mo. Pumunta sa bukas na lugar o i-on ang GPS."
+    },
+    "wake": {
+      "on": "Nakabukas ang screen habang online ka",
+      "off": "Baka mamatay ang screen: panatilihin itong bukas para patuloy kang makakuha ng job",
+      "unsupported": "Hindi kayang panatilihing bukas ng browser na ito ang screen: pahabain ang screen timeout"
+    },
+    "offer": {
+      "title": "Bagong job",
+      "seconds": "{seconds}s",
+      "earn": "Kikita ng {amount}",
+      "tip": "May {amount} na tip",
+      "trip": "{km} km papunta sa customer · {area}",
+      "nearby": "malapit lang",
+      "accept": "I-slide para tanggapin",
+      "decline": "Tanggihan"
+    },
+    "job": {
+      "title": "Ang job mo",
+      "failed": "Hindi natapos ang hakbang na ito. Subukan ulit.",
+      "pay": "Kikita ka ng {amount} sa job na ito",
+      "step": {
+        "toStore": "Pumunta sa tindahan",
+        "atStore": "Nasa tindahan: kunin ang order",
+        "toCustomer": "Ihatid sa customer"
+      },
+      "landmark": "Palatandaan: {landmark}",
+      "notes": "Tala: {notes}",
+      "callSoon": "malapit na ang pagtawag sa Klik Go",
+      "waze": "Waze",
+      "googleMaps": "Google Maps",
+      "arrived": "I-slide: nasa tindahan na ako",
+      "pickedUp": "I-slide: hawak ko na ang order",
+      "waitingForStore": "Hinihintay na i-mark ng tindahan na handa na ang order…",
+      "pin": "4-digit PIN ng customer",
+      "photo": "Litrato ng order sa pinto",
+      "photoOptional": "Litrato (opsyonal)",
+      "delivered": "I-slide: naihatid na"
+    },
+    "earnings": {
+      "title": "Kita",
+      "today": "Ngayon · {jobs, plural, one {# job} other {# job}}",
+      "week": "Ngayong linggo · {jobs, plural, one {# job} other {# job}}",
+      "cash": "Hawak na cash: {held} sa {limit} na limit mo"
+    }
   }
 }

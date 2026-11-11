@@ -28,7 +28,7 @@ Feature: Dispatch offers each job to the nearest suitable rider
     And "Rico Rider" is offered the job
 
   Scenario: A rider who already carries too much cash is skipped for cash orders
-    Given "Rosa Rider" already holds ₱2,950 in cash with a ₱3,000 limit
+    Given "Rosa Rider" can carry only ₱50.00 more cash before reaching her limit
     When the owner accepts the order with a prep time of 15 minutes
     Then "Rico Rider" is offered the job
 

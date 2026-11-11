@@ -59,13 +59,24 @@ function liveClient(): Promise<SupabaseClient | null> {
   return pending;
 }
 
+/** Broadcast events: order changes, offers to a rider, and the assigned rider moving. */
+export type LiveEvent = "status" | "offer" | "location";
+
+const STATUS_ONLY: readonly LiveEvent[] = ["status"];
+
 /**
- * Calls `onChange` whenever the server broadcasts on `topic` (`order:<id>` or `merchant:<id>`).
- * Events carry ids and a status only; the caller refetches through the BFF.
+ * Calls `onChange` whenever the server broadcasts one of `events` on `topic` (`order:<id>`,
+ * `merchant:<id>` or `rider:<id>`). Events carry ids only; the caller refetches through the BFF.
  */
-export function useLiveTopic(topic: string | null, onChange: () => void): LiveState {
+export function useLiveTopic(
+  topic: string | null,
+  onChange: () => void,
+  events: readonly LiveEvent[] = STATUS_ONLY,
+): LiveState {
   const [state, setState] = useState<LiveState>("connecting");
   const callback = useRef(onChange);
+  // A string, so a new array with the same events does not re-subscribe.
+  const eventList = events.join(",");
   useEffect(() => {
     callback.current = onChange;
   }, [onChange]);
@@ -80,26 +91,27 @@ export function useLiveTopic(topic: string | null, onChange: () => void): LiveSt
         setState("offline");
         return;
       }
-      const channel = supabase
-        .channel(topic, { config: { private: true } })
-        .on("broadcast", { event: "status" }, () => callback.current())
-        .subscribe((status) => {
-          if (status === REALTIME_SUBSCRIBE_STATES.SUBSCRIBED) {
-            setState("live");
-            // Catch up on anything that changed while connecting.
-            callback.current();
-          } else {
-            // CHANNEL_ERROR, TIMED_OUT or CLOSED: screens fall back to polling.
-            setState("offline");
-          }
-        });
+      const channel = supabase.channel(topic, { config: { private: true } });
+      for (const event of eventList.split(",")) {
+        channel.on("broadcast", { event }, () => callback.current());
+      }
+      channel.subscribe((status) => {
+        if (status === REALTIME_SUBSCRIBE_STATES.SUBSCRIBED) {
+          setState("live");
+          // Catch up on anything that changed while connecting.
+          callback.current();
+        } else {
+          // CHANNEL_ERROR, TIMED_OUT or CLOSED: screens fall back to polling.
+          setState("offline");
+        }
+      });
       remove = () => void supabase.removeChannel(channel);
     });
     return () => {
       cancelled = true;
       remove?.();
     };
-  }, [topic]);
+  }, [topic, eventList]);
 
   return topic ? state : "offline";
 }

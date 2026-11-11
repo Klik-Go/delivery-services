@@ -66,6 +66,20 @@ export interface CheckoutScenario {
   ownerMerchantId?: string;
 }
 
+/** A seeded rider signed in for dispatch scenarios. */
+export interface RiderSession {
+  readonly client: ApiClient;
+  readonly riderId: string;
+  readonly userId: string;
+}
+
+/** State for dispatch, rider and tracking steps. */
+export interface DispatchScenario {
+  readonly riders: Map<string, RiderSession>;
+  /** Cash held and today's earnings when the rider took the job, to compare after delivery. */
+  before?: { cashHeld: number; earned: number; jobs: number };
+}
+
 export const BASE_URL = process.env.BASE_URL ?? "http://localhost:3000";
 
 setDefaultTimeout(30_000);
@@ -84,6 +98,7 @@ export class KlikWorld extends World {
   readonly discovery: DiscoveryScenario = {};
   readonly merchant: MerchantScenario = { applications: new Map(), items: new Map(), cleanups: [] };
   readonly checkout: CheckoutScenario = {};
+  readonly dispatch: DispatchScenario = { riders: new Map() };
   private context: BrowserContext | undefined;
   private currentPage: Page | undefined;
 

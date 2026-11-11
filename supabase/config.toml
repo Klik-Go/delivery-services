@@ -270,8 +270,11 @@ max_frequency = "1s"
 
 # Use pre-defined map of phone number to OTP for testing.
 # Keys are the phone number with country code and without the + prefix.
-# Klik Go test numbers (+639170000101 … 110): no SMS is sent and the code is always 123456.
+# Klik Go test numbers (+639170000101 … 112): no SMS is sent and the code is always 123456.
+# The seeded riders Rico and Rosa (+639170000021/22) too, so dispatch scenarios can sign in as them.
 [auth.sms.test_otp]
+639170000021 = "123456"
+639170000022 = "123456"
 639170000101 = "123456"
 639170000102 = "123456"
 639170000103 = "123456"
