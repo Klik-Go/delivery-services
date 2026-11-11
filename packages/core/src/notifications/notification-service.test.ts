@@ -131,6 +131,54 @@ describe("NotificationService", () => {
   });
 });
 
+describe("NotificationService when its own bookkeeping fails", () => {
+  /** A store team lookup or notifications table that throws, like a database missing a migration. */
+  function broken(parts: { team?: boolean; start?: boolean; finish?: boolean }) {
+    const senders = [new FakeNotificationSender("push"), new FakeNotificationSender("in_app")];
+    const log = new InMemoryNotificationLog();
+    if (parts.start) log.start = () => Promise.reject(new Error("column does not exist"));
+    if (parts.finish) log.finish = () => Promise.reject(new Error("column does not exist"));
+    const recipients = new InMemoryRecipients({ kape: ["owner-1"] });
+    if (parts.team) recipients.merchantTeam = () => Promise.reject(new Error("table is missing"));
+    const logger = new MemoryLogger();
+    const service = new NotificationService({ senders, log, recipients, logger });
+    return { service, senders, log, logger };
+  }
+
+  it("never throws when the store team cannot be looked up, and still tells the customer", async () => {
+    const w = broken({ team: true });
+    await expect(
+      w.service.statusChanged(ORDER, "cancelled", { reason: "x" }),
+    ).resolves.toBeUndefined();
+    expect(w.senders[0]?.sent.map((s) => s.message.userId)).toEqual(["customer-1"]);
+    expect(w.logger.lines.map((l) => l.message)).toContain("notification.recipients_failed");
+  });
+
+  it("never throws when a message cannot be recorded, and still sends it", async () => {
+    const w = broken({ start: true });
+    await expect(w.service.statusChanged(ORDER, "placed")).resolves.toBeUndefined();
+    expect(w.senders[0]?.sent).toHaveLength(1);
+    expect(w.logger.lines.map((l) => l.message)).toContain("notification.record_failed");
+    expect(JSON.stringify(w.logger.lines)).not.toContain("column does not exist");
+  });
+
+  it("never throws when the outcome cannot be recorded", async () => {
+    const w = broken({ finish: true });
+    await expect(w.service.statusChanged(ORDER, "placed")).resolves.toBeUndefined();
+    expect(w.senders[0]?.sent).toHaveLength(1);
+    expect(w.logger.lines.map((l) => l.message)).toContain("notification.record_failed");
+  });
+
+  it("keeps delivering queued messages when recording one outcome fails", async () => {
+    const w = broken({ finish: true });
+    for (const userId of ["owner-1", "owner-2"]) {
+      w.log.queue({ userId, template: "order_new", orderId: "order-1", params: {} }, "push");
+    }
+    expect(await w.service.deliverQueued()).toBe(2);
+    expect(w.senders[0]?.sent).toHaveLength(2);
+  });
+});
+
 describe("renderNotification", () => {
   it.each(NOTIFICATION_TEMPLATES)("writes %s within one text message", (template) => {
     const rendered = renderNotification(template, {
