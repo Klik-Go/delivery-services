@@ -35,7 +35,7 @@
     "@klikgo/db": "workspace:*",
     "@klikgo/types": "workspace:*",
     "@playwright/test": "1.65.0",
-    "@supabase/supabase-js": "2.118.0",
+    "@supabase/supabase-js": "2.119.0",
     "@types/node": "26.6.6",
     "@types/pg": "8.23.1",
     "@vitest/coverage-v8": "5.1.0",
