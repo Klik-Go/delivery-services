@@ -39,6 +39,25 @@ export function barakoOrder(overrides: Partial<PlaceOrderRequest> = {}): PlaceOr
   };
 }
 
+/** A recording stand-in for the dispatch seams of the lifecycle service and background jobs. */
+export class DispatchStub {
+  readonly accepted: string[] = [];
+  ticks = 0;
+  fail = false;
+
+  orderAccepted(orderId: string): Promise<void> {
+    if (this.fail) return Promise.reject(new Error("dispatch down"));
+    this.accepted.push(orderId);
+    return Promise.resolve();
+  }
+
+  tick(): Promise<{ expired: number; offered: number; flagged: number }> {
+    if (this.fail) return Promise.reject(new Error("dispatch down"));
+    this.ticks += 1;
+    return Promise.resolve({ expired: 0, offered: 0, flagged: 0 });
+  }
+}
+
 /** The checkout services and fakes {@link orderingWorld} wires together. */
 export interface OrderingWorld {
   readonly catalog: InMemoryCatalog;
@@ -58,6 +77,8 @@ export interface OrderingWorld {
   readonly notifier: RecordingNotifier;
   readonly lifecycle: OrderLifecycleService;
   readonly jobs: BackgroundJobs;
+  /** Stands in for DispatchService: records accepted orders, ticks, and can be made to fail. */
+  readonly dispatch: DispatchStub;
   /** Kape't Tinapay's owner, signed in with TOTP. */
   readonly owner: SessionUser;
 }
@@ -116,6 +137,7 @@ export function orderingWorld(now = new Date("2026-11-02T03:00:00Z")): OrderingW
     notifier,
     logger,
   });
+  const dispatch = new DispatchStub();
   const lifecycle = new OrderLifecycleService({
     orders: store,
     lifecycle: store,
@@ -123,12 +145,14 @@ export function orderingWorld(now = new Date("2026-11-02T03:00:00Z")): OrderingW
     authz,
     refunds,
     notifier,
+    dispatch,
     logger,
   });
   const jobs = new BackgroundJobs({
     notifications: { deliverQueued: () => Promise.resolve(0) },
     lifecycle: store,
     refunds,
+    dispatch,
     logger,
   });
   const owner = sessionUser("owner-kape", [{ role: "merchant_owner", merchantId: "kape" }], "aal2");
@@ -155,6 +179,7 @@ export function orderingWorld(now = new Date("2026-11-02T03:00:00Z")): OrderingW
     notifier,
     lifecycle,
     jobs,
+    dispatch,
     owner,
   };
 }

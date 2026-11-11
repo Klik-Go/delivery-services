@@ -47,6 +47,31 @@ const RENDERERS: Readonly<Record<NotificationTemplate, Renderer>> = {
     body: `${text(p, "store")} hasn't confirmed after 2 minutes. Please call the store.`,
     url: `/admin`,
   }),
+  order_rider_assigned: (p) => ({
+    title: "A rider took your order",
+    body: `A rider accepted ${text(p, "code")} and will pick it up from ${text(p, "store")}.`,
+    url: `/orders/${text(p, "orderId")}`,
+  }),
+  order_picked_up: (p) => ({
+    title: "Your order is on the way",
+    body: `${text(p, "code")} left ${text(p, "store")}. Follow your rider on the map.`,
+    url: `/orders/${text(p, "orderId")}`,
+  }),
+  order_delivered: (p) => ({
+    title: "Delivered. Enjoy!",
+    body: `${text(p, "code")} from ${text(p, "store")} was delivered. Salamat sa Klik Go!`,
+    url: `/orders/${text(p, "orderId")}`,
+  }),
+  rider_offer: (p) => ({
+    title: `New job: earn ${formatPeso(Number(p.earningsCentavos ?? 0))}`,
+    body: `Pickup at ${text(p, "store")}. Answer within ${text(p, "seconds")} seconds.`,
+    url: "/rider",
+  }),
+  dispatch_unassigned: (p) => ({
+    title: `No rider for ${text(p, "code")}`,
+    body: `No rider took ${text(p, "code")} from ${text(p, "store")}. Please assign one.`,
+    url: "/admin",
+  }),
 };
 
 /** Puts a template into words. */

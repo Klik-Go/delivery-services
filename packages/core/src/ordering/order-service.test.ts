@@ -258,6 +258,18 @@ describe("OrderService.view", () => {
     });
   });
 
+  it("shows the delivery PIN of a big order to its customer only", async () => {
+    const w = orderingWorld();
+    const big = barakoOrder({
+      items: [{ itemId: "item-barako", quantity: 10, optionIds: ["o-less"] }],
+    });
+    await w.orders.placeOrder(big, { idempotencyKey: KEY, actor: w.customer, urls: w.urls });
+    const mine = await w.orders.view("order-1", w.customer);
+    expect(mine.ok && mine.value.deliveryPin).toBe("4821");
+    const staff = await w.orders.view("order-1", w.owner);
+    expect(staff.ok && staff.value.deliveryPin).toBeNull();
+  });
+
   it("hides an order from other customers and asks guests to sign in", async () => {
     const w = orderingWorld();
     await w.orders.placeOrder(barakoOrder(), {

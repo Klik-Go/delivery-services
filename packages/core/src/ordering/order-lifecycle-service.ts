@@ -79,20 +79,34 @@ export class OrderLifecycleService {
       authz: AuthorizationService;
       refunds: RefundService;
       notifier: IOrderNotifier;
+      /** Starts looking for a rider when the store accepts (Phase 7). */
+      dispatch?: { orderAccepted(orderId: string): Promise<void> };
       logger: Logger;
     },
   ) {}
 
-  /** The store confirms the order and starts cooking. */
-  accept(
+  /** The store confirms the order and starts cooking; dispatch starts looking for a rider. */
+  async accept(
     orderId: string,
     user: SessionUser | null,
     input: { readonly prepMinutes: number },
   ): Promise<Result<StatusResult, AppError>> {
-    return this.move(orderId, user, ["accepted", "preparing"], {
+    const result = await this.move(orderId, user, ["accepted", "preparing"], {
       prepMinutes: input.prepMinutes,
       meta: { prepMinutes: input.prepMinutes },
     });
+    if (result.ok && this.deps.dispatch) {
+      try {
+        await this.deps.dispatch.orderAccepted(orderId);
+      } catch (error) {
+        // The store's accept stands; the background job retries dispatch within seconds.
+        this.deps.logger.error("dispatch.start_failed", {
+          orderId,
+          err: error instanceof Error ? error.name : "unknown",
+        });
+      }
+    }
+    return result;
   }
 
   /** The store cannot take the order. */

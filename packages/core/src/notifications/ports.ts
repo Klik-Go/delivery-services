@@ -12,6 +12,11 @@ export const NOTIFICATION_TEMPLATES = [
   "order_store_timeout",
   "merchant_order_waiting",
   "order_unacknowledged",
+  "order_rider_assigned",
+  "order_picked_up",
+  "order_delivered",
+  "rider_offer",
+  "dispatch_unassigned",
 ] as const;
 export type NotificationTemplate = (typeof NOTIFICATION_TEMPLATES)[number];
 

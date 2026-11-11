@@ -123,6 +123,8 @@ export class InMemoryOrderStore
   readonly refunds: StoredRefund[] = [];
   readonly ledger: LedgerTxn[] = [];
   readonly redemptions: { promoId: string; orderId: string; userId: string }[] = [];
+  /** Delivery PINs the database trigger issues for orders of ₱500.00 or more. */
+  readonly pins = new Map<string, string>();
   private sequence = 0;
 
   findById(orderId: string): Promise<OrderRecord | null> {
@@ -166,6 +168,7 @@ export class InMemoryOrderStore
       rejectReason: null,
       cancelReason: null,
     });
+    if (order.totalCentavos >= 50_000) this.pins.set(id, "4821");
     this.events.push({
       orderId: id,
       from: null,
@@ -430,6 +433,7 @@ export class InMemoryOrderStore
     if (!order) return null;
     const payment = this.payments.find((p) => p.orderId === order.id);
     return {
+      deliveryPin: this.pins.get(order.id) ?? null,
       id: order.id,
       code: order.code,
       customerId: order.customerId,
