@@ -32,6 +32,9 @@ export const DEFAULT_NOTIFICATION_POLICY: NotificationPolicy = {
   // Offers last 30 seconds; a text would arrive too late to matter.
   rider_offer: ["push", "in_app"],
   dispatch_unassigned: ["push", "in_app"],
+  rider_job_assigned: ["push", "in_app"],
+  // New riders may not have the app open yet: a text tells them they can start.
+  rider_approved: ["sms", "push", "in_app"],
 };
 
 /** The order facts a status message needs. */
