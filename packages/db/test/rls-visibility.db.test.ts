@@ -48,6 +48,19 @@ describeDb("row-level security: who can see which rows", () => {
     }
   });
 
+  it("support notes are seen by the order's zone coordinator and admins only", async () => {
+    const q =
+      "select distinct order_id as id from public.order_support_notes where order_id = any($1)";
+    const both = [[w.order1, w.order2]];
+    expect(await seen("coordA", q, both)).toEqual([w.order1]);
+    expect(await seen("coordB", q, both)).toEqual([w.order2]);
+    expect(await seen("admin", q, both)).toEqual(sorted(w.order1, w.order2));
+    // Anonymous visitors have no grant on the table at all.
+    for (const viewer of ["customer1", "customer2", "riderA1", "ownerA", "staffA"] as const) {
+      expect(await seen(viewer, q, both), viewer).toEqual([]);
+    }
+  });
+
   it("order items, events, payments and refunds follow the order they belong to", async () => {
     for (const table of ["order_items", "order_events", "payments", "refunds"]) {
       const q = `select distinct order_id as id from public.${table} where order_id = any($1)`;

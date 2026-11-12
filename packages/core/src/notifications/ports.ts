@@ -17,6 +17,8 @@ export const NOTIFICATION_TEMPLATES = [
   "order_delivered",
   "rider_offer",
   "dispatch_unassigned",
+  "rider_job_assigned",
+  "rider_approved",
 ] as const;
 export type NotificationTemplate = (typeof NOTIFICATION_TEMPLATES)[number];
 

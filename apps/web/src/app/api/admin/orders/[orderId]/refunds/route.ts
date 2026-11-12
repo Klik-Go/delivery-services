@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 /**
  * POST /api/admin/orders/:orderId/refunds — full (no amount) or partial refund of an online
- * payment. RefundService checks the order's zone: admins, or that zone's coordinator, with TOTP.
+ * payment, by an admin or the order's zone coordinator with TOTP; written to audit_logs.
  */
 export async function POST(
   request: Request,
@@ -22,16 +22,11 @@ export async function POST(
     if (!ids.ok) return jsonError(ids.error, meta);
     const body = await parseBody(request, RefundRequestSchema);
     if (!body.ok) return jsonError(body.error, meta);
-    const refunded = await getContainer().refunds.refund(
-      {
-        orderId: ids.value.orderId,
-        reason: body.value.reason,
-        ...(body.value.amountCentavos === undefined
-          ? {}
-          : { amountCentavos: body.value.amountCentavos }),
-      },
-      user.value,
-    );
+    // Through the console service so the refund is written to the audit log.
+    const refunded = await getContainer().adminOrders.refund(user.value, ids.value.orderId, {
+      reason: body.value.reason,
+      amountCentavos: body.value.amountCentavos,
+    });
     return respond(refunded, meta, 201);
   });
 }

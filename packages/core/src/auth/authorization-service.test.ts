@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { AuthorizationService } from "./authorization-service";
 import type { RoleGrant, SessionUser } from "./session-user";
+import { sessionUser } from "../testing/session-users";
 
 const authz = new AuthorizationService();
 
@@ -153,5 +154,30 @@ describe("AuthorizationService", () => {
     expect(authz.isStaff(user([customer, rider]))).toBe(false);
     expect(authz.isStaff(user([customer, staff]))).toBe(true);
     expect(authz.isStaff(user([coordinator]))).toBe(true);
+  });
+
+  it("lets admins run every zone and coordinators only their own, with TOTP", () => {
+    const coordinator = sessionUser("c", [{ role: "coordinator", zoneId: "makati" }], "aal2");
+    expect(authz.can(coordinator, { type: "ops.zone", zoneId: "makati" })).toBe(true);
+    expect(authz.can(coordinator, { type: "ops.zone", zoneId: "pampanga" })).toBe(false);
+    expect(
+      authz.decide({ ...coordinator, aal: "aal1" }, { type: "ops.zone", zoneId: "makati" }),
+    ).toEqual({
+      allowed: false,
+      reason: "mfa_required",
+    });
+    const admin = sessionUser("a", [{ role: "admin" }], "aal2");
+    expect(authz.can(admin, { type: "ops.zone", zoneId: "pampanga" })).toBe(true);
+  });
+
+  it("keeps platform settings for admins", () => {
+    expect(authz.can(sessionUser("a", [{ role: "admin" }], "aal2"), { type: "ops.platform" })).toBe(
+      true,
+    );
+    expect(
+      authz.can(sessionUser("c", [{ role: "coordinator", zoneId: "makati" }], "aal2"), {
+        type: "ops.platform",
+      }),
+    ).toBe(false);
   });
 });

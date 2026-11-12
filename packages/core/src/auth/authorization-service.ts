@@ -14,6 +14,10 @@ export type Action =
   | { readonly type: "merchant.applications.review" }
   | { readonly type: "order.place" }
   | { readonly type: "order.refund"; readonly zoneId: string }
+  /** Run a zone's operations: orders, riders and KYC (admins, or that zone's coordinator). */
+  | { readonly type: "ops.zone"; readonly zoneId: string }
+  /** Platform-wide settings, zones, stores and staff (admins only). */
+  | { readonly type: "ops.platform" }
   | {
       readonly type: "order.view";
       readonly customerId: string;
@@ -77,6 +81,14 @@ export class AuthorizationService {
           { roles: ["admin", "coordinator"], requiresMfa: true },
           (role, _merchantId, zoneId) => role === "admin" || zoneId === action.zoneId,
         );
+      case "ops.zone":
+        return this.check(
+          user,
+          { roles: ["admin", "coordinator"], requiresMfa: true },
+          (role, _merchantId, zoneId) => role === "admin" || zoneId === action.zoneId,
+        );
+      case "ops.platform":
+        return this.check(user, { roles: ["admin"], requiresMfa: true }, () => true);
       case "order.view":
         // The customer sees their own order; staff see their store's or zone's (with TOTP).
         if (user.id === action.customerId) return ALLOWED;

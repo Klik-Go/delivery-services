@@ -72,6 +72,16 @@ const RENDERERS: Readonly<Record<NotificationTemplate, Renderer>> = {
     body: `No rider took ${text(p, "code")} from ${text(p, "store")}. Please assign one.`,
     url: "/admin",
   }),
+  rider_job_assigned: (p) => ({
+    title: "You have a new job",
+    body: `Klik Go gave you ${text(p, "code")} from ${text(p, "store")}. Open the app for details.`,
+    url: "/rider",
+  }),
+  rider_approved: () => ({
+    title: "You're approved to ride",
+    body: "Welcome to Klik Go! Open the rider app and go online to get jobs.",
+    url: "/rider",
+  }),
 };
 
 /** Puts a template into words. */

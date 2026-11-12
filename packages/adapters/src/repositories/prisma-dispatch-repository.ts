@@ -518,6 +518,9 @@ export class PrismaDispatchRepository
       },
     });
     if (!row) return null;
+    // A scheduled commission change counts once its date has come (Phase 8).
+    const [rate] = await this.prisma.$queryRaw<{ bps: number | null }[]>`
+      select private.commission_bps(${row.merchant_id}::uuid, now()) as bps`;
     return {
       orderId: row.id,
       customerId: row.customer_id,
@@ -531,7 +534,7 @@ export class PrismaDispatchRepository
       discountCentavos: row.discount_centavos,
       discountFundedBy:
         row.promo_redemptions?.promos.funded_by === "merchant" ? "merchant" : "platform",
-      commissionBps: row.merchants.commission_bps,
+      commissionBps: rate?.bps ?? row.merchants.commission_bps,
       commissionFreeUntil: row.merchants.founding_commission_until,
       riderPayCentavos: row.rider_earnings_centavos ?? 0,
     };

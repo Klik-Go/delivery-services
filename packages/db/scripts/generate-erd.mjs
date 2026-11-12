@@ -27,7 +27,14 @@ const DOMAINS = [
   ["Riders", ["riders", "rider_kyc_documents", "rider_locations", "rider_location_breadcrumbs"]],
   [
     "Orders and dispatch",
-    ["orders", "order_items", "order_events", "order_status_transitions", "dispatch_offers"],
+    [
+      "orders",
+      "order_items",
+      "order_events",
+      "order_status_transitions",
+      "dispatch_offers",
+      "order_support_notes",
+    ],
   ],
   [
     "Payments and money",

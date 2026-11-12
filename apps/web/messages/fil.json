@@ -77,7 +77,7 @@
     "riderTitle": "Rider app",
     "riderLead": "Mag-online para makakuha ng job malapit sa iyo. Makikita ang kita bago mo tanggapin.",
     "adminTitle": "Admin console",
-    "adminLead": "Darating sa Phase 8 ang live map, approvals at finance. Sa ngayon: mag-imbita ng staff.",
+    "adminLead": "Patakbuhin ang mga live na order, rider, zone at tindahan.",
     "forbiddenTitle": "Hindi mo mabubuksan ang page na ito",
     "forbiddenLead": "Walang access dito ang iyong account. Kung sa tingin mo ay dapat mayroon, magtanong sa iyong Klik Go admin.",
     "goHome": "Pumunta sa Home"
@@ -654,6 +654,211 @@
       "today": "Ngayon · {jobs, plural, one {# job} other {# job}}",
       "week": "Ngayong linggo · {jobs, plural, one {# job} other {# job}}",
       "cash": "Hawak na cash: {held} sa {limit} na limit mo"
+    },
+    "applyLink": "Tingnan ang aplikasyon mo"
+  },
+  "Ops": {
+    "nav": {
+      "live": "Mga live na order",
+      "riders": "Mga rider",
+      "zones": "Mga zone",
+      "stores": "Mga tindahan",
+      "applications": "Mga aplikasyon",
+      "settings": "Settings",
+      "staff": "Staff",
+      "label": "Mga bahagi ng console"
+    },
+    "loading": "Naglo-load…",
+    "failed": "May nangyaring mali. Subukan ulit.",
+    "reason": "Dahilan (itatala sa audit log)",
+    "save": "I-save",
+    "saving": "Sine-save…",
+    "saved": "Na-save",
+    "cancel": "Kanselahin",
+    "board": {
+      "title": "Mga live na order",
+      "lead": "Mga order sa mga zone mo, pinakaluma muna. Dilaw kapag 80% na ng oras ang nagamit, pula kapag huli na.",
+      "allZones": "Lahat ng zone",
+      "zone": "Zone",
+      "empty": "Walang live na order ngayon.",
+      "noRider": "Wala pang rider",
+      "rider": "Rider: {name}",
+      "open": "Buksan",
+      "due": "Hanggang {time}",
+      "unassigned": "Walang rider na kumuha",
+      "storeLate": "Mabagal kumpirmahin ng tindahan",
+      "live": "Live",
+      "map": "Mapa ng mga rider at live na order",
+      "ridersOnline": "{count, plural, =0 {Walang online na rider} one {# rider ang online} other {# rider ang online}}",
+      "sla": {
+        "on_time": "Nasa oras",
+        "at_risk": "Malapit nang mahuli",
+        "late": "Huli na"
+      }
+    },
+    "order": {
+      "title": "Order {code}",
+      "back": "← Mga live na order",
+      "status": "Status",
+      "store": "Store",
+      "payment": "Payment",
+      "total": "Total",
+      "history": "Kasaysayan",
+      "by": "ni {role}",
+      "customer": "customer",
+      "system": "system",
+      "notes": "Mga support note",
+      "noNotes": "Wala pang note.",
+      "addNote": "Magdagdag ng note",
+      "note": "Note",
+      "assign": "Magtalaga ng rider",
+      "reassign": "Ilipat sa ibang rider",
+      "chooseRider": "Pumili ng rider",
+      "riderOption": "{name} · {state}",
+      "online": "online",
+      "offline": "offline",
+      "busy": "may job",
+      "assignButton": "Italaga",
+      "cancelOrder": "Kanselahin ang order",
+      "cancelButton": "Kanselahin ang order",
+      "refund": "Refund",
+      "refundAmount": "Halaga sa ₱ (walang laman = lahat ng natitira)",
+      "refundButton": "Refund",
+      "codNoRefund": "Walang ire-refund online sa cash na order.",
+      "ended": "Tapos na ang order na ito; note na lang ang puwedeng idagdag."
+    },
+    "riders": {
+      "title": "Mga rider",
+      "lead": "Suriin ang mga dokumento ng bagong rider, aprubahan sila, at bantayan ang ratings.",
+      "tabs": {
+        "pending": "Naghihintay ng review",
+        "active": "Aktibo",
+        "suspended": "Suspendido",
+        "coaching": "Coaching"
+      },
+      "empty": "Walang tao rito.",
+      "vehicle": "{vehicle} · {plate}",
+      "payoutName": "Payout account name: {name}",
+      "rating": "Rating {rating} from {count}",
+      "doc": {
+        "government_id": "Government ID",
+        "drivers_license": "Driver's license",
+        "vehicle_registration": "OR/CR",
+        "selfie_with_id": "Selfie with ID",
+        "payout_account": "GCash/Maya account"
+      },
+      "state": {
+        "missing": "Hindi pa na-upload",
+        "pending": "Susuriin",
+        "approved": "Tinanggap",
+        "rejected": "Tinanggihan"
+      },
+      "view": "Tingnan",
+      "accept": "Tanggapin",
+      "reject": "Tanggihan",
+      "rejectReason": "Bakit tinanggihan? Makikita ito ng rider.",
+      "approve": "Aprubahan ang rider",
+      "suspend": "Suspendihin",
+      "reactivate": "Ibalik",
+      "suspendReason": "Bakit sinuspinde? (itinatala)",
+      "linkNote": "60 segundo lang bukas ang link at bawat tingin ay naitatala."
+    },
+    "zones": {
+      "title": "Mga zone",
+      "lead": "Iguhit ang bawat zone at itakda ang bayad. Sa bagong quote lang tatama ang pagbabago; hindi nagbabago ang naka-order na.",
+      "baseFee": "Base delivery fee (₱)",
+      "perKm": "Per km (₱)",
+      "radius": "Max radius (km)",
+      "active": "Tumatanggap ng order",
+      "coordinator": "Coordinator",
+      "noCoordinator": "Walang coordinator",
+      "feeRules": "Fee rules",
+      "fee": "Fee (₱)",
+      "band": "{from}–{to} km",
+      "bandOpen": "From {from} km",
+      "minSubtotal": "Under ₱{amount}",
+      "area": "Area",
+      "areaHelp": "I-click ang mapa para magdagdag ng sulok, i-drag para ilipat. Hindi dapat magkrus ang mga gilid.",
+      "undo": "Alisin ang huling sulok",
+      "reset": "Ulitin",
+      "saveArea": "I-save ang area",
+      "corners": "{count} corners",
+      "readOnly": "Admin lang ang puwedeng magbago ng zone."
+    },
+    "stores": {
+      "title": "Mga tindahan",
+      "lead": "Suspendihin ang tindahan o baguhin ang komisyon mula sa isang petsa.",
+      "status": {
+        "pending": "Pending",
+        "active": "Active",
+        "suspended": "Suspended"
+      },
+      "commission": "Commission {rate}%",
+      "next": "{rate}% from {date}",
+      "founding": "Founding partner until {date}",
+      "suspend": "Suspendihin",
+      "reactivate": "Ibalik",
+      "newRate": "Bagong komisyon (%)",
+      "from": "Simula sa",
+      "schedule": "Itakda ang komisyon"
+    },
+    "settings": {
+      "title": "Settings",
+      "lead": "Mga feature flag at ang settings nila. Sinusuri ang kilalang settings bago i-save.",
+      "enabled": "Naka-on",
+      "flagHelp": {
+        "dispatch": "Rider offers, pay and the delivery PIN.",
+        "merchant_sla": "When stores are texted, flagged and cancelled."
+      }
+    },
+    "staff": {
+      "title": "Staff",
+      "lead": "Sino ang nagpapatakbo ng tindahan, zone at platform. Sa imbitasyon lang sumasali ang bagong staff.",
+      "revoke": "Alisin ang access",
+      "confirmRevoke": "Remove {role} access for {name}?",
+      "scope": {
+        "zone": "Zone: {name}",
+        "store": "Store: {name}",
+        "all": "Everywhere"
+      }
+    }
+  },
+  "RiderApply": {
+    "title": "Maging Klik Go rider",
+    "lead": "Mag-apply sa ilang minuto. Susuriin ng coordinator ang mga dokumento mo, saka ka puwedeng mag-online.",
+    "zone": "Saan ka magra-ride?",
+    "vehicle": "Sasakyan",
+    "vehicles": {
+      "motorcycle": "Motorsiklo",
+      "bicycle": "Bisikleta",
+      "tricycle": "Traysikel"
+    },
+    "plate": "Plate number",
+    "fullName": "Buong pangalan (gaya sa ID)",
+    "payoutName": "Pangalan ng GCash/Maya account",
+    "apply": "Mag-apply",
+    "applying": "Ipinapadala…",
+    "documents": "Mga dokumento mo",
+    "documentsLead": "Mag-upload ng malinaw na litrato ng bawat isa. Susuriin ito ng coordinator.",
+    "upload": "I-upload",
+    "replace": "I-upload ulit",
+    "rejected": "Tinanggihan: {reason}",
+    "approved": "Aprubado ka na! Buksan ang rider app para mag-online.",
+    "openApp": "Buksan ang rider app",
+    "suspended": "Naka-hold ang rider account mo. Kontakin ang coordinator mo.",
+    "signIn": "Mag-sign in muna para mag-apply.",
+    "doc": {
+      "government_id": "Government ID",
+      "drivers_license": "Driver's license",
+      "vehicle_registration": "OR/CR",
+      "selfie_with_id": "Selfie with ID",
+      "payout_account": "GCash/Maya account"
+    },
+    "state": {
+      "missing": "Hindi pa na-upload",
+      "pending": "Susuriin",
+      "approved": "Tinanggap",
+      "rejected": "Tinanggihan"
     }
   }
 }

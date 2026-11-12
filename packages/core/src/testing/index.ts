@@ -9,3 +9,5 @@ export * from "./ordering-fakes";
 export * from "./ordering-world";
 export * from "./dispatch-fakes";
 export * from "./dispatch-world";
+export * from "./ops-fakes";
+export * from "./ops-world";

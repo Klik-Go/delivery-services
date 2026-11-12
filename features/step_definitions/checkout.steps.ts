@@ -52,7 +52,9 @@ Before({ tags: "@payments or @ledger" }, function () {
 // The seeded store keeps lunch and dinner hours; checkout scenarios run at any time of day, so
 // the store is open all day for them (and restored afterwards).
 Before(
-  { tags: "@checkout or @payments or @ledger or @lifecycle or @sla or @dispatch or @rider" },
+  {
+    tags: "@checkout or @payments or @ledger or @lifecycle or @sla or @dispatch or @rider or @ops",
+  },
   async function (this: KlikWorld) {
     const id = await keepStore(this, STORE);
     const days = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];

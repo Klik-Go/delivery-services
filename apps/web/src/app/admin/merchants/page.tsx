@@ -1,9 +1,9 @@
 import { formatManilaDateTime } from "@klikgo/core";
-import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import type { JSX } from "react";
 import { ApplicationReview } from "@/components/admin/application-review";
 import { FormError } from "@/components/auth/form-error";
+import { ConsoleNav } from "@/components/admin/console-nav";
 import { SurfaceShell } from "@/components/surface-shell";
 import { requireSurface } from "@/server/auth/guards";
 import { getContainer } from "@/server/container";
@@ -22,9 +22,7 @@ export default async function AdminMerchantsPage(): Promise<JSX.Element> {
 
   return (
     <SurfaceShell title={t("title")} lead={t("lead")} who={user.email ?? user.id}>
-      <Link href="/admin" className="text-brand-800 self-start font-semibold underline">
-        ← Admin
-      </Link>
+      <ConsoleNav isAdmin={getContainer().authz.can(user, { type: "ops.platform" })} />
       {!applications.ok ? (
         <FormError message={applications.error.message} />
       ) : applications.value.length === 0 ? (

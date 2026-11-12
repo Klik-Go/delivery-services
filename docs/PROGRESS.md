@@ -17,8 +17,8 @@ Phases are defined in `docs/BUILD_PLAN.md` §6. Agents update this file in every
 | 6 | Order lifecycle, merchant queue, SLA | ✅ Done (merged) | [Klik-Go/delivery-services#15](https://github.com/Klik-Go/delivery-services/pull/15) | Owner: Vault secrets + `CRON_SECRET`, VAPID keys, store phones (Q25); SLA penalty (Q26) |
 | 6.1 | Follow-up: demo data for the hosted app | ✅ Done (merged) | [Klik-Go/delivery-services#16](https://github.com/Klik-Go/delivery-services/pull/16) | Owner: run **Load demo data** (Q28) |
 | 6.2 | Follow-up: notifications never fail an order | ✅ Done (merged) | [Klik-Go/delivery-services#22](https://github.com/Klik-Go/delivery-services/pull/22) | Found when production checkout returned 500 (database not yet migrated) |
-| 7 | Rider app, dispatch, live tracking | 🟡 In progress (PR open) | [Klik-Go/delivery-services#23](https://github.com/Klik-Go/delivery-services/pull/23) | Owner: rider sign-in needs SMS (Q30); rider pay rule (Q29); Vault secrets from Q25 now also drive dispatch |
-| 8 | Coordinator and Admin console | ⬜ Not started | | |
+| 7 | Rider app, dispatch, live tracking | ✅ Done (merged) | [Klik-Go/delivery-services#23](https://github.com/Klik-Go/delivery-services/pull/23) | Owner: rider sign-in needs SMS (Q30); rider pay rule (Q29); Vault secrets from Q25 now also drive dispatch |
+| 8 | Coordinator and Admin console | 🟡 In progress (PR open) | [Klik-Go/delivery-services#24](https://github.com/Klik-Go/delivery-services/pull/24) | Owner: SLA targets and coaching rule (Q32); template editor moved to Phase 11 (Q33) |
 | 9 | Ratings, reorder, promos, referrals, loyalty | ⬜ Not started | | |
 | 10 | Finance: settlements, payouts, reports | ⬜ Not started | | |
 | 11 | Hardening: security, privacy, observability | ⬜ Not started | | |
@@ -207,7 +207,24 @@ Deliverables:
 - [x] Docs: ARCHITECTURE §4h (incl. PWA background-GPS limits and when to build an Expo rider app), OPEN_QUESTIONS Q29–Q31.
 - [ ] Owner: rider sign-in on production needs SMS (Q30); confirm the rider pay rule (Q29).
 
-Next: Phase 8, coordinator and admin console (after review).
+Merged in [Klik-Go/delivery-services#23](https://github.com/Klik-Go/delivery-services/pull/23).
+
+### Phase 8 — Coordinator and admin console (branch `phase-8-ops-console`)
+Acceptance (docs/BUILD_PLAN.md §6, Gherkin in `features/admin/`):
+- [x] A coordinator only sees their zone: the service scopes every list and treats another zone's order, rider or document as missing (`coordinator-scope.feature`); platform settings and zone edits are admin-only (FORBIDDEN); the database repeats it (support notes RLS, `zone:<id>` topic only for that zone's coordinator with TOTP).
+- [x] Every admin action writes `audit_logs`: assign/reassign, cancel, refund, note, zone/fee/coordinator changes, store suspend/reactivate/commission, KYC view/accept/reject, rider approve/suspend/reactivate, flag changes, role revocation — each checked in Cucumber ("the audit log records …") and unit tests.
+- [x] KYC images are never public: they live in the private `rider-kyc` bucket; reviewers get 60-second signed links (`kyc-review.feature` decodes the link and checks it expires 60 s after it was made, and that the public URL does not serve the file); every view is audited.
+- [x] Changing a zone fee affects new quotes only (`zones.feature`: the ₱39 band becomes ₱45 for a new quote; the order placed before keeps ₱39).
+
+Deliverables:
+- [x] Core `ops` module: `AdminOrderService` (board with SLA timers — amber at 80%, red at 100% — live map, detail with history and notes, assign/reassign, cancel, refund, notes), `ZoneAdminService` (fees, radius within the zone type's band, status, outline with self-crossing check, coordinator, fee rules), `MerchantAdminService` (suspend/reactivate, commission from a date), `RiderAdminService` (KYC queue per Appendix B incl. payout account, 60 s links, accept/reject with reason, approve when all 5 pass, suspend/reactivate, coaching list < 3.5 with ≥ 5 ratings), `RiderOnboardingService` (apply + upload), `SettingsService` (flags checked by zod for `dispatch` and `merchant_sla`), `StaffAdminService` (list, revoke); `ConsoleAccess` scope + audit helper; in-memory fakes.
+- [x] Adapters: Prisma console repositories, `SupabaseKycStorage`; settlement uses the scheduled commission once its date comes (`private.commission_bps`).
+- [x] BFF: `/api/admin/{board,live,orders/:id[/assign|cancel|notes|refunds],zones[/:id[/area|coordinator|fee-rules]],fee-rules/:id,stores[/:id/status|commission],riders[/:id[/status]],kyc/:id,settings/flags[/:key],staff[/:id]}` and `/api/rider/application[/documents]`; zod schemas in `packages/types/src/ops.ts`.
+- [x] Console UI `/admin`: live board + map (live over `zone:<id>`), order page, riders/KYC, zones (Leaflet outline editor), stores, applications, settings, staff (invites moved here); `/become-a-rider` for applicants.
+- [x] Migration `20261114100000_ops_console.sql` (support notes + RLS, payout document type, status reasons, scheduled commission, zone topic) with DB tests; Prisma schema + ERD regenerated.
+- [ ] Owner: confirm SLA targets and the coaching rule (Q32).
+
+Next: Phase 9, ratings, reorder, promos, referrals and loyalty (after review).
 
 ## Business validation (parallel, doc §8)
 - [ ] 20–30 customer interviews in the pilot barangay

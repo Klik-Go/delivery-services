@@ -3,6 +3,7 @@ import {
   ServiceUnavailableError,
   type AppError,
   type IDeliveryProofStorage,
+  type IKycStorage,
   type IMenuParser,
   type IPhotoStorage,
   type ParsedMenuItem,
@@ -45,5 +46,16 @@ export class UnconfiguredDeliveryProofStorage implements IDeliveryProofStorage {
     return Promise.resolve(
       err(new ServiceUnavailableError("Delivery photos aren't set up yet. Ask support for help.")),
     );
+  }
+}
+
+/** Rider documents without the service-role key: uploads and review links say so instead of failing. */
+export class UnconfiguredKycStorage implements IKycStorage {
+  signedUrl(): Promise<Result<string, AppError>> {
+    return Promise.resolve(err(new ServiceUnavailableError("Rider documents aren't set up yet.")));
+  }
+
+  upload(): Promise<Result<void, AppError>> {
+    return Promise.resolve(err(new ServiceUnavailableError("Rider documents aren't set up yet.")));
   }
 }

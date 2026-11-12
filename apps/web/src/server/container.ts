@@ -16,6 +16,16 @@ import {
   PrismaStoreRepository,
   PrismaZoneLocator,
   SupabaseDeliveryProofStorage,
+  SupabaseKycStorage,
+  UnconfiguredKycStorage,
+  PrismaAuditLog,
+  PrismaMerchantAdmin,
+  PrismaOpsOrders,
+  PrismaRiderAdmin,
+  PrismaRiderOnboarding,
+  PrismaSettings,
+  PrismaStaff,
+  PrismaZoneAdmin,
   SupabasePhotoStorage,
   UnconfiguredMenuParser,
   UnconfiguredDeliveryProofStorage,
@@ -81,8 +91,16 @@ import {
   PaymentWebhookService,
   PromoService,
   RefundService,
+  AdminOrderService,
   BackgroundJobs,
+  ConsoleAccess,
   DispatchService,
+  MerchantAdminService,
+  RiderAdminService,
+  RiderOnboardingService,
+  SettingsService,
+  StaffAdminService,
+  ZoneAdminService,
   DistancePayRule,
   NearestAvailableStrategy,
   NotificationService,
@@ -148,6 +166,15 @@ export interface Container {
   readonly riders: RiderService;
   /** The customer's live map. */
   readonly tracking: TrackingService;
+  /** The ops console (Phase 8): live orders, zones, stores, rider KYC, settings and staff. */
+  readonly adminOrders: AdminOrderService;
+  readonly zoneAdmin: ZoneAdminService;
+  readonly merchantAdmin: MerchantAdminService;
+  readonly riderAdmin: RiderAdminService;
+  readonly settingsAdmin: SettingsService;
+  readonly staffAdmin: StaffAdminService;
+  /** Applying to ride and uploading KYC documents. */
+  readonly riderOnboarding: RiderOnboardingService;
   /** Dispatch ticks, queued messages and unfinished refunds (POST /api/internal/jobs). */
   readonly jobs: BackgroundJobs;
   readonly pushSubscriptions: PushSubscriptionService;
@@ -252,12 +279,24 @@ export function createContainer(env: ServerEnv): Container {
     clock,
     logger,
   });
+  const consoleAccess = new ConsoleAccess(authz, new PrismaAuditLog(prisma));
+  const kycStorage = admin ? new SupabaseKycStorage(admin, logger) : new UnconfiguredKycStorage();
   const refunds = new RefundService({
     orders: orderStore,
     payments: orderStore,
     gateways,
     ledger,
     authz,
+    logger,
+  });
+  const lifecycle = new OrderLifecycleService({
+    orders: orderStore,
+    lifecycle: orderStore,
+    states,
+    authz,
+    refunds,
+    notifier: notifications,
+    dispatch,
     logger,
   });
   const paymentWebhooks = new PaymentWebhookService({
@@ -362,17 +401,43 @@ export function createContainer(env: ServerEnv): Container {
       notifier: notifications,
     }),
     paymentWebhooks,
-    lifecycle: new OrderLifecycleService({
-      orders: orderStore,
-      lifecycle: orderStore,
-      states,
-      authz,
+    lifecycle,
+    dispatch,
+    adminOrders: new AdminOrderService({
+      access: consoleAccess,
+      orders: new PrismaOpsOrders(prisma),
+      dispatchJobs: dispatchStore,
+      dispatchSettings: dispatchStore,
+      payRule: new DistancePayRule(),
+      lifecycle,
       refunds,
-      notifier: notifications,
-      dispatch,
+      messages: notifications,
+      clock,
       logger,
     }),
-    dispatch,
+    zoneAdmin: new ZoneAdminService({ access: consoleAccess, zones: new PrismaZoneAdmin(prisma) }),
+    merchantAdmin: new MerchantAdminService({
+      access: consoleAccess,
+      merchants: new PrismaMerchantAdmin(prisma),
+      clock,
+    }),
+    riderAdmin: new RiderAdminService({
+      access: consoleAccess,
+      riders: new PrismaRiderAdmin(prisma),
+      storage: kycStorage,
+      messages: notifications,
+      clock,
+    }),
+    settingsAdmin: new SettingsService({
+      access: consoleAccess,
+      settings: new PrismaSettings(prisma),
+    }),
+    staffAdmin: new StaffAdminService({ access: consoleAccess, staff: new PrismaStaff(prisma) }),
+    riderOnboarding: new RiderOnboardingService({
+      onboarding: new PrismaRiderOnboarding(prisma),
+      storage: kycStorage,
+      logger,
+    }),
     riders: new RiderService({
       riders: dispatchStore,
       dispatch,

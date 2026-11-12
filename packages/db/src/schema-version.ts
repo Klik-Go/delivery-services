@@ -3,4 +3,4 @@
  * have. /api/health/ready compares it with the database; schema-version.test.ts fails CI when a
  * migration is added without bumping it.
  */
-export const LATEST_MIGRATION = "20261113100000";
+export const LATEST_MIGRATION = "20261114100000";

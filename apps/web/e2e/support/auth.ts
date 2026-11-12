@@ -6,8 +6,18 @@ import pg from "pg";
 
 /** Supabase test OTP numbers reserved for Playwright (Cucumber uses 101–104 and 110). */
 export const E2E_PHONES = {
-  "mobile-pixel-7": { customer: "+639170000105", rider: "+639170000107", tracker: "+639170000111" },
-  "desktop-chrome": { customer: "+639170000106", rider: "+639170000108", tracker: "+639170000112" },
+  "mobile-pixel-7": {
+    customer: "+639170000105",
+    rider: "+639170000107",
+    tracker: "+639170000111",
+    applicant: "+639170000113",
+  },
+  "desktop-chrome": {
+    customer: "+639170000106",
+    rider: "+639170000108",
+    tracker: "+639170000112",
+    applicant: "+639170000114",
+  },
 } as const;
 export const TEST_OTP_CODE = "123456";
 
@@ -121,6 +131,15 @@ export async function signedInMerchant(
   merchantId: string,
   role: "merchant_owner" | "merchant_staff" = "merchant_owner",
 ): Promise<APIRequestContext> {
+  return signedInStaff(baseURL, role, { merchantId });
+}
+
+/** Creates a staff account with a role (and its store or zone) and signs it in (password + TOTP). */
+export async function signedInStaff(
+  baseURL: string,
+  role: "merchant_owner" | "merchant_staff" | "coordinator" | "admin",
+  scope: { merchantId?: string; zoneId?: string } = {},
+): Promise<APIRequestContext> {
   const email = `e2e-${role}-${randomBytes(4).toString("hex")}@example.test`;
   const password = `Pw-${randomBytes(12).toString("base64url")}`;
   const admin = createClient(
@@ -134,11 +153,10 @@ export async function signedInMerchant(
     email_confirm: true,
   });
   if (!data.user) throw new Error(error?.message ?? "Could not create the e2e merchant user");
-  await sql(`insert into public.user_roles (user_id, role, merchant_id) values ($1, $2, $3)`, [
-    data.user.id,
-    role,
-    merchantId,
-  ]);
+  await sql(
+    `insert into public.user_roles (user_id, role, merchant_id, zone_id) values ($1, $2, $3, $4)`,
+    [data.user.id, role, scope.merchantId ?? null, scope.zoneId ?? null],
+  );
   const api = await apiSession(baseURL);
   await expectOk(api.post("/api/auth/password", { data: { email, password } }));
   const enrolment = (await (

@@ -4,6 +4,12 @@ Agents add items here when a decision is blocked, docs conflict, or the plan cou
 
 ## Open
 
+### Q32. Console timers and the coaching rule (decision taken; please confirm)
+The board colours each live step against a target, amber at 80% and red at 100% (BUILD_PLAN): store confirmation **3 minutes**, cooking **the store's own prep time** (15 if none), pickup **10 minutes** after the food is ready, delivery **30 minutes** after pickup. Riders appear on the coaching list when their average rating is below **3.5** with at least **5** ratings (docs/BUSINESS.md §5.3 gives 3.5 but no minimum). Both are constants in `packages/core/src/ops` today; tell us if you want different numbers or want them editable as settings.
+
+### Q33. Editing notification wording (moved to Phase 11)
+BUILD_PLAN lists an English/Filipino template editor in the Phase 8 console. Message wording lives in code today (short, tested to fit one SMS), and a database editor needs per-locale storage, length checks and a review step so a typo cannot reach every customer. It is moved to Phase 11 (hardening); until then wording changes go through a normal PR. Say if you need it sooner.
+
 ### Q29. Rider pay per job (decision taken; please confirm the numbers)
 Riders see their pay before accepting: **₱35 base + ₱10 per started km after the first 2 km** (road distance store → customer, estimated as straight line × 1.3), plus the full tip. The values are in the `dispatch` feature flag (`rider_base_centavos`, `rider_per_km_centavos`, `rider_free_km`) and change without a deploy; the rule itself is `DistancePayRule` (a different rule is a new class). Klik Go keeps the delivery and service fees and the commission and pays the rider from them; on short, cheap orders the platform can make a loss on delivery (the ledger records it). Please confirm or give the pilot numbers.
 
