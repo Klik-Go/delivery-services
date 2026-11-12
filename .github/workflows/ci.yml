@@ -109,8 +109,20 @@ jobs:
       - name: Build
         run: pnpm build
 
+      # --with-deps installs system libraries through apt. When the runner can't reach the Ubuntu
+      # mirrors (seen as DNS failures), retry; if apt is still down, install the browser alone:
+      # the GitHub image already ships what headless Chromium needs, only some fonts may be missing.
       - name: Install Playwright browser
-        run: pnpm --filter @klikgo/web exec playwright install --with-deps chromium
+        run: |
+          for attempt in 1 2 3; do
+            if pnpm --filter @klikgo/web exec playwright install --with-deps chromium; then
+              exit 0
+            fi
+            echo "::warning::Playwright install with system packages failed (attempt $attempt); retrying"
+            sleep $((attempt * 20))
+          done
+          echo "::warning::System packages unavailable; installing the Chromium browser only"
+          pnpm --filter @klikgo/web exec playwright install chromium
 
       - name: Start web server
         run: |
