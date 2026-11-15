@@ -18,7 +18,8 @@ Phases are defined in `docs/BUILD_PLAN.md` §6. Agents update this file in every
 | 6.1 | Follow-up: demo data for the hosted app | ✅ Done (merged) | [Klik-Go/delivery-services#16](https://github.com/Klik-Go/delivery-services/pull/16) | Owner: run **Load demo data** (Q28) |
 | 6.2 | Follow-up: notifications never fail an order | ✅ Done (merged) | [Klik-Go/delivery-services#22](https://github.com/Klik-Go/delivery-services/pull/22) | Found when production checkout returned 500 (database not yet migrated) |
 | 7 | Rider app, dispatch, live tracking | ✅ Done (merged) | [Klik-Go/delivery-services#23](https://github.com/Klik-Go/delivery-services/pull/23) | Owner: rider sign-in needs SMS (Q30); rider pay rule (Q29); Vault secrets from Q25 now also drive dispatch |
-| 8 | Coordinator and Admin console | 🟡 In progress (PR open) | [Klik-Go/delivery-services#24](https://github.com/Klik-Go/delivery-services/pull/24) | Owner: SLA targets and coaching rule (Q32); template editor moved to Phase 11 (Q33) |
+| 8 | Coordinator and Admin console | ✅ Done (merged) | [Klik-Go/delivery-services#24](https://github.com/Klik-Go/delivery-services/pull/24) | Owner: SLA targets and coaching rule (Q32); template editor moved to Phase 11 (Q33) |
+| 8.1 | Follow-up: demo riders + demo accounts reference | 🟡 In progress (PR open) | branch `phase-8.1-demo-riders` | Owner: run **Load demo riders**, add the test numbers in Supabase (docs/DEMO.md §4.2) |
 | 9 | Ratings, reorder, promos, referrals, loyalty | ⬜ Not started | | |
 | 10 | Finance: settlements, payouts, reports | ⬜ Not started | | |
 | 11 | Hardening: security, privacy, observability | ⬜ Not started | | |
@@ -208,6 +209,16 @@ Deliverables:
 - [ ] Owner: rider sign-in on production needs SMS (Q30); confirm the rider pay rule (Q29).
 
 Merged in [Klik-Go/delivery-services#23](https://github.com/Klik-Go/delivery-services/pull/23).
+
+### Phase 8.1 — Follow-up: demo riders and demo accounts reference (branch `phase-8.1-demo-riders`)
+Owner request 2026-11-15: "create another set of seeder with a placeholder data for riders demo purposes, then create a documentation regarding demo credentials per users and their data for reference".
+- [x] `pnpm demo:riders` (`scripts/demo-riders.ts`, data in `scripts/demo/demo-riders.ts`): 10 invented riders in the three launch zones. Six are approved (four online next to the demo stores, two off shift), two applicants have placeholder KYC PDFs in the private bucket (one with the ID already accepted), one is suspended with a reason and one is on the coaching list. Idempotent: `load` resets the demo (KYC back to review) without touching riders on a delivery. `DEMO_ACTION=hide` takes them offline and suspends them.
+- [x] Manual workflow **Load demo riders** (`.github/workflows/demo-riders.yml`, `production` gate).
+- [x] Local test sign-in codes for the demo riders (+639170000901 … 910) and the seeded riders/customers (+639170000023, 031 … 033) in `supabase/config.toml`.
+- [x] `pnpm seed:staff-link` (local only): one-time set-password link for a seeded staff account (they have no password).
+- [x] `features/demo-riders.feature`: online riders near a demo store in every zone, KYC queue with five placeholder documents per applicant (opened through the 60-second link), suspended reason and coaching list in the console, a demo rider signs in with the test number, reload resets an approved applicant, nothing is duplicated, hide leaves no rider online or approved.
+- [x] `docs/DEMO.md`: every demo account per role (local seed, demo stores, demo riders), how each signs in locally and on the hosted app, and the data each has.
+- [ ] Owner: run **Load demo riders** with `action: load`, then add the printed numbers as Supabase test phone numbers (docs/DEMO.md §4.2).
 
 ### Phase 8 — Coordinator and admin console (branch `phase-8-ops-console`)
 Acceptance (docs/BUILD_PLAN.md §6, Gherkin in `features/admin/`):

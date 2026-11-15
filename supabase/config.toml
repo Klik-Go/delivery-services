@@ -271,10 +271,16 @@ max_frequency = "1s"
 # Use pre-defined map of phone number to OTP for testing.
 # Keys are the phone number with country code and without the + prefix.
 # Klik Go test numbers (+639170000101 … 114): no SMS is sent and the code is always 123456.
-# The seeded riders Rico and Rosa (+639170000021/22) too, so dispatch scenarios can sign in as them.
+# The seeded riders (+639170000021 … 23) and customers (+639170000031 … 33) too, so scenarios and
+# local demos can sign in as them, and the demo riders from `pnpm demo:riders` (+639170000901 … 910).
+# Every local demo account is listed in docs/DEMO.md.
 [auth.sms.test_otp]
 639170000021 = "123456"
 639170000022 = "123456"
+639170000023 = "123456"
+639170000031 = "123456"
+639170000032 = "123456"
+639170000033 = "123456"
 639170000101 = "123456"
 639170000102 = "123456"
 639170000103 = "123456"
@@ -289,6 +295,16 @@ max_frequency = "1s"
 639170000112 = "123456"
 639170000113 = "123456"
 639170000114 = "123456"
+639170000901 = "123456"
+639170000902 = "123456"
+639170000903 = "123456"
+639170000904 = "123456"
+639170000905 = "123456"
+639170000906 = "123456"
+639170000907 = "123456"
+639170000908 = "123456"
+639170000909 = "123456"
+639170000910 = "123456"
 
 # Send-SMS hook: Supabase Auth calls the BFF, which texts through Semaphore (docs/ARCHITECTURE.md).
 # The secret ("v1,whsec_…") must equal SEND_SMS_HOOK_SECRET in the web app's environment.
