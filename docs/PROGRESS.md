@@ -19,7 +19,7 @@ Phases are defined in `docs/BUILD_PLAN.md` §6. Agents update this file in every
 | 6.2 | Follow-up: notifications never fail an order | ✅ Done (merged) | [Klik-Go/delivery-services#22](https://github.com/Klik-Go/delivery-services/pull/22) | Found when production checkout returned 500 (database not yet migrated) |
 | 7 | Rider app, dispatch, live tracking | ✅ Done (merged) | [Klik-Go/delivery-services#23](https://github.com/Klik-Go/delivery-services/pull/23) | Owner: rider sign-in needs SMS (Q30); rider pay rule (Q29); Vault secrets from Q25 now also drive dispatch |
 | 8 | Coordinator and Admin console | ✅ Done (merged) | [Klik-Go/delivery-services#24](https://github.com/Klik-Go/delivery-services/pull/24) | Owner: SLA targets and coaching rule (Q32); template editor moved to Phase 11 (Q33) |
-| 8.1 | Follow-up: demo riders + demo accounts reference | 🟡 In progress (PR open) | branch `phase-8.1-demo-riders` | Owner: run **Load demo riders**, add the test numbers in Supabase (docs/DEMO.md §4.2) |
+| 8.1 | Follow-up: demo riders + demo accounts reference | 🟡 In progress (PR open) | [Klik-Go/delivery-services#25](https://github.com/Klik-Go/delivery-services/pull/25) | Owner: run **Load demo riders**, add the test numbers in Supabase (docs/DEMO.md §4.2) |
 | 9 | Ratings, reorder, promos, referrals, loyalty | ⬜ Not started | | |
 | 10 | Finance: settlements, payouts, reports | ⬜ Not started | | |
 | 11 | Hardening: security, privacy, observability | ⬜ Not started | | |
