@@ -89,7 +89,7 @@ describeDb("dispatch repository (local Supabase, seed data)", () => {
       promo: null,
     };
     const placed = await orders.create(order);
-    if (!placed) throw new Error("order not created");
+    if (placed.kind !== "created") throw new Error("order not created");
     created.push(placed.id);
     const accepted = await orders.changeStatus({
       orderId: placed.id,

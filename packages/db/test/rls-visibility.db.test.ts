@@ -208,11 +208,38 @@ describeDb("row-level security: who can see which rows", () => {
   });
 
   it("ratings: the author and the rated store see a rating; others do not", async () => {
-    const q = `select order_id as id from public.ratings where order_id = $1`;
+    const q = `select order_id as id from public.ratings where order_id = $1 and target_type = 'merchant'`;
     expect(await seen("customer1", q, [w.order1])).toEqual([w.order1]);
     expect(await seen("ownerA", q, [w.order1])).toEqual([w.order1]);
     expect(await seen("customer2", q, [w.order1])).toEqual([]);
     expect(await seen("ownerB", q, [w.order1])).toEqual([]);
+  });
+
+  it("a rider's rating of a customer is seen by that rider and admins, not by the customer", async () => {
+    const q = `select order_id as id from public.ratings where order_id = $1 and target_type = 'customer'`;
+    expect(await seen("riderA1", q, [w.order1])).toEqual([w.order1]);
+    expect(await seen("admin", q, [w.order1])).toEqual([w.order1]);
+    for (const viewer of ["customer1", "customer2", "ownerA", "riderA2"] as const) {
+      expect(await seen(viewer, q, [w.order1]), viewer).toEqual([]);
+    }
+  });
+
+  it("support tickets are seen by the zone's coordinator and admins only", async () => {
+    const q = "select order_id as id from public.support_tickets where order_id = any($1)";
+    const both = [[w.order1, w.order2]];
+    expect(await seen("coordA", q, both)).toEqual([w.order1]);
+    expect(await seen("coordB", q, both)).toEqual([w.order2]);
+    expect(await seen("admin", q, both)).toEqual(sorted(w.order1, w.order2));
+    for (const viewer of ["customer1", "riderA1", "ownerA", "staffA"] as const) {
+      expect(await seen(viewer, q, both), viewer).toEqual([]);
+    }
+  });
+
+  it("a personal voucher is seen by its owner only; campaign codes stay hidden", async () => {
+    const q = `select owner_id as id from public.promos where source = 'referral'`;
+    expect(await seen("customer1", q)).toEqual([w.users.customer1]);
+    expect(await seen("customer2", q)).toEqual([]);
+    expect(await seen("ownerA", q)).toEqual([]);
   });
 
   it("promos stay private (codes are validated by the server); redemptions only by their user", async () => {

@@ -61,6 +61,7 @@ export class DispatchStub {
 /** The checkout services and fakes {@link orderingWorld} wires together. */
 export interface OrderingWorld {
   readonly catalog: InMemoryCatalog;
+  readonly hasher: FakeContentHasher;
   readonly clock: FakeClock;
   readonly logger: MemoryLogger;
   readonly store: InMemoryOrderStore;
@@ -109,12 +110,13 @@ export function orderingWorld(now = new Date("2026-11-02T03:00:00Z")): OrderingW
     clock,
   });
   const promos = new PromoService({ promos: promoRepo, clock });
+  const hasher = new FakeContentHasher();
   const orders = new OrderService({
     pricing,
     promos,
     orders: store,
     gateways,
-    hasher: new FakeContentHasher(),
+    hasher,
     authz,
     clock,
     logger,
@@ -163,6 +165,7 @@ export function orderingWorld(now = new Date("2026-11-02T03:00:00Z")): OrderingW
   };
   return {
     catalog,
+    hasher,
     clock,
     logger,
     store,

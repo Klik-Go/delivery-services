@@ -2,6 +2,7 @@ import { CheckoutQuoteSchema } from "@klikgo/types";
 import { getSessionUser } from "@/server/auth/session";
 import { getContainer } from "@/server/container";
 import { jsonError } from "@/server/http/api-response";
+import { deviceIdOf } from "@/server/http/device-id";
 import { parseBody } from "@/server/http/parse-body";
 import { respond, runRoute } from "@/server/http/route";
 
@@ -13,7 +14,11 @@ export async function POST(request: Request): Promise<Response> {
     const body = await parseBody(request, CheckoutQuoteSchema);
     if (!body.ok) return jsonError(body.error, meta);
     return respond(
-      await getContainer().orders.quoteCheckout(body.value, await getSessionUser()),
+      await getContainer().orders.quoteCheckout(
+        body.value,
+        await getSessionUser(),
+        deviceIdOf(request),
+      ),
       meta,
     );
   });

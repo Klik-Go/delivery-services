@@ -11,6 +11,8 @@ if (process.env.CI && !process.env.DATABASE_URL) {
 const describeDb = describe.skipIf(!process.env.DATABASE_URL);
 
 const CARMEN = "5eed0000-0000-4000-8000-0000000000e1";
+const DIEGO = "5eed0000-0000-4000-8000-0000000000e2";
+const WHO = { userId: CARMEN, phoneHash: null, deviceHash: null };
 const KAPE = "5eed0000-0000-4000-8000-000000000102";
 
 /** Orders, payments, refunds and webhook events against the seeded local database. */
@@ -27,14 +29,12 @@ describeDb("order and payment repositories (local Supabase, seed data)", () => {
     await prisma.$disconnect();
   });
 
-  async function newOrder(
-    overrides: Partial<NewOrder> = {},
-  ): Promise<{ id: string; code: string }> {
+  async function orderFields(): Promise<NewOrder> {
     const zone = await prisma.merchants.findUniqueOrThrow({
       where: { id: KAPE },
       select: { zone_id: true },
     });
-    const order = await orders.create({
+    return {
       customerId: CARMEN,
       merchantId: KAPE,
       zoneId: zone.zone_id,
@@ -69,10 +69,16 @@ describeDb("order and payment repositories (local Supabase, seed data)", () => {
         },
       ],
       promo: null,
-      ...overrides,
-    });
-    if (order) created.push(order.id);
-    return order ?? { id: "", code: "" };
+    };
+  }
+
+  async function newOrder(
+    overrides: Partial<NewOrder> = {},
+  ): Promise<{ id: string; code: string }> {
+    const order = await orders.create({ ...(await orderFields()), ...overrides });
+    if (order.kind !== "created") return { id: "", code: "" };
+    created.push(order.id);
+    return order;
   }
 
   it("creates the order with its lines, a KG- code and a first history row by the customer", async () => {
@@ -98,7 +104,7 @@ describeDb("order and payment repositories (local Supabase, seed data)", () => {
     });
   });
 
-  it("answers null instead of a second order for the same customer and Idempotency-Key", async () => {
+  it("answers 'duplicate' instead of a second order for the same customer and Idempotency-Key", async () => {
     const key = `repo-dup-${randomUUID()}`;
     await newOrder({ idempotencyKey: key });
     const zone = await prisma.orders.findFirstOrThrow({ where: { idempotency_key: key } });
@@ -124,7 +130,7 @@ describeDb("order and payment repositories (local Supabase, seed data)", () => {
       lines: [],
       promo: null,
     });
-    expect(again).toBeNull();
+    expect(again).toEqual({ kind: "duplicate" });
     expect((await orders.findByIdempotencyKey(CARMEN, key))?.requestHash).toBe("b".repeat(64));
   });
 
@@ -293,15 +299,60 @@ describeDb("order and payment repositories (local Supabase, seed data)", () => {
 
   it("reads a promo with its redemption counts for one customer", async () => {
     const promos = new PrismaPromoRepository(prisma);
-    expect(await promos.findByCode("KAINTAYO", CARMEN)).toMatchObject({
+    expect(await promos.findByCode("KAINTAYO", WHO)).toMatchObject({
       code: "KAINTAYO",
       type: "fixed_off",
       discountCentavos: 5000,
       minSubtotalCentavos: 30000,
       fundedBy: "platform",
       isActive: true,
-      redemptionsByUser: 0,
+      source: "campaign",
+      ownerId: null,
+      redemptions: 0,
+      redemptionsByCustomer: 0,
     });
-    expect(await promos.findByCode("NOPE1234", CARMEN)).toBeNull();
+    expect(await promos.findByCode("NOPE1234", WHO)).toBeNull();
+  });
+
+  it("refuses a second redemption from the same phone, even from another account", async () => {
+    const promos = new PrismaPromoRepository(prisma);
+    const promo = await prisma.promos.create({
+      data: {
+        code: `REPO${randomUUID().slice(0, 6).toUpperCase().replace(/-/g, "0")}`,
+        type: "fixed_off",
+        discount_centavos: 1000,
+        starts_at: new Date(Date.now() - 60_000),
+        ends_at: new Date(Date.now() + 3_600_000),
+      },
+    });
+    const phoneHash = "a".repeat(64);
+    try {
+      const first = await newOrder({
+        promo: { promoId: promo.id, discountCentavos: 1000, phoneHash, deviceHash: null },
+      });
+      expect(first.id).not.toBe("");
+      const counted = await promos.findByCode(promo.code, {
+        userId: DIEGO,
+        phoneHash,
+        deviceHash: null,
+      });
+      expect(counted).toMatchObject({
+        redemptions: 1,
+        discountGivenCentavos: 1000,
+        redemptionsByCustomer: 1,
+      });
+      const second = await orders.create({
+        ...(await orderFields()),
+        customerId: DIEGO,
+        idempotencyKey: `repo-promo-${randomUUID()}`,
+        promo: { promoId: promo.id, discountCentavos: 1000, phoneHash, deviceHash: null },
+      });
+      expect(second).toEqual({
+        kind: "promo_refused",
+        reason: "You have already used that promo code.",
+      });
+    } finally {
+      await prisma.promo_redemptions.deleteMany({ where: { promo_id: promo.id } });
+    }
   });
 });

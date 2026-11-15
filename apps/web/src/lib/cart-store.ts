@@ -29,6 +29,8 @@ interface CartState {
   /** Empties the cart and adds the line for the new store. */
   replace: (store: CartStore, line: Omit<CartLine, "key">) => void;
   setQuantity: (key: string, quantity: number) => void;
+  /** Replaces the cart with these lines (reorder). */
+  fill: (store: CartStore, lines: readonly Omit<CartLine, "key">[]) => void;
   clear: () => void;
 }
 
@@ -77,6 +79,8 @@ export const useCart = create<CartState>()(
                 );
           return { lines, store: lines.length > 0 ? state.store : null };
         }),
+      fill: (store, lines) =>
+        set({ store, lines: lines.reduce<CartLine[]>((all, line) => merge(all, line), []) }),
       clear: () => set({ store: null, lines: [] }),
     }),
     { name: "klikgo-cart", version: 1, storage: createJSONStorage(() => localStorage) },

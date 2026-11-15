@@ -270,7 +270,7 @@ max_frequency = "1s"
 
 # Use pre-defined map of phone number to OTP for testing.
 # Keys are the phone number with country code and without the + prefix.
-# Klik Go test numbers (+639170000101 … 114): no SMS is sent and the code is always 123456.
+# Klik Go test numbers (+639170000101 … 116): no SMS is sent and the code is always 123456.
 # The seeded riders (+639170000021 … 23) and customers (+639170000031 … 33) too, so scenarios and
 # local demos can sign in as them, and the demo riders from `pnpm demo:riders` (+639170000901 … 910).
 # Every local demo account is listed in docs/DEMO.md.
@@ -295,6 +295,8 @@ max_frequency = "1s"
 639170000112 = "123456"
 639170000113 = "123456"
 639170000114 = "123456"
+639170000115 = "123456"
+639170000116 = "123456"
 639170000901 = "123456"
 639170000902 = "123456"
 639170000903 = "123456"

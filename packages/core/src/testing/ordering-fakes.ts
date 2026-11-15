@@ -37,7 +37,9 @@ import type {
   NewPayment,
   OrderRecord,
   PaymentRecord,
+  PromoCustomer,
   PromoRecord,
+  CreateOrderResult,
 } from "../ordering/ports";
 import { AppError, ServiceUnavailableError } from "../shared/errors";
 import type { Centavos } from "../shared/money";
@@ -122,7 +124,16 @@ export class InMemoryOrderStore
   })[] = [];
   readonly refunds: StoredRefund[] = [];
   readonly ledger: LedgerTxn[] = [];
-  readonly redemptions: { promoId: string; orderId: string; userId: string }[] = [];
+  readonly redemptions: {
+    promoId: string;
+    orderId: string;
+    userId: string;
+    discountCentavos: Centavos;
+    phoneHash: string | null;
+    deviceHash: string | null;
+  }[] = [];
+  /** The database's redemption guard (set by {@link InMemoryPromos}): a refusal reason or null. */
+  promoGuard: ((order: NewOrder) => string | null) | null = null;
   /** Delivery PINs the database trigger issues for orders of ₱500.00 or more. */
   readonly pins = new Map<string, string>();
   private sequence = 0;
@@ -137,14 +148,16 @@ export class InMemoryOrderStore
     );
   }
 
-  create(order: NewOrder): Promise<{ id: string; code: string } | null> {
+  create(order: NewOrder): Promise<CreateOrderResult> {
     if (
       this.orders.some(
         (o) => o.customerId === order.customerId && o.idempotencyKey === order.idempotencyKey,
       )
     ) {
-      return Promise.resolve(null);
+      return Promise.resolve({ kind: "duplicate" });
     }
+    const refused = this.promoGuard?.(order) ?? null;
+    if (refused) return Promise.resolve({ kind: "promo_refused", reason: refused });
     this.sequence += 1;
     const id = `order-${String(this.sequence)}`;
     const code = `KG-TEST${String(this.sequence).padStart(2, "0")}`;
@@ -182,9 +195,12 @@ export class InMemoryOrderStore
         promoId: order.promo.promoId,
         orderId: id,
         userId: order.customerId,
+        discountCentavos: order.promo.discountCentavos,
+        phoneHash: order.promo.phoneHash,
+        deviceHash: order.promo.deviceHash,
       });
     }
-    return Promise.resolve({ id, code });
+    return Promise.resolve({ kind: "created", id, code });
   }
 
   attachPayment(orderId: string, payment: NewPayment): Promise<void> {
@@ -491,21 +507,70 @@ export class InMemoryWebhookEvents implements IWebhookEventStore {
   }
 }
 
-/** Promo codes in memory, counting redemptions from an {@link InMemoryOrderStore}. */
+/** A promo as a test sets it up: everything but the live counts. */
+export type PromoSetup = Omit<
+  PromoRecord,
+  "redemptions" | "discountGivenCentavos" | "redemptionsByCustomer"
+>;
+
+/**
+ * Promo codes in memory, counting redemptions from an {@link InMemoryOrderStore}. Like the
+ * database, the store refuses a redemption past the cap, the budget or the per-customer limit
+ * (account, phone or device) when the order is stored.
+ */
 export class InMemoryPromos implements IPromoRepository {
-  readonly promos: Omit<PromoRecord, "redemptions" | "redemptionsByUser">[] = [];
+  readonly promos: PromoSetup[] = [];
+  /** Delivered orders per customer (first-order promos). */
+  readonly delivered = new Map<string, number>();
 
-  constructor(private readonly store: InMemoryOrderStore) {}
+  constructor(private readonly store: InMemoryOrderStore) {
+    store.promoGuard = (order) => this.guard(order);
+  }
 
-  findByCode(code: string, userId: string): Promise<PromoRecord | null> {
+  findByCode(code: string, customer: PromoCustomer): Promise<PromoRecord | null> {
     const promo = this.promos.find((p) => p.code === code);
-    if (!promo) return Promise.resolve(null);
+    return Promise.resolve(promo ? this.withCounts(promo, customer) : null);
+  }
+
+  deliveredOrders(userId: string): Promise<number> {
+    return Promise.resolve(this.delivered.get(userId) ?? 0);
+  }
+
+  private withCounts(promo: PromoSetup, customer: PromoCustomer): PromoRecord {
     const used = this.store.redemptions.filter((r) => r.promoId === promo.id);
-    return Promise.resolve({
+    return {
       ...promo,
       redemptions: used.length,
-      redemptionsByUser: used.filter((r) => r.userId === userId).length,
+      discountGivenCentavos: used.reduce((sum, r) => sum + r.discountCentavos, 0),
+      redemptionsByCustomer: used.filter(
+        (r) =>
+          r.userId === customer.userId ||
+          (customer.phoneHash !== null && r.phoneHash === customer.phoneHash) ||
+          (customer.deviceHash !== null && r.deviceHash === customer.deviceHash),
+      ).length,
+    };
+  }
+
+  private guard(order: NewOrder): string | null {
+    if (!order.promo) return null;
+    const setup = this.promos.find((p) => p.id === order.promo?.promoId);
+    if (!setup) return null;
+    if (setup.ownerId !== null && setup.ownerId !== order.customerId) return "promo_not_yours";
+    const promo = this.withCounts(setup, {
+      userId: order.customerId,
+      phoneHash: order.promo.phoneHash,
+      deviceHash: order.promo.deviceHash,
     });
+    if (promo.maxRedemptions !== null && promo.redemptions >= promo.maxRedemptions)
+      return "That promo code has been used up.";
+    if (
+      promo.budgetCentavos !== null &&
+      promo.discountGivenCentavos + order.promo.discountCentavos > promo.budgetCentavos
+    )
+      return "That promo code has been used up.";
+    if (promo.redemptionsByCustomer >= promo.perUserLimit)
+      return "You have already used that promo code.";
+    return null;
   }
 }
 

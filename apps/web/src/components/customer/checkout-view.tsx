@@ -37,9 +37,12 @@ const PROMO_PATTERN = /^[A-Z0-9]{4,20}$/;
 export function CheckoutView({
   dropoff,
   initialAddress,
+  initialPromo = null,
 }: {
   readonly dropoff: { lat: number; lng: number } | null;
   readonly initialAddress: CheckoutAddressDraft;
+  /** A voucher picked in Rewards ("Use at checkout"), applied straight away. */
+  readonly initialPromo?: string | null;
 }): JSX.Element {
   const t = useTranslations("Customer.checkout");
   const tCart = useTranslations("Customer.cart");
@@ -47,8 +50,8 @@ export function CheckoutView({
   const router = useRouter();
   const hydrated = useHydrated();
   const { store, lines, clear } = useCart();
-  const [promoInput, setPromoInput] = useState("");
-  const [promoCode, setPromoCode] = useState<string | null>(null);
+  const [promoInput, setPromoInput] = useState(initialPromo ?? "");
+  const [promoCode, setPromoCode] = useState<string | null>(initialPromo);
   const [tipCentavos, setTipCentavos] = useState(0);
   const [chosenMethod, setChosenMethod] = useState<PaymentMethod | null>(null);
   const [chosenWhen, setChosenWhen] = useState<When | null>(null);

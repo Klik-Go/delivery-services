@@ -272,6 +272,13 @@ sequenceDiagram
 - **Stores.** Suspending also closes the store; a commission change can start on a later date (`next_commission_bps/from`), and settlement uses `private.commission_bps(merchant, now())`.
 - **Settings.** Feature flags are edited in the console; the `dispatch` and `merchant_sla` settings are validated by zod schemas (`FLAG_ROLLOUT_SCHEMAS`) before saving. Editing notification wording moved to Phase 11 (OPEN_QUESTIONS Q33).
 
+## 4j. Ratings, reorder, promos, referrals and loyalty (Phase 9)
+
+- **Ratings.** `RatingService` (core `retention`) lets the customer rate the store and the rider separately and the rider rate the customer: one row per order, rater and target, within 7 days of delivery, changeable for 24 hours. Averages (`merchants`, `riders`, `profiles.rating_avg`) are kept by a database trigger on insert, score change and delete. A score of 2 or less opens a `support_tickets` row in the same transaction (summary with tags only; the comment stays on the rating). Coordinators see their zone's tickets in `/admin/tickets`.
+- **History and reorder.** `OrderHistoryService` lists the customer's orders (20 per page, keyset on `created_at`) and turns a past order back into cart lines priced by `PricingService` today; removed, sold-out or changed lines are flagged and nothing is placed.
+- **Promos.** `PromoService` composes `DiscountStrategy` classes (percent with cap, fixed, free delivery with cap) and `PromoRule` classes (window, owner, zone, store, first N orders, minimum, total uses and peso budget, uses per customer). Uses per customer count the account, a hash of its phone and a hash of the app's device id (`X-Device-Id`, a random id the PWA keeps in localStorage). `private.guard_promo_redemption` repeats the caps and per-customer check under a row lock when the order is stored; a refusal comes back as `promo_refused`, so two orders at the same moment cannot both take the last use.
+- **Referrals and loyalty.** `RewardsService` gives each customer a referral code (`profiles.referral_code`). Referral and loyalty rewards are **personal promo codes** (`promos.owner_id`, `source`), so checkout, the ledger (`promo_expense`) and refunds handle them like any promo. Delivered orders are processed once by the background job (`orders.rewards_processed_at`): a stamp for orders of ₱150+, a free-delivery voucher at 10 stamps, and the referral reward (₱50 each) or a void when the first order went within 50 m of the referrer's saved address or past drop-off. One referral per device is a unique index.
+
 ## 5. Folder map
 
 ```

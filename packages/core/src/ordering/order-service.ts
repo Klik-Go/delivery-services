@@ -139,8 +139,9 @@ export class OrderService {
   async quoteCheckout(
     input: CheckoutQuoteRequest,
     actor: SessionUser | null,
+    deviceId: string | null = null,
   ): Promise<Result<CheckoutQuote, AppError>> {
-    const priced = await this.price(input, actor?.id ?? null);
+    const priced = await this.price(input, actor, deviceId);
     if (!priced.ok) return priced;
     const { quote, store, promo, promoError, tipCentavos, totalCentavos } = priced.value;
     return ok({
@@ -220,6 +221,8 @@ export class OrderService {
       readonly idempotencyKey: string;
       readonly actor: SessionUser;
       readonly urls: PaymentReturnUrls;
+      /** The app's device id (X-Device-Id), for the one-promo-per-device guard. */
+      readonly deviceId?: string | null;
     },
   ): Promise<Result<PlacedOrder, AppError>> {
     const { actor, idempotencyKey } = context;
@@ -232,7 +235,7 @@ export class OrderService {
     const gateway = this.deps.gateways.forMethod(input.paymentMethod);
     if (!gateway) return err(invalid("paymentMethod", "That payment method is not available."));
 
-    const priced = await this.price(input, actor.id);
+    const priced = await this.price(input, actor, context.deviceId ?? null);
     if (!priced.ok) return priced;
     const checked = this.checkOrderable(input, priced.value, gateway);
     if (!checked.ok) return checked;
@@ -266,16 +269,26 @@ export class OrderService {
         modifiers: line.optionIds.map((id, i) => ({ id, name: line.optionNames[i] ?? "" })),
         lineTotalCentavos: line.lineTotalCentavos,
       })),
-      promo: promo ? { promoId: promo.promoId, discountCentavos: promo.discountCentavos } : null,
+      promo: promo
+        ? {
+            promoId: promo.promoId,
+            discountCentavos: promo.discountCentavos,
+            ...identityHashes(this.deps.hasher, actor, context.deviceId ?? null),
+          }
+        : null,
     };
 
-    const created = await this.deps.orders.create(order);
-    if (!created) {
+    const stored = await this.deps.orders.create(order);
+    if (stored.kind === "promo_refused") {
+      return err(invalid("promoCode", stored.reason));
+    }
+    if (stored.kind === "duplicate") {
       // A parallel request with the same key created the order first: answer with that one.
       const raced = await this.deps.orders.findByIdempotencyKey(actor.id, idempotencyKey);
       if (!raced) return err(new ConflictError("Please try placing the order again."));
       return this.replay(raced, requestHash, context.urls);
     }
+    const created = stored;
     this.deps.logger.info("order.created", {
       orderId: created.id,
       merchantId: order.merchantId,
@@ -365,7 +378,8 @@ export class OrderService {
   /** Re-prices the cart and applies the promo and tip. A bad promo is reported, not fatal. */
   private async price(
     input: CheckoutQuoteRequest,
-    userId: string | null,
+    actor: SessionUser | null,
+    deviceId: string | null,
   ): Promise<Result<Priced, AppError>> {
     const priced = await this.deps.pricing.quoteWithStore(input);
     if (!priced.ok) return priced;
@@ -373,10 +387,11 @@ export class OrderService {
     let promo: AppliedPromo | null = null;
     let promoError: string | null = null;
     if (input.promoCode) {
-      if (!userId) promoError = "Sign in to use a promo code.";
+      if (!actor) promoError = "Sign in to use a promo code.";
       else {
         const applied = await this.deps.promos.apply(input.promoCode, {
-          userId,
+          userId: actor.id,
+          ...identityHashes(this.deps.hasher, actor, deviceId),
           zoneId: store.zoneId,
           merchantId: store.id,
           subtotalCentavos: quote.subtotalCentavos,
@@ -472,3 +487,19 @@ function canonical(input: PlaceOrderRequest): string {
 }
 
 const iso = (at: Date | null): string | null => (at ? at.toISOString() : null);
+
+/**
+ * Hashes of the customer's phone and device for the abuse guards (one promo or referral per
+ * phone and per handset). Only hashes are stored; the device id is prefixed so it can never
+ * collide with a phone hash.
+ */
+export function identityHashes(
+  hasher: IContentHasher,
+  actor: Pick<SessionUser, "phone">,
+  deviceId: string | null,
+): { readonly phoneHash: string | null; readonly deviceHash: string | null } {
+  return {
+    phoneHash: actor.phone ? hasher.sha256Hex(`phone:${actor.phone}`) : null,
+    deviceHash: deviceId ? hasher.sha256Hex(`device:${deviceId}`) : null,
+  };
+}

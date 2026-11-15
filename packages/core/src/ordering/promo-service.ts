@@ -1,8 +1,18 @@
+import type { PromoType } from "@klikgo/types";
 import { ValidationError, type AppError } from "../shared/errors";
 import type { Centavos } from "../shared/money";
 import { err, ok, type Result } from "../shared/result";
 import type { Clock } from "../ports/clock";
 import type { IPromoRepository, PromoRecord } from "./ports";
+import {
+  DEFAULT_DISCOUNT_STRATEGIES,
+  DEFAULT_PROMO_RULES,
+  type DiscountStrategy,
+  type PromoContext,
+  type PromoRule,
+} from "./promo-rules";
+
+export type { PromoContext } from "./promo-rules";
 
 /** A promo that applies to this cart, and what it takes off. */
 export interface AppliedPromo {
@@ -13,62 +23,57 @@ export interface AppliedPromo {
   readonly fundedBy: PromoRecord["fundedBy"];
 }
 
-/** The cart a promo is checked against. */
-export interface PromoContext {
-  readonly userId: string;
-  readonly zoneId: string;
-  readonly merchantId: string;
-  readonly subtotalCentavos: Centavos;
-  readonly deliveryFeeCentavos: Centavos;
-}
+/** The customer and cart, before the service adds what it looks up itself. */
+export type PromoRequest = Omit<PromoContext, "deliveredOrders" | "now">;
 
 const refuse = (message: string): Result<never, AppError> =>
   err(new ValidationError(message, [{ path: "promoCode", message }]));
 
 /**
- * Checks a promo code for one customer's cart and works out the discount: percent off the
- * subtotal (capped), a fixed amount (never more than the subtotal) or free delivery.
+ * Checks a promo code for one customer's cart (docs/BUILD_PLAN.md Phase 9): every eligibility rule
+ * must pass (window, owner, zone, store, first orders, minimum, caps and budget, uses per customer,
+ * phone and device), then the strategy for the promo's type works out the discount. The database
+ * checks caps and per-customer uses again under a lock when the order is stored.
  */
 export class PromoService {
-  constructor(private readonly deps: { promos: IPromoRepository; clock: Clock }) {}
+  private readonly strategies: ReadonlyMap<PromoType, DiscountStrategy>;
+  private readonly rules: readonly PromoRule[];
 
-  async apply(code: string, context: PromoContext): Promise<Result<AppliedPromo, AppError>> {
-    const promo = await this.deps.promos.findByCode(code.trim().toUpperCase(), context.userId);
-    const now = this.deps.clock.now();
-    if (!promo || !promo.isActive || now < promo.startsAt || now >= promo.endsAt) {
-      return refuse("That promo code is not valid right now.");
-    }
-    if (promo.zoneId !== null && promo.zoneId !== context.zoneId) {
-      return refuse("That promo code does not work in your area.");
-    }
-    if (promo.merchantId !== null && promo.merchantId !== context.merchantId) {
-      return refuse("That promo code is for a different store.");
-    }
-    if (context.subtotalCentavos < promo.minSubtotalCentavos) {
-      return refuse(
-        `Add ₱${String(Math.ceil((promo.minSubtotalCentavos - context.subtotalCentavos) / 100))} more to use this code.`,
-      );
-    }
-    if (promo.maxRedemptions !== null && promo.redemptions >= promo.maxRedemptions) {
-      return refuse("That promo code has been used up.");
-    }
-    if (promo.redemptionsByUser >= promo.perUserLimit) {
-      return refuse("You have already used that promo code.");
+  constructor(
+    private readonly deps: {
+      promos: IPromoRepository;
+      clock: Clock;
+      strategies?: readonly DiscountStrategy[];
+      rules?: readonly PromoRule[];
+    },
+  ) {
+    this.strategies = new Map(
+      (deps.strategies ?? DEFAULT_DISCOUNT_STRATEGIES).map((s) => [s.type, s]),
+    );
+    this.rules = deps.rules ?? DEFAULT_PROMO_RULES;
+  }
+
+  async apply(code: string, request: PromoRequest): Promise<Result<AppliedPromo, AppError>> {
+    const promo = await this.deps.promos.findByCode(code.trim().toUpperCase(), request);
+    const strategy = promo ? this.strategies.get(promo.type) : undefined;
+    if (!promo || !strategy) return refuse("That promo code is not valid right now.");
+    const context: PromoContext = {
+      ...request,
+      deliveredOrders:
+        promo.firstOrders === null ? 0 : await this.deps.promos.deliveredOrders(request.userId),
+      now: this.deps.clock.now(),
+    };
+    const discount = strategy.discount(promo, context);
+    for (const rule of this.rules) {
+      const refusal = rule.refusal(promo, context, discount);
+      if (refusal) return refuse(refusal);
     }
     return ok({
       promoId: promo.id,
       code: promo.code,
       type: promo.type,
-      discountCentavos: discountFor(promo, context),
+      discountCentavos: discount,
       fundedBy: promo.fundedBy,
     });
   }
-}
-
-function discountFor(promo: PromoRecord, context: PromoContext): Centavos {
-  if (promo.type === "free_delivery") return context.deliveryFeeCentavos;
-  if (promo.type === "fixed_off")
-    return Math.min(promo.discountCentavos ?? 0, context.subtotalCentavos);
-  const percent = Math.floor((context.subtotalCentavos * (promo.discountBps ?? 0)) / 10_000);
-  return Math.min(percent, promo.maxDiscountCentavos ?? percent, context.subtotalCentavos);
 }

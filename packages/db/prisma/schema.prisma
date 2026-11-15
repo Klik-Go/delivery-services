@@ -182,9 +182,11 @@ model loyalty_stamps {
   created_at                                      DateTime  @default(now()) @db.Timestamptz(6)
   redeemed_at                                     DateTime? @db.Timestamptz(6)
   redeemed_order_id                               String?   @db.Uuid
+  voucher_promo_id                                String?   @db.Uuid
   profiles                                        profiles  @relation(fields: [customer_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   orders_loyalty_stamps_order_idToorders          orders    @relation("loyalty_stamps_order_idToorders", fields: [order_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   orders_loyalty_stamps_redeemed_order_idToorders orders?   @relation("loyalty_stamps_redeemed_order_idToorders", fields: [redeemed_order_id], references: [id], onUpdate: NoAction)
+  promos                                          promos?   @relation(fields: [voucher_promo_id], references: [id], onUpdate: NoAction)
 
   @@schema("public")
 }
@@ -435,6 +437,7 @@ model orders {
   dispatch_flagged_at                                     DateTime?                    @db.Timestamptz(6)
   arrived_store_at                                        DateTime?                    @db.Timestamptz(6)
   delivery_proof_path                                     String?
+  rewards_processed_at                                    DateTime?                    @db.Timestamptz(6)
   dispatch_offers                                         dispatch_offers[]
   ledger_entries                                          ledger_entries[]
   loyalty_stamps_loyalty_stamps_order_idToorders          loyalty_stamps?              @relation("loyalty_stamps_order_idToorders")
@@ -455,6 +458,7 @@ model orders {
   referrals                                               referrals[]
   refunds                                                 refunds[]
   rider_location_breadcrumbs                              rider_location_breadcrumbs[]
+  support_tickets                                         support_tickets[]
 
   @@index([customer_id, created_at(sort: Desc)], map: "orders_customer_idx")
   @@index([dropoff], map: "orders_dropoff_gix", type: Gist)
@@ -521,6 +525,9 @@ model profiles {
   status                                     profile_status              @default(active)
   created_at                                 DateTime                    @default(now()) @db.Timestamptz(6)
   updated_at                                 DateTime                    @default(now()) @db.Timestamptz(6)
+  rating_avg                                 Decimal                     @default(0) @db.Decimal(3, 2)
+  rating_count                               Int                         @default(0)
+  referral_code                              String?                     @unique
   addresses                                  addresses[]
   device_push_subscriptions                  device_push_subscriptions[]
   feature_flags                              feature_flags[]
@@ -535,12 +542,14 @@ model profiles {
   orders_orders_customer_idToprofiles        orders[]                    @relation("orders_customer_idToprofiles")
   users                                      users                       @relation(fields: [id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   promo_redemptions                          promo_redemptions[]
+  promos                                     promos[]
   ratings                                    ratings[]
   referrals_referrals_referee_idToprofiles   referrals?                  @relation("referrals_referee_idToprofiles")
   referrals_referrals_referrer_idToprofiles  referrals[]                 @relation("referrals_referrer_idToprofiles")
   refunds                                    refunds[]
   rider_kyc_documents                        rider_kyc_documents[]
   riders                                     riders?
+  support_tickets                            support_tickets[]
   user_roles_user_roles_granted_byToprofiles user_roles[]                @relation("user_roles_granted_byToprofiles")
   user_roles_user_roles_user_idToprofiles    user_roles[]                @relation("user_roles_user_idToprofiles")
   zones                                      zones[]
@@ -557,6 +566,8 @@ model promo_redemptions {
   order_id          String   @unique @db.Uuid
   discount_centavos Int
   created_at        DateTime @default(now()) @db.Timestamptz(6)
+  phone_hash        String?
+  device_hash       String?
   orders            orders   @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   promos            promos   @relation(fields: [promo_id], references: [id], onUpdate: NoAction)
   profiles          profiles @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
@@ -568,27 +579,36 @@ model promo_redemptions {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model promos {
-  id                    String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  code                  String              @unique
-  type                  promo_type
-  discount_bps          Int?
-  discount_centavos     Int?
-  max_discount_centavos Int?
-  min_subtotal_centavos Int                 @default(0)
-  starts_at             DateTime            @db.Timestamptz(6)
-  ends_at               DateTime            @db.Timestamptz(6)
-  max_redemptions       Int?
-  per_user_limit        Int                 @default(1)
-  zone_id               String?             @db.Uuid
-  merchant_id           String?             @db.Uuid
-  funded_by             String              @default("platform")
-  is_active             Boolean             @default(true)
-  created_at            DateTime            @default(now()) @db.Timestamptz(6)
-  updated_at            DateTime            @default(now()) @db.Timestamptz(6)
-  is_featured           Boolean             @default(false)
-  promo_redemptions     promo_redemptions[]
-  merchants             merchants?          @relation(fields: [merchant_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  zones                 zones?              @relation(fields: [zone_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  id                                            String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code                                          String              @unique
+  type                                          promo_type
+  discount_bps                                  Int?
+  discount_centavos                             Int?
+  max_discount_centavos                         Int?
+  min_subtotal_centavos                         Int                 @default(0)
+  starts_at                                     DateTime            @db.Timestamptz(6)
+  ends_at                                       DateTime            @db.Timestamptz(6)
+  max_redemptions                               Int?
+  per_user_limit                                Int                 @default(1)
+  zone_id                                       String?             @db.Uuid
+  merchant_id                                   String?             @db.Uuid
+  funded_by                                     String              @default("platform")
+  is_active                                     Boolean             @default(true)
+  created_at                                    DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at                                    DateTime            @default(now()) @db.Timestamptz(6)
+  is_featured                                   Boolean             @default(false)
+  budget_centavos                               Int?
+  first_orders                                  Int?
+  owner_id                                      String?             @db.Uuid
+  source                                        String              @default("campaign")
+  description                                   String?
+  loyalty_stamps                                loyalty_stamps[]
+  promo_redemptions                             promo_redemptions[]
+  merchants                                     merchants?          @relation(fields: [merchant_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  profiles                                      profiles?           @relation(fields: [owner_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  zones                                         zones?              @relation(fields: [zone_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  referrals_referrals_referee_promo_idTopromos  referrals[]         @relation("referrals_referee_promo_idTopromos")
+  referrals_referrals_referrer_promo_idTopromos referrals[]         @relation("referrals_referrer_promo_idTopromos")
 
   @@schema("public")
 }
@@ -596,17 +616,19 @@ model promos {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model ratings {
-  id           String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  order_id     String        @db.Uuid
-  from_user_id String        @db.Uuid
-  target_type  rating_target
-  target_id    String        @db.Uuid
-  score        Int           @db.SmallInt
-  tags         String[]      @default([])
-  comment      String?
-  created_at   DateTime      @default(now()) @db.Timestamptz(6)
-  profiles     profiles      @relation(fields: [from_user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  orders       orders        @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  id              String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  order_id        String           @db.Uuid
+  from_user_id    String           @db.Uuid
+  target_type     rating_target
+  target_id       String           @db.Uuid
+  score           Int              @db.SmallInt
+  tags            String[]         @default([])
+  comment         String?
+  created_at      DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime         @default(now()) @db.Timestamptz(6)
+  profiles        profiles         @relation(fields: [from_user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  orders          orders           @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  support_tickets support_tickets?
 
   @@unique([order_id, from_user_id, target_type])
   @@index([target_type, target_id, created_at(sort: Desc)], map: "ratings_target_idx")
@@ -616,18 +638,24 @@ model ratings {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model referrals {
-  id                                       String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  referrer_id                              String    @db.Uuid
-  referee_id                               String    @unique @db.Uuid
-  code                                     String
-  status                                   String    @default("pending")
-  qualifying_order_id                      String?   @db.Uuid
-  reward_centavos                          Int       @default(0)
-  created_at                               DateTime  @default(now()) @db.Timestamptz(6)
-  qualified_at                             DateTime? @db.Timestamptz(6)
-  orders                                   orders?   @relation(fields: [qualifying_order_id], references: [id], onUpdate: NoAction)
-  profiles_referrals_referee_idToprofiles  profiles  @relation("referrals_referee_idToprofiles", fields: [referee_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  profiles_referrals_referrer_idToprofiles profiles  @relation("referrals_referrer_idToprofiles", fields: [referrer_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  id                                         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  referrer_id                                String    @db.Uuid
+  referee_id                                 String    @unique @db.Uuid
+  code                                       String
+  status                                     String    @default("pending")
+  qualifying_order_id                        String?   @db.Uuid
+  reward_centavos                            Int       @default(0)
+  created_at                                 DateTime  @default(now()) @db.Timestamptz(6)
+  qualified_at                               DateTime? @db.Timestamptz(6)
+  device_hash                                String?
+  void_reason                                String?
+  referrer_promo_id                          String?   @db.Uuid
+  referee_promo_id                           String?   @db.Uuid
+  orders                                     orders?   @relation(fields: [qualifying_order_id], references: [id], onUpdate: NoAction)
+  profiles_referrals_referee_idToprofiles    profiles  @relation("referrals_referee_idToprofiles", fields: [referee_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  promos_referrals_referee_promo_idTopromos  promos?   @relation("referrals_referee_promo_idTopromos", fields: [referee_promo_id], references: [id], onUpdate: NoAction)
+  profiles_referrals_referrer_idToprofiles   profiles  @relation("referrals_referrer_idToprofiles", fields: [referrer_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  promos_referrals_referrer_promo_idTopromos promos?   @relation("referrals_referrer_promo_idTopromos", fields: [referrer_promo_id], references: [id], onUpdate: NoAction)
 
   @@index([referrer_id], map: "referrals_referrer_idx")
   @@schema("public")
@@ -770,6 +798,7 @@ model zones {
   orders                orders[]
   promos                promos[]
   riders                riders[]
+  support_tickets       support_tickets[]
   user_roles            user_roles[]
   profiles              profiles?                @relation(fields: [coordinator_id], references: [id], onUpdate: NoAction)
 
@@ -887,6 +916,29 @@ model order_support_notes {
   orders      orders    @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([order_id, created_at], map: "order_support_notes_order_idx")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model support_tickets {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  kind        String
+  status      String    @default("open")
+  order_id    String    @db.Uuid
+  zone_id     String    @db.Uuid
+  rating_id   String?   @unique @db.Uuid
+  summary     String
+  created_at  DateTime  @default(now()) @db.Timestamptz(6)
+  resolved_at DateTime? @db.Timestamptz(6)
+  resolved_by String?   @db.Uuid
+  resolution  String?
+  orders      orders    @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  ratings     ratings?  @relation(fields: [rating_id], references: [id], onUpdate: NoAction)
+  profiles    profiles? @relation(fields: [resolved_by], references: [id], onUpdate: NoAction)
+  zones       zones     @relation(fields: [zone_id], references: [id], onUpdate: NoAction)
+
   @@schema("public")
 }
 

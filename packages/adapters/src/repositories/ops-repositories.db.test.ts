@@ -94,7 +94,7 @@ describeDb("ops console repositories (local Supabase, seed data)", () => {
       ],
       promo: null,
     });
-    if (!placed) throw new Error("order not created");
+    if (placed.kind !== "created") throw new Error("order not created");
     created.push(placed.id);
     await orders.changeStatus({
       orderId: placed.id,

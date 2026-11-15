@@ -66,6 +66,24 @@ export interface CheckoutScenario {
   ownerMerchantId?: string;
 }
 
+/** A customer signed in for retention scenarios (fresh number, placeholder code). */
+export interface RetentionCustomer {
+  readonly client: ApiClient;
+  readonly userId: string;
+}
+
+/** State for ratings, reorder, promos, referrals and loyalty steps. */
+export interface RetentionScenario {
+  /** Customers by the name the scenario gives them. */
+  customers: Map<string, RetentionCustomer>;
+  /** Makes device names unique per scenario, so earlier runs never collide. */
+  readonly run: string;
+  campaign?: { code: string; id: string };
+  /** Orders by a short name (e.g. the item ordered). */
+  orders: Map<string, string>;
+  ticketId?: string;
+}
+
 /** A seeded rider signed in for dispatch scenarios. */
 export interface RiderSession {
   readonly client: ApiClient;
@@ -109,6 +127,11 @@ export class KlikWorld extends World {
   readonly checkout: CheckoutScenario = {};
   readonly dispatch: DispatchScenario = { riders: new Map() };
   readonly ops: OpsScenario = {};
+  readonly retention: RetentionScenario = {
+    customers: new Map(),
+    run: Math.random().toString(36).slice(2, 10),
+    orders: new Map(),
+  };
   private context: BrowserContext | undefined;
   private currentPage: Page | undefined;
 

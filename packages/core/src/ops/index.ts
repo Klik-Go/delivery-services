@@ -9,3 +9,4 @@ export * from "./sla";
 export * from "./staff-admin-service";
 export * from "./zone-admin-service";
 export * from "./zone-outline";
+export * from "./retention-admin-service";

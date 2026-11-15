@@ -214,6 +214,28 @@ export async function buildWorld(db: pg.ClientBase, fx: DbFixtures): Promise<Wor
      values ($1, $2, 'merchant', $3, 5, '{Hot food}')`,
     [order1, customer1, merchantA],
   );
+  // A rider's rating of the customer, and a low-rating ticket in each zone.
+  const riderRating = await db.query<{ id: string }>(
+    `insert into public.ratings (order_id, from_user_id, target_type, target_id, score)
+     values ($1, $2, 'customer', $3, 2) returning id`,
+    [order1, riderA1User, customer1],
+  );
+  for (const [orderId, zoneId, ratingId] of [
+    [order1, zoneA, riderRating.rows[0]?.id ?? null],
+    [order2, zoneB, null],
+  ] as const) {
+    await db.query(
+      `insert into public.support_tickets (kind, order_id, zone_id, rating_id, summary)
+       values ('low_rating', $1, $2, $3, 'Rated 2 of 5')`,
+      [orderId, zoneId, ratingId],
+    );
+  }
+  // A personal voucher (a referral reward) for customer1.
+  await db.query(
+    `insert into public.promos (code, type, discount_centavos, starts_at, ends_at, owner_id, source, max_redemptions)
+     values ('REF' || upper(substr(md5(random()::text), 1, 8)), 'fixed_off', 5000, now(), now() + interval '90 days', $1, 'referral', 1)`,
+    [customer1],
+  );
   const promo = await db.query<{ id: string }>(
     `insert into public.promos (code, type, discount_centavos, starts_at, ends_at)
      values ('BAGONG' || upper(substr(md5(random()::text), 1, 6)), 'fixed_off', 5000, now(), now() + interval '30 days') returning id`,

@@ -122,16 +122,42 @@ describe("OrderService.placeOrder", () => {
       merchantId: null,
       fundedBy: "platform",
       isActive: true,
+      description: null,
+      budgetCentavos: null,
+      firstOrders: null,
+      ownerId: null,
+      source: "campaign",
     });
     const placed = await w.orders.placeOrder(
       barakoOrder({ promoCode: "KAINTAYO", tipCentavos: 2000 }),
-      { idempotencyKey: KEY, actor: w.customer, urls: w.urls },
+      { idempotencyKey: KEY, actor: w.customer, urls: w.urls, deviceId: "device-abcdef123456" },
     );
     expect(placed.ok && placed.value.totalCentavos).toBe(17900 - 5000 + 2000);
     expect(w.store.orders[0]).toMatchObject({ discountCentavos: 5000, tipCentavos: 2000 });
     expect(w.store.redemptions).toEqual([
-      { promoId: "promo-1", orderId: "order-1", userId: "customer-1" },
+      {
+        promoId: "promo-1",
+        orderId: "order-1",
+        userId: "customer-1",
+        discountCentavos: 5000,
+        phoneHash: null,
+        // Only a hash of the device id is kept.
+        deviceHash: w.hasher.sha256Hex("device:device-abcdef123456"),
+      },
     ]);
+
+    // The database checks the promo again: if it was used up in the meantime, nothing is stored.
+    w.store.promoGuard = () => "That promo code has been used up.";
+    const raced = await w.orders.placeOrder(barakoOrder({ promoCode: "KAINTAYO" }), {
+      idempotencyKey: `${KEY}-2`,
+      actor: { ...w.customer, id: "customer-2" },
+      urls: w.urls,
+    });
+    expect(!raced.ok && raced.error).toMatchObject({
+      code: "VALIDATION_FAILED",
+      message: "That promo code has been used up.",
+    });
+    expect(w.store.orders).toHaveLength(1);
   });
 
   it("refuses a promo that does not apply instead of ignoring it silently", async () => {

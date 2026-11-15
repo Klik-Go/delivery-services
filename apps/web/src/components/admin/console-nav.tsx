@@ -8,14 +8,16 @@ import type { JSX } from "react";
 const SECTIONS = [
   { href: "/admin", key: "live", adminOnly: false },
   { href: "/admin/riders", key: "riders", adminOnly: false },
+  { href: "/admin/tickets", key: "tickets", adminOnly: false },
   { href: "/admin/zones", key: "zones", adminOnly: false },
   { href: "/admin/stores", key: "stores", adminOnly: false },
   { href: "/admin/merchants", key: "applications", adminOnly: false },
+  { href: "/admin/promos", key: "promos", adminOnly: true },
   { href: "/admin/settings", key: "settings", adminOnly: true },
   { href: "/admin/staff", key: "staff", adminOnly: true },
 ] as const;
 
-/** The console's sections; settings and staff are for admins only. */
+/** The console's sections; promos, settings and staff are for admins only. */
 export function ConsoleNav({ isAdmin }: { readonly isAdmin: boolean }): JSX.Element {
   const t = useTranslations("Ops.nav");
   const pathname = usePathname();
