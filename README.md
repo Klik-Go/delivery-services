@@ -70,13 +70,15 @@ Sign-in locally (phone OTP, staff invites and TOTP) needs Supabase Auth and a fe
 echo "SEND_SMS_HOOK_SECRET=v1,whsec_$(openssl rand -base64 32)" > supabase/.env   # gitignored; read by supabase start
 ```
 
-Then put the values from `pnpm exec supabase status -o env` (`API_URL`, `ANON_KEY`, `SERVICE_ROLE_KEY`, `DB_URL`) and the same `SEND_SMS_HOOK_SECRET` into `apps/web/.env.local` as `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `DATABASE_URL`/`DIRECT_URL` and `SEND_SMS_HOOK_SECRET`. Test phone numbers +639170000101 to +639170000110 always accept the code `123456` (no SMS is sent). Create the first admin with:
+Then put the values from `pnpm exec supabase status -o env` (`API_URL`, `ANON_KEY`, `SERVICE_ROLE_KEY`, `DB_URL`) and the same `SEND_SMS_HOOK_SECRET` into `apps/web/.env.local` as `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `DATABASE_URL`/`DIRECT_URL` and `SEND_SMS_HOOK_SECRET`. Test phone numbers +639170000101 to +639170000114, the seeded riders and customers, and the demo riders always accept the code `123456` locally (no SMS is sent; docs/DEMO.md). Create the first admin with:
 
 ```bash
 ADMIN_EMAIL=you@example.com pnpm bootstrap:admin
 ```
 
 Demo stores for showing the app (9 stores across the launch zones, promo codes, one owner account): `DEMO_OWNER_EMAIL=you@example.com pnpm demo:data` locally, or GitHub Actions → **Load demo data** for the hosted project (`DEMO_ACTION=hide` takes them off again; docs/OPEN_QUESTIONS.md Q28).
+
+Demo riders (10 invented riders: online, off shift, KYC applicants with placeholder documents, suspended, coaching): `pnpm demo:riders` locally, or GitHub Actions → **Load demo riders**. Every demo account, how it signs in and the data it has is listed in [`docs/DEMO.md`](docs/DEMO.md). To sign in as a seeded staff account locally: `STAFF_EMAIL=nena@seed.klikgo.test pnpm seed:staff-link`.
 
 For the hosted project, use GitHub Actions → **Bootstrap first admin** instead (needs the `SUPABASE_PROJECT_REF`, `SUPABASE_SERVICE_ROLE_KEY` and `DATABASE_URL` repository secrets; see `docs/OPEN_QUESTIONS.md` Q13 step 8). It prints a one-time link: open it straight away, then delete the run's logs.
 

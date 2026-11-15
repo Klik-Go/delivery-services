@@ -5,7 +5,8 @@
 -- Makati (pins checked against the PSA barangay boundaries).
 --
 -- No real personal data and no secrets: users are fake (@seed.klikgo.test, +63917000xxxx) and have
--- no passwords. Tests sign in by setting request.jwt.claims; Phase 2 adds test OTP numbers.
+-- no passwords. Tests sign in by setting request.jwt.claims; phone users sign in locally with the
+-- test code (supabase/config.toml) and staff through `pnpm seed:staff-link`. Accounts: docs/DEMO.md.
 -- Fixed UUIDs keep links between rows readable: 5eed0000-…-0000000000XY.
 
 do $seed$

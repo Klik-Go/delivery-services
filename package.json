@@ -25,7 +25,9 @@
     "db:generate": "turbo run db:generate",
     "test:db": "pnpm db:generate && pnpm --filter @klikgo/db --filter @klikgo/adapters --sequential test:db",
     "bootstrap:admin": "node --import tsx scripts/bootstrap-admin.ts",
-    "demo:data": "node --import tsx scripts/demo-data.ts"
+    "demo:data": "node --import tsx scripts/demo-data.ts",
+    "demo:riders": "node --import tsx scripts/demo-riders.ts",
+    "seed:staff-link": "node --import tsx scripts/seed-staff-link.ts"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.14.0",
