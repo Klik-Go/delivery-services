@@ -26,7 +26,9 @@
     "footer": "Klik Go · Made in the Philippines",
     "signIn": "Sign in",
     "signedInAs": "Signed in as {who}",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "orders": "Orders",
+    "rewards": "Rewards"
   },
   "Auth": {
     "signInTitle": "Sign in or sign up",
@@ -575,7 +577,8 @@
         "noFix": "Waiting for your rider's location…",
         "finding": "Finding a rider near the store…"
       },
-      "pin": "Your delivery PIN is <b>{pin}</b>. Tell it to your rider at the door, not before."
+      "pin": "Your delivery PIN is <b>{pin}</b>. Tell it to your rider at the door, not before.",
+      "allOrders": "All orders"
     },
     "devPay": {
       "title": "Test checkout",
@@ -666,7 +669,9 @@
       "applications": "Applications",
       "settings": "Settings",
       "staff": "Staff",
-      "label": "Console sections"
+      "label": "Console sections",
+      "tickets": "Low ratings",
+      "promos": "Promos"
     },
     "loading": "Loading…",
     "failed": "Something went wrong. Try again.",
@@ -859,6 +864,164 @@
       "pending": "To check",
       "approved": "Accepted",
       "rejected": "Rejected"
+    }
+  },
+  "Retention": {
+    "rating": {
+      "title": "How was your order?",
+      "lead": "Rate the store and your rider separately. You can change your rating for 24 hours.",
+      "editNote": "You can still change your rating for 24 hours after you gave it.",
+      "loading": "Loading…",
+      "failed": "We couldn't save your rating. Please try again.",
+      "stars": "Stars for {label}",
+      "starLabel": "{count, plural, one {# star} other {# stars}}",
+      "tags": "Quick tags",
+      "tag": {
+        "tasty": "Tasty",
+        "hot_food": "Hot food",
+        "well_packed": "Well packed",
+        "generous": "Generous serving",
+        "cold_food": "Food was cold",
+        "missing_item": "Missing item",
+        "wrong_item": "Wrong item",
+        "spilled": "Spilled",
+        "friendly": "Friendly",
+        "fast": "Fast",
+        "careful": "Careful with the food",
+        "followed_notes": "Followed my notes",
+        "late": "Late",
+        "rude": "Rude",
+        "hard_to_reach": "Hard to reach",
+        "ready_at_door": "Ready at the door",
+        "clear_pin": "Pin was right",
+        "polite": "Polite",
+        "hard_to_find": "Hard to find",
+        "no_answer": "Didn't answer"
+      },
+      "comment": "Anything else? (optional)",
+      "store": "The store: {name}",
+      "rider": "Your rider",
+      "riderNamed": "Your rider: {name}",
+      "send": "Send rating",
+      "update": "Update rating",
+      "saved": "Thanks! Your rating was saved.",
+      "closed": "Ratings for this order are closed.",
+      "thanks": "Thanks for rating this order."
+    },
+    "reorder": {
+      "button": "Order again",
+      "failed": "We couldn't load that order. Please try again.",
+      "nothing": "None of these items can be ordered right now.",
+      "missingTitle": "Some items can't be ordered again:",
+      "missingLine": "{quantity}× {name}",
+      "issue": {
+        "removed": "no longer on the menu",
+        "sold_out": "sold out today",
+        "choices_needed": "choices changed, pick again",
+        "invalid_choice": "choices changed, pick again",
+        "not_found": "no longer on the menu"
+      },
+      "toCart": "Go to cart"
+    },
+    "history": {
+      "title": "Your orders",
+      "loading": "Loading your orders…",
+      "failed": "We couldn't load your orders.",
+      "empty": "No orders yet.",
+      "browse": "Find a store",
+      "rate": "Rate this order",
+      "details": "Details",
+      "more": "Show more",
+      "rewards": "Rewards"
+    },
+    "rewards": {
+      "title": "Rewards",
+      "orders": "Your orders",
+      "loading": "Loading…",
+      "failed": "Something went wrong. Please try again.",
+      "referTitle": "Give {amount}, get {amount}",
+      "referLead": "Share your code. When a friend's first order is delivered, you both get {amount} off your next order.",
+      "share": "Share my code",
+      "copied": "Code copied.",
+      "shareText": "Order on Klik Go with my code {code} and get {amount} off after your first order!",
+      "friends": "{rewarded, plural, =0 {No friends joined yet} one {# friend joined} other {# friends joined}} · {pending} waiting for their first order",
+      "enterTitle": "Got a friend's code?",
+      "enterLead": "Enter it before your first order. You get {amount} off your next order once your first one is delivered.",
+      "codeLabel": "Friend's code",
+      "apply": "Use code",
+      "referred": {
+        "pending": "Your friend's code is in. Your {amount} reward comes after your first delivered order.",
+        "qualified": "Your first order is in. Your {amount} reward is on its way.",
+        "rewarded": "You got your {amount} welcome reward. Check your vouchers below.",
+        "void": "This referral didn't qualify."
+      },
+      "stampsTitle": "Stamp card",
+      "stampsLead": "Get a stamp for every delivered order of {min} or more. {goal} stamps = free delivery.",
+      "stampsCount": "{count} of {goal} stamps",
+      "vouchersTitle": "Your vouchers",
+      "noVouchers": "No vouchers yet.",
+      "freeDelivery": "Free delivery",
+      "amountOff": "{amount} off",
+      "used": "Used",
+      "until": "Use by {date}",
+      "use": "Use at checkout"
+    },
+    "riderRating": {
+      "title": "Rate your customers",
+      "lead": "Your ratings help us keep riders safe. Customers don't see them.",
+      "failed": "We couldn't save that. Please try again.",
+      "customer": "The customer",
+      "send": "Save rating",
+      "rate": "Rate customer",
+      "change": "Change rating"
+    },
+    "tickets": {
+      "title": "Low ratings",
+      "lead": "Orders rated 2 stars or less in your zones. Follow up, then note what you did.",
+      "loading": "Loading…",
+      "failed": "Something went wrong. Please try again.",
+      "empty": "Nothing to follow up.",
+      "tabs": {
+        "open": "To follow up",
+        "resolved": "Done"
+      },
+      "resolvedWith": "Done: {note}",
+      "noteLabel": "What did you do?",
+      "resolve": "Mark as done"
+    },
+    "promos": {
+      "title": "Promos",
+      "lead": "Campaign codes with limits. Referral and stamp-card vouchers are made automatically.",
+      "loading": "Loading…",
+      "failed": "Something went wrong. Please try again.",
+      "empty": "No campaigns yet.",
+      "newTitle": "New promo code",
+      "code": "Code (4–20 letters or digits)",
+      "type": "Kind",
+      "types": {
+        "fixed_off": "Amount off",
+        "percent_off": "Percent off",
+        "free_delivery": "Free delivery"
+      },
+      "amount": "Amount off (₱)",
+      "percent": "Percent off",
+      "cap": "Most it takes off (₱, optional)",
+      "min": "Minimum order (₱)",
+      "starts": "Starts",
+      "ends": "Ends",
+      "budget": "Total budget (₱, optional)",
+      "maxUses": "Total uses (optional)",
+      "perCustomer": "Uses per customer",
+      "firstOrders": "Only for a customer's first … orders (optional)",
+      "description": "Note for the team (optional)",
+      "abuseNote": "Uses per customer count the account, its phone number and the device together.",
+      "create": "Create promo",
+      "listTitle": "Campaigns",
+      "off": "off",
+      "used": "{count, plural, one {# use} other {# uses}} · {given} given",
+      "ofBudget": "of {budget}",
+      "switchOff": "Switch off",
+      "switchOn": "Switch on"
     }
   }
 }

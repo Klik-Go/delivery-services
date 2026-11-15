@@ -4,6 +4,15 @@ Agents add items here when a decision is blocked, docs conflict, or the plan cou
 
 ## Open
 
+### Q34. Rewards numbers and guards (decision taken; please confirm)
+- **Stamps:** one per delivered order of **₱150 or more** before fees (so tiny orders can't farm stamps); **10 stamps = one free delivery**. BUSINESS §4.2 gives "every 10th order" but no minimum.
+- **Referral reward:** **₱50 off** for both friends after the friend's first **delivered** order (cash orders count once delivered). Rewards are single-use vouchers that last **90 days**, rather than a wallet balance: no new money path, and they show up in Rewards with "Use at checkout".
+- **Referral guards:** codes only before a customer's first order; one referral per phone handset (device id); no reward when the first order goes to within **50 m** of the referrer's saved address or past drop-off. Phone numbers are already one per account.
+- **Promo abuse:** "once per customer" counts the account, its phone number and the device together. The device id is a random value the app keeps on the phone, stored only as a hash; clearing the browser makes a new one, so it is a deterrent, not proof.
+- **First-N-orders promos** (BUILD_PLAN lists "FirstNOrders" as a strategy) are an eligibility rule here, so any discount type can be limited to a customer's first N orders.
+- **Rider ratings of customers** are seen by admins and the rider only, never by the customer. Low ratings (2 or less) of anyone open a coordinator ticket.
+Tell us if any number should change or become a console setting.
+
 ### Q32. Console timers and the coaching rule (decision taken; please confirm)
 The board colours each live step against a target, amber at 80% and red at 100% (BUILD_PLAN): store confirmation **3 minutes**, cooking **the store's own prep time** (15 if none), pickup **10 minutes** after the food is ready, delivery **30 minutes** after pickup. Riders appear on the coaching list when their average rating is below **3.5** with at least **5** ratings (docs/BUSINESS.md §5.3 gives 3.5 but no minimum). Both are constants in `packages/core/src/ops` today; tell us if you want different numbers or want them editable as settings.
 

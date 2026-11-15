@@ -53,7 +53,7 @@ Before({ tags: "@payments or @ledger" }, function () {
 // the store is open all day for them (and restored afterwards).
 Before(
   {
-    tags: "@checkout or @payments or @ledger or @lifecycle or @sla or @dispatch or @rider or @ops",
+    tags: "@checkout or @payments or @ledger or @lifecycle or @sla or @dispatch or @rider or @ops or @retention",
   },
   async function (this: KlikWorld) {
     const id = await keepStore(this, STORE);

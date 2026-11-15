@@ -10,6 +10,8 @@ import { useCallback, useState, type JSX } from "react";
 import { FormError } from "@/components/auth/form-error";
 import { fetchData, postJson } from "@/lib/post-json";
 import { useLiveTopic } from "@/lib/realtime";
+import { RatingSheet } from "@/components/retention/rating-sheet";
+import { ReorderButton } from "@/components/retention/reorder-button";
 import { TrackingMap } from "./tracking-map";
 
 /** Statuses that still change without the customer doing anything (keep listening). */
@@ -176,15 +178,26 @@ export function OrderStatusView({
           <a href={o.checkoutUrl}>{t("payNow", { total: formatPeso(o.totalCentavos) })}</a>
         </Button>
       ) : null}
+      {o.status === "delivered" ? (
+        <>
+          <RatingSheet orderId={orderId} />
+          <ReorderButton orderId={orderId} merchantName={o.merchantName} variant="secondary" />
+        </>
+      ) : null}
       {o.canCancel ? (
         <Button variant="secondary" disabled={cancelling} onClick={() => void cancel()}>
           {t("cancel")}
         </Button>
       ) : null}
       {cancelError ? <FormError message={cancelError} /> : null}
-      <Link href="/" className="text-brand-800 font-semibold underline">
-        {t("home")}
-      </Link>
+      <div className="flex flex-wrap gap-4">
+        <Link href="/" className="text-brand-800 font-semibold underline">
+          {t("home")}
+        </Link>
+        <Link href="/orders" className="text-brand-800 font-semibold underline">
+          {t("allOrders")}
+        </Link>
+      </div>
     </div>
   );
 }

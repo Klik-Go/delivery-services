@@ -26,7 +26,9 @@
     "footer": "Klik Go · Gawa sa Pilipinas",
     "signIn": "Mag-sign in",
     "signedInAs": "Naka-sign in bilang {who}",
-    "signOut": "Mag-sign out"
+    "signOut": "Mag-sign out",
+    "orders": "Mga order",
+    "rewards": "Rewards"
   },
   "Auth": {
     "signInTitle": "Mag-sign in o mag-sign up",
@@ -575,7 +577,8 @@
         "noFix": "Hinihintay ang lokasyon ng rider mo…",
         "finding": "Naghahanap ng rider malapit sa tindahan…"
       },
-      "pin": "Ang delivery PIN mo ay <b>{pin}</b>. Sabihin ito sa rider mo pagdating sa pinto, hindi bago."
+      "pin": "Ang delivery PIN mo ay <b>{pin}</b>. Sabihin ito sa rider mo pagdating sa pinto, hindi bago.",
+      "allOrders": "Lahat ng order"
     },
     "devPay": {
       "title": "Test checkout",
@@ -666,7 +669,9 @@
       "applications": "Mga aplikasyon",
       "settings": "Settings",
       "staff": "Staff",
-      "label": "Mga bahagi ng console"
+      "label": "Mga bahagi ng console",
+      "tickets": "Mababang rating",
+      "promos": "Mga promo"
     },
     "loading": "Naglo-load…",
     "failed": "May nangyaring mali. Subukan ulit.",
@@ -859,6 +864,164 @@
       "pending": "Susuriin",
       "approved": "Tinanggap",
       "rejected": "Tinanggihan"
+    }
+  },
+  "Retention": {
+    "rating": {
+      "title": "Kumusta ang order mo?",
+      "lead": "I-rate nang hiwalay ang tindahan at ang rider mo. Puwede mo itong palitan sa loob ng 24 oras.",
+      "editNote": "Puwede mo pang palitan ang rating mo sa loob ng 24 oras mula nang ibigay mo.",
+      "loading": "Kinukuha…",
+      "failed": "Hindi namin na-save ang rating mo. Subukan ulit.",
+      "stars": "Mga bituin para sa {label}",
+      "starLabel": "{count, plural, one {# bituin} other {# bituin}}",
+      "tags": "Mabilisang tag",
+      "tag": {
+        "tasty": "Masarap",
+        "hot_food": "Mainit pa",
+        "well_packed": "Maayos ang balot",
+        "generous": "Sulit ang serving",
+        "cold_food": "Malamig na",
+        "missing_item": "May kulang",
+        "wrong_item": "Maling item",
+        "spilled": "Natapon",
+        "friendly": "Mabait",
+        "fast": "Mabilis",
+        "careful": "Maingat sa pagkain",
+        "followed_notes": "Sinunod ang bilin ko",
+        "late": "Late",
+        "rude": "Bastos",
+        "hard_to_reach": "Mahirap kontakin",
+        "ready_at_door": "Nakaabang sa pinto",
+        "clear_pin": "Tama ang pin",
+        "polite": "Magalang",
+        "hard_to_find": "Mahirap hanapin",
+        "no_answer": "Hindi sumasagot"
+      },
+      "comment": "May iba ka pa bang gustong sabihin? (opsyonal)",
+      "store": "Ang tindahan: {name}",
+      "rider": "Ang rider mo",
+      "riderNamed": "Ang rider mo: {name}",
+      "send": "Ipadala ang rating",
+      "update": "I-update ang rating",
+      "saved": "Salamat! Na-save ang rating mo.",
+      "closed": "Sarado na ang rating para sa order na ito.",
+      "thanks": "Salamat sa pag-rate ng order na ito."
+    },
+    "reorder": {
+      "button": "Umorder ulit",
+      "failed": "Hindi namin makuha ang order na iyon. Subukan ulit.",
+      "nothing": "Wala sa mga item na ito ang puwedeng orderin ngayon.",
+      "missingTitle": "May mga item na hindi na maoorder ulit:",
+      "missingLine": "{quantity}× {name}",
+      "issue": {
+        "removed": "wala na sa menu",
+        "sold_out": "ubos na ngayong araw",
+        "choices_needed": "nagbago ang mga pagpipilian, pumili ulit",
+        "invalid_choice": "nagbago ang mga pagpipilian, pumili ulit",
+        "not_found": "wala na sa menu"
+      },
+      "toCart": "Pumunta sa cart"
+    },
+    "history": {
+      "title": "Mga order mo",
+      "loading": "Kinukuha ang mga order mo…",
+      "failed": "Hindi namin makuha ang mga order mo.",
+      "empty": "Wala ka pang order.",
+      "browse": "Maghanap ng tindahan",
+      "rate": "I-rate ang order",
+      "details": "Detalye",
+      "more": "Ipakita pa",
+      "rewards": "Rewards"
+    },
+    "rewards": {
+      "title": "Rewards",
+      "orders": "Mga order mo",
+      "loading": "Kinukuha…",
+      "failed": "May mali. Subukan ulit.",
+      "referTitle": "Magbigay ng {amount}, makakuha ng {amount}",
+      "referLead": "I-share ang code mo. Kapag na-deliver ang unang order ng kaibigan mo, pareho kayong may {amount} na bawas sa susunod na order.",
+      "share": "I-share ang code ko",
+      "copied": "Nakopya ang code.",
+      "shareText": "Umorder sa Klik Go gamit ang code ko na {code} at makakuha ng {amount} na bawas pagkatapos ng unang order mo!",
+      "friends": "{rewarded, plural, =0 {Wala pang kaibigang sumali} one {# kaibigan ang sumali} other {# kaibigan ang sumali}} · {pending} naghihintay ng unang order",
+      "enterTitle": "May code ka mula sa kaibigan?",
+      "enterLead": "Ilagay ito bago ang unang order mo. May {amount} kang bawas sa susunod na order kapag na-deliver ang una.",
+      "codeLabel": "Code ng kaibigan",
+      "apply": "Gamitin ang code",
+      "referred": {
+        "pending": "Nailagay na ang code ng kaibigan mo. Darating ang {amount} mong reward pagkatapos ma-deliver ang unang order mo.",
+        "qualified": "Pasok na ang unang order mo. Parating na ang {amount} mong reward.",
+        "rewarded": "Natanggap mo na ang {amount} mong welcome reward. Tingnan ang mga voucher mo sa ibaba.",
+        "void": "Hindi pumasa ang referral na ito."
+      },
+      "stampsTitle": "Stamp card",
+      "stampsLead": "May stamp ka sa bawat na-deliver na order na {min} pataas. {goal} stamp = libreng delivery.",
+      "stampsCount": "{count} sa {goal} stamp",
+      "vouchersTitle": "Mga voucher mo",
+      "noVouchers": "Wala ka pang voucher.",
+      "freeDelivery": "Libreng delivery",
+      "amountOff": "{amount} bawas",
+      "used": "Nagamit na",
+      "until": "Gamitin bago ang {date}",
+      "use": "Gamitin sa checkout"
+    },
+    "riderRating": {
+      "title": "I-rate ang mga customer mo",
+      "lead": "Tumutulong ang rating mo para manatiling ligtas ang mga rider. Hindi ito nakikita ng customer.",
+      "failed": "Hindi namin na-save iyan. Subukan ulit.",
+      "customer": "Ang customer",
+      "send": "I-save ang rating",
+      "rate": "I-rate ang customer",
+      "change": "Palitan ang rating"
+    },
+    "tickets": {
+      "title": "Mababang rating",
+      "lead": "Mga order na may 2 bituin pababa sa mga zone mo. Sundan ito, tapos isulat ang ginawa mo.",
+      "loading": "Kinukuha…",
+      "failed": "May mali. Subukan ulit.",
+      "empty": "Walang kailangang sundan.",
+      "tabs": {
+        "open": "Sundan",
+        "resolved": "Tapos na"
+      },
+      "resolvedWith": "Tapos na: {note}",
+      "noteLabel": "Ano ang ginawa mo?",
+      "resolve": "Markahang tapos"
+    },
+    "promos": {
+      "title": "Mga promo",
+      "lead": "Mga campaign code na may limit. Kusa nang ginagawa ang mga voucher mula sa referral at stamp card.",
+      "loading": "Kinukuha…",
+      "failed": "May mali. Subukan ulit.",
+      "empty": "Wala pang campaign.",
+      "newTitle": "Bagong promo code",
+      "code": "Code (4–20 letra o numero)",
+      "type": "Uri",
+      "types": {
+        "fixed_off": "Halagang bawas",
+        "percent_off": "Porsiyentong bawas",
+        "free_delivery": "Libreng delivery"
+      },
+      "amount": "Halagang bawas (₱)",
+      "percent": "Porsiyentong bawas",
+      "cap": "Pinakamalaking bawas (₱, opsyonal)",
+      "min": "Pinakamababang order (₱)",
+      "starts": "Simula",
+      "ends": "Katapusan",
+      "budget": "Kabuuang budget (₱, opsyonal)",
+      "maxUses": "Kabuuang gamit (opsyonal)",
+      "perCustomer": "Gamit bawat customer",
+      "firstOrders": "Para lang sa unang … order ng customer (opsyonal)",
+      "description": "Tala para sa team (opsyonal)",
+      "abuseNote": "Sabay na binibilang sa gamit bawat customer ang account, numero ng telepono at device.",
+      "create": "Gumawa ng promo",
+      "listTitle": "Mga campaign",
+      "off": "naka-off",
+      "used": "{count, plural, one {# gamit} other {# gamit}} · {given} naibigay",
+      "ofBudget": "sa {budget}",
+      "switchOff": "I-off",
+      "switchOn": "I-on"
     }
   }
 }

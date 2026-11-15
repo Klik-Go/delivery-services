@@ -10,6 +10,8 @@ export interface JobsRun {
   readonly refundsFailed: number;
   /** Offers that expired, offers made and orders flagged for the coordinator. */
   readonly dispatch: DispatchTick;
+  /** Delivered orders whose stamps and referral rewards were worked out. */
+  readonly rewards: number;
 }
 
 const NO_DISPATCH: DispatchTick = { expired: 0, offered: 0, flagged: 0 };
@@ -28,6 +30,7 @@ export class BackgroundJobs {
       lifecycle: IOrderLifecycleRepository;
       refunds: RefundService;
       dispatch?: { tick(): Promise<DispatchTick> };
+      rewards?: { processDelivered(limit: number): Promise<{ readonly processed: number }> };
       logger: Logger;
       batchSize?: number;
     },
@@ -53,16 +56,39 @@ export class BackgroundJobs {
         });
       }
     }
-    if (notifications + refundsStarted + refundsFailed + dispatch.offered + dispatch.expired > 0) {
+    const rewards = await this.rewardsRun(limit);
+    if (
+      notifications +
+        refundsStarted +
+        refundsFailed +
+        dispatch.offered +
+        dispatch.expired +
+        rewards >
+      0
+    ) {
       this.deps.logger.info("jobs.run", {
         notifications,
         refundsStarted,
         refundsFailed,
         offersExpired: dispatch.expired,
         offersMade: dispatch.offered,
+        rewards,
       });
     }
-    return { notifications, refundsStarted, refundsFailed, dispatch };
+    return { notifications, refundsStarted, refundsFailed, dispatch, rewards };
+  }
+
+  /** Rewards can wait for the next run, so a failure is logged and the rest carries on. */
+  private async rewardsRun(limit: number): Promise<number> {
+    if (!this.deps.rewards) return 0;
+    try {
+      return (await this.deps.rewards.processDelivered(limit)).processed;
+    } catch (error) {
+      this.deps.logger.error("jobs.rewards_failed", {
+        err: error instanceof Error ? error.name : "unknown",
+      });
+      return 0;
+    }
   }
 
   /** Dispatch runs first (offers are time-critical) and a failure there must not stop the rest. */

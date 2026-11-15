@@ -32,3 +32,4 @@ export * from "./notifications/in-app-sender";
 export * from "./notifications/sms-notification-sender";
 export * from "./notifications/web-push-sender";
 export * from "./repositories/prisma-notifications";
+export * from "./repositories/prisma-retention-repositories";

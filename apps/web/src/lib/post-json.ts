@@ -1,3 +1,5 @@
+import { deviceId } from "./device-id";
+
 /** Outcome of a BFF call from the browser: the `data` payload or the error message to show. */
 export type PostResult<T> =
   { ok: true; data: T } | { ok: false; status: number; code: string; message: string };
@@ -11,15 +13,17 @@ export async function requestJson<T>(
   headers: Readonly<Record<string, string>> = {},
 ): Promise<PostResult<T>> {
   try {
+    const device = deviceId();
+    const sent = device ? { "x-device-id": device, ...headers } : headers;
     const isForm = body instanceof FormData;
     const response = await fetch(path, {
       method,
       ...(body === undefined
-        ? { headers }
+        ? { headers: sent }
         : isForm
-          ? { headers, body }
+          ? { headers: sent, body }
           : {
-              headers: { ...headers, "content-type": "application/json" },
+              headers: { ...sent, "content-type": "application/json" },
               body: JSON.stringify(body),
             }),
     });

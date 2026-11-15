@@ -31,6 +31,7 @@ erDiagram
   zones ||--o{ orders : "zone_id"
   auth_users ||--o| profiles : "id"
   profiles ||--o{ promo_redemptions : "user_id"
+  profiles |o--o{ promos : "owner_id"
   zones |o--o{ promos : "zone_id"
   profiles ||--o{ ratings : "from_user_id"
   profiles ||--o| referrals : "referee_id"
@@ -39,6 +40,8 @@ erDiagram
   profiles |o--o{ rider_kyc_documents : "reviewed_by"
   profiles ||--o| riders : "user_id"
   zones ||--o{ riders : "zone_id"
+  profiles |o--o{ support_tickets : "resolved_by"
+  zones ||--o{ support_tickets : "zone_id"
   profiles |o--o{ user_roles : "granted_by"
   merchants |o--o{ user_roles : "merchant_id"
   profiles ||--o{ user_roles : "user_id"
@@ -53,6 +56,9 @@ erDiagram
     profile_status status
     timestamptz created_at
     timestamptz updated_at
+    numeric rating_avg
+    int4 rating_count
+    text referral_code UK
   }
   user_roles {
     uuid id PK
@@ -313,6 +319,10 @@ erDiagram
   orders |o--o{ referrals : "qualifying_order_id"
   orders ||--o{ refunds : "order_id"
   orders |o--o{ rider_location_breadcrumbs : "order_id"
+  orders ||--o{ support_tickets : "order_id"
+  ratings |o--o| support_tickets : "rating_id"
+  profiles |o--o{ support_tickets : "resolved_by"
+  zones ||--o{ support_tickets : "zone_id"
   orders {
     uuid id PK
     text code UK
@@ -360,6 +370,7 @@ erDiagram
     timestamptz dispatch_flagged_at
     timestamptz arrived_store_at
     text delivery_proof_path
+    timestamptz rewards_processed_at
   }
   order_items {
     uuid id PK
@@ -405,6 +416,19 @@ erDiagram
     app_role author_role
     text body
     timestamptz created_at
+  }
+  support_tickets {
+    uuid id PK
+    text kind
+    text status
+    uuid order_id FK
+    uuid zone_id FK
+    uuid rating_id FK, UK
+    text summary
+    timestamptz created_at
+    timestamptz resolved_at
+    uuid resolved_by FK
+    text resolution
   }
 ```
 
@@ -499,18 +523,23 @@ erDiagram
   profiles ||--o{ loyalty_stamps : "customer_id"
   orders ||--o| loyalty_stamps : "order_id"
   orders |o--o{ loyalty_stamps : "redeemed_order_id"
+  promos |o--o{ loyalty_stamps : "voucher_promo_id"
   orders |o--o{ notifications : "order_id"
   profiles ||--o{ notifications : "user_id"
   orders ||--o| promo_redemptions : "order_id"
   promos ||--o{ promo_redemptions : "promo_id"
   profiles ||--o{ promo_redemptions : "user_id"
   merchants |o--o{ promos : "merchant_id"
+  profiles |o--o{ promos : "owner_id"
   zones |o--o{ promos : "zone_id"
   profiles ||--o{ ratings : "from_user_id"
   orders ||--o{ ratings : "order_id"
   orders |o--o{ referrals : "qualifying_order_id"
   profiles ||--o| referrals : "referee_id"
+  promos |o--o{ referrals : "referee_promo_id"
   profiles ||--o{ referrals : "referrer_id"
+  promos |o--o{ referrals : "referrer_promo_id"
+  ratings |o--o| support_tickets : "rating_id"
   waitlist_signups {
     uuid id PK
     text name
@@ -531,6 +560,7 @@ erDiagram
     text_array tags
     text comment
     timestamptz created_at
+    timestamptz updated_at
   }
   promos {
     uuid id PK
@@ -551,6 +581,11 @@ erDiagram
     timestamptz created_at
     timestamptz updated_at
     bool is_featured
+    int4 budget_centavos
+    int4 first_orders
+    uuid owner_id FK
+    text source
+    text description
   }
   promo_redemptions {
     uuid id PK
@@ -559,6 +594,8 @@ erDiagram
     uuid order_id FK, UK
     int4 discount_centavos
     timestamptz created_at
+    text phone_hash
+    text device_hash
   }
   referrals {
     uuid id PK
@@ -570,6 +607,10 @@ erDiagram
     int4 reward_centavos
     timestamptz created_at
     timestamptz qualified_at
+    text device_hash
+    text void_reason
+    uuid referrer_promo_id FK
+    uuid referee_promo_id FK
   }
   loyalty_stamps {
     uuid id PK
@@ -578,6 +619,7 @@ erDiagram
     timestamptz created_at
     timestamptz redeemed_at
     uuid redeemed_order_id FK
+    uuid voucher_promo_id FK
   }
   device_push_subscriptions {
     uuid id PK
@@ -673,14 +715,15 @@ Role helpers live in the `private` schema (`has_role`, `is_admin`, `is_merchant_
 | `payouts` | on | `payouts_select` (select · authenticated) |
 | `profiles` | on | `profiles_select_own` (select · authenticated)<br>`profiles_select_zone_riders` (select · authenticated)<br>`profiles_update_own` (update · authenticated) |
 | `promo_redemptions` | on | `promo_redemptions_select` (select · authenticated) |
-| `promos` | on | `promos_select_admin` (select · authenticated) |
-| `ratings` | on | `ratings_insert_customer` (insert · authenticated)<br>`ratings_select` (select · authenticated) |
+| `promos` | on | `promos_select_admin` (select · authenticated)<br>`promos_select_owner` (select · authenticated) |
+| `ratings` | on | `ratings_select` (select · authenticated) |
 | `referrals` | on | `referrals_select` (select · authenticated) |
 | `refunds` | on | `refunds_select` (select · authenticated) |
 | `rider_kyc_documents` | on | `rider_kyc_insert_self` (insert · authenticated)<br>`rider_kyc_select_admin` (select · authenticated) |
 | `rider_location_breadcrumbs` | on | `breadcrumbs_insert_self` (insert · authenticated)<br>`breadcrumbs_select` (select · authenticated) |
 | `rider_locations` | on | `rider_locations_insert_self` (insert · authenticated)<br>`rider_locations_select` (select · authenticated)<br>`rider_locations_select_customer_delivery` (select · authenticated)<br>`rider_locations_update_self` (update · authenticated) |
 | `riders` | on | `riders_select` (select · authenticated)<br>`riders_select_customer_delivery` (select · authenticated)<br>`riders_update_self` (update · authenticated) |
+| `support_tickets` | on | `support_tickets_select_ops` (select · authenticated) |
 | `user_roles` | on | `user_roles_select` (select · authenticated) |
 | `waitlist_signups` | on | `waitlist_signups_admin_select` (select · authenticated) |
 | `webhook_events` | on | none: server only |

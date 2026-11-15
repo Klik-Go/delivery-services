@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import type {
   BoardOrder,
   Centavos,
+  CreateOrderResult,
   IOrderLifecycleRepository,
   IOrderRepository,
   IPaymentRepository,
@@ -111,6 +112,18 @@ const ORDER_INCLUDE = {
 } as const;
 
 /** True when a database error is a unique violation of `constraint`. */
+const PROMO_REFUSALS: Readonly<Record<string, string>> = {
+  promo_used_up: "That promo code has been used up.",
+  promo_already_used: "You have already used that promo code.",
+  promo_not_yours: "That promo code is not valid right now.",
+};
+
+function promoRefusal(error: unknown): string | null {
+  const text = error instanceof Error ? error.message : String(error);
+  const key = Object.keys(PROMO_REFUSALS).find((k) => text.includes(k));
+  return key ? (PROMO_REFUSALS[key] ?? null) : null;
+}
+
 function isUniqueViolation(error: unknown, constraint: string): boolean {
   const text = error instanceof Error ? error.message : String(error);
   return (text.includes("23505") || /unique/i.test(text)) && text.includes(constraint);
@@ -172,9 +185,9 @@ export class PrismaOrderRepository
     return row ? toOrder(row) : null;
   }
 
-  async create(order: NewOrder): Promise<{ id: string; code: string } | null> {
+  async create(order: NewOrder): Promise<CreateOrderResult> {
     try {
-      return await this.prisma.$transaction(async (tx) => {
+      const created = await this.prisma.$transaction(async (tx) => {
         await setActor(tx, order.customerId, "customer", { via: "checkout" });
         const address = {
           label: order.address.label,
@@ -220,13 +233,19 @@ export class PrismaOrderRepository
               user_id: order.customerId,
               order_id: created.id,
               discount_centavos: order.promo.discountCentavos,
+              phone_hash: order.promo.phoneHash,
+              device_hash: order.promo.deviceHash,
             },
           });
         }
         return created;
       });
+      return { kind: "created", id: created.id, code: created.code };
     } catch (error) {
-      if (isUniqueViolation(error, "orders_customer_idempotency_key")) return null;
+      if (isUniqueViolation(error, "orders_customer_idempotency_key")) return { kind: "duplicate" };
+      // The database's promo guard (private.guard_promo_redemption) refused under its lock.
+      const refused = promoRefusal(error);
+      if (refused) return { kind: "promo_refused", reason: refused };
       throw error;
     }
   }

@@ -23,6 +23,7 @@ export interface PromoRecord {
   readonly id: string;
   readonly code: string;
   readonly type: PromoType;
+  readonly description: string | null;
   readonly discountBps: number | null;
   readonly discountCentavos: Centavos | null;
   readonly maxDiscountCentavos: Centavos | null;
@@ -30,18 +31,36 @@ export interface PromoRecord {
   readonly startsAt: Date;
   readonly endsAt: Date;
   readonly maxRedemptions: number | null;
+  /** Total discount the promo may give away; null for no peso budget. */
+  readonly budgetCentavos: Centavos | null;
   readonly perUserLimit: number;
+  /** Usable only on the customer's first N delivered orders; null for any order. */
+  readonly firstOrders: number | null;
   readonly zoneId: string | null;
   readonly merchantId: string | null;
+  /** A personal voucher's owner (referral or loyalty reward); null for campaign codes. */
+  readonly ownerId: string | null;
+  readonly source: "campaign" | "referral" | "loyalty";
   readonly fundedBy: "platform" | "merchant";
   readonly isActive: boolean;
-  /** Redemptions so far, by everyone and by this customer. */
+  /** Redemptions so far by everyone, and the discount they took. */
   readonly redemptions: number;
-  readonly redemptionsByUser: number;
+  readonly discountGivenCentavos: Centavos;
+  /** Redemptions by this customer: the account, its phone number or its device. */
+  readonly redemptionsByCustomer: number;
+}
+
+/** Who is using a promo, for the per-customer count. */
+export interface PromoCustomer {
+  readonly userId: string;
+  readonly phoneHash: string | null;
+  readonly deviceHash: string | null;
 }
 
 export interface IPromoRepository {
-  findByCode(code: string, userId: string): Promise<PromoRecord | null>;
+  findByCode(code: string, customer: PromoCustomer): Promise<PromoRecord | null>;
+  /** Orders this customer has had delivered. */
+  deliveredOrders(userId: string): Promise<number>;
 }
 
 // ---------------------------------------------------------------------------
@@ -80,8 +99,23 @@ export interface NewOrder {
   readonly idempotencyKey: string;
   readonly requestHash: string;
   readonly lines: readonly NewOrderLine[];
-  readonly promo: { readonly promoId: string; readonly discountCentavos: Centavos } | null;
+  readonly promo: {
+    readonly promoId: string;
+    readonly discountCentavos: Centavos;
+    readonly phoneHash: string | null;
+    readonly deviceHash: string | null;
+  } | null;
 }
+
+/**
+ * What storing a new order did: created it, found that a parallel request with the same
+ * Idempotency-Key won, or the database refused the promo (used up, or already used by this
+ * customer, phone or device in the meantime).
+ */
+export type CreateOrderResult =
+  | { readonly kind: "created"; readonly id: string; readonly code: string }
+  | { readonly kind: "duplicate" }
+  | { readonly kind: "promo_refused"; readonly reason: string };
 
 /** A payment row as checkout and webhooks see it. */
 export interface PaymentRecord {
@@ -149,10 +183,9 @@ export interface IOrderRepository {
   findByIdempotencyKey(customerId: string, key: string): Promise<OrderRecord | null>;
   /**
    * Creates the order, its lines and the promo redemption in one transaction (the database writes
-   * the first order_events row). Returns null when another request with the same customer and
-   * Idempotency-Key won the race; the caller then reads that order.
+   * the first order_events row). The database checks the promo again under a lock.
    */
-  create(order: NewOrder): Promise<{ readonly id: string; readonly code: string } | null>;
+  create(order: NewOrder): Promise<CreateOrderResult>;
   attachPayment(orderId: string, payment: NewPayment): Promise<void>;
 }
 

@@ -79,7 +79,7 @@ describeDb("lifecycle and notification repositories (local Supabase, seed data)"
       promo: null,
     };
     const created = await orders.create(order);
-    if (!created) throw new Error("order not created");
+    if (created.kind !== "created") throw new Error("order not created");
     return created.id;
   }
 

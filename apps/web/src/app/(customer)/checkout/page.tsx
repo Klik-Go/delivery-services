@@ -4,6 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import type { JSX } from "react";
+import { PromoCodeSchema } from "@klikgo/types";
 import { CheckoutView, type CheckoutAddressDraft } from "@/components/customer/checkout-view";
 import { getSessionUser } from "@/server/auth/session";
 import { getContainer } from "@/server/container";
@@ -16,9 +17,14 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /** Single-screen checkout: address, time, payment, promo, tip, then "Place order". */
-export default async function CheckoutPage(): Promise<JSX.Element> {
+export default async function CheckoutPage({
+  searchParams,
+}: {
+  readonly searchParams: Promise<Record<string, string | string[] | undefined>>;
+}): Promise<JSX.Element> {
   const user = await getSessionUser();
   if (!user) redirect("/auth/sign-in?next=/checkout");
+  const promo = PromoCodeSchema.safeParse((await searchParams).promo);
   const [t, location, saved] = await Promise.all([
     getTranslations("Customer.checkout"),
     readDeliveryLocation(),
@@ -50,6 +56,7 @@ export default async function CheckoutPage(): Promise<JSX.Element> {
       <CheckoutView
         dropoff={location?.location ?? preferred?.location ?? null}
         initialAddress={address}
+        initialPromo={promo.success ? promo.data : null}
       />
     </main>
   );

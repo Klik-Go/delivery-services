@@ -33,7 +33,21 @@ export default async function HomePage(): Promise<JSX.Element> {
         </div>
         <nav aria-label="Account" className="flex items-center gap-2">
           {user ? (
-            <SignOutButton label={tHome("signOut")} />
+            <>
+              <Link
+                href="/orders"
+                className="text-brand-800 min-h-tap inline-flex items-center px-2 font-semibold underline"
+              >
+                {tHome("orders")}
+              </Link>
+              <Link
+                href="/rewards"
+                className="text-brand-800 min-h-tap inline-flex items-center px-2 font-semibold underline"
+              >
+                {tHome("rewards")}
+              </Link>
+              <SignOutButton label={tHome("signOut")} />
+            </>
           ) : (
             <Link
               href="/auth/sign-in"

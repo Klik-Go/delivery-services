@@ -34,6 +34,7 @@ const DOMAINS = [
       "order_status_transitions",
       "dispatch_offers",
       "order_support_notes",
+      "support_tickets",
     ],
   ],
   [

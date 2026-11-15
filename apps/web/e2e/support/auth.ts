@@ -11,12 +11,14 @@ export const E2E_PHONES = {
     rider: "+639170000107",
     tracker: "+639170000111",
     applicant: "+639170000113",
+    regular: "+639170000115",
   },
   "desktop-chrome": {
     customer: "+639170000106",
     rider: "+639170000108",
     tracker: "+639170000112",
     applicant: "+639170000114",
+    regular: "+639170000116",
   },
 } as const;
 export const TEST_OTP_CODE = "123456";

@@ -154,32 +154,27 @@ describeDb("row-level security: what each role may change", () => {
     expect(theirs).toMatch(/row-level security/);
   });
 
-  it("a customer can rate a store for their own delivered order only", async () => {
-    const ok = await asUser(db(), w.users.customer1, () =>
-      db().query(
-        `insert into public.ratings (order_id, from_user_id, target_type, target_id, score) values ($1, $2, 'rider', $3, 5)`,
-        [w.order1, w.users.customer1, w.riders.A1],
-      ),
-    );
-    expect(ok.rowCount).toBe(1);
-    const notDelivered = await asUser(db(), w.users.customer1, () =>
-      failureOf(db(), () =>
-        db().query(
-          `insert into public.ratings (order_id, from_user_id, target_type, target_id, score) values ($1, $2, 'merchant', $3, 1)`,
-          [w.order4, w.users.customer1, w.merchantA],
+  it("ratings and support tickets are written by the server only, never by a client", async () => {
+    for (const user of [w.users.customer1, w.users.riderA1, w.users.admin]) {
+      const rating = await asUser(db(), user, () =>
+        failureOf(db(), () =>
+          db().query(
+            `insert into public.ratings (order_id, from_user_id, target_type, target_id, score) values ($1, $2, 'merchant', $3, 5)`,
+            [w.order1, user, w.merchantA],
+          ),
         ),
-      ),
-    );
-    expect(notDelivered).toMatch(/row-level security/);
-    const someoneElses = await asUser(db(), w.users.customer2, () =>
-      failureOf(db(), () =>
-        db().query(
-          `insert into public.ratings (order_id, from_user_id, target_type, target_id, score) values ($1, $2, 'merchant', $3, 1)`,
-          [w.order1, w.users.customer2, w.merchantA],
+      );
+      expect(rating).toMatch(/permission denied/);
+      const ticket = await asUser(db(), user, () =>
+        failureOf(db(), () =>
+          db().query(
+            `insert into public.support_tickets (kind, order_id, zone_id, summary) values ('low_rating', $1, $2, 'x')`,
+            [w.order1, w.zoneA],
+          ),
         ),
-      ),
-    );
-    expect(someoneElses).toMatch(/row-level security/);
+      );
+      expect(ticket).toMatch(/permission denied/);
+    }
   });
 
   it("people manage their own push subscriptions and mark their own notifications read", async () => {

@@ -19,8 +19,8 @@ Phases are defined in `docs/BUILD_PLAN.md` §6. Agents update this file in every
 | 6.2 | Follow-up: notifications never fail an order | ✅ Done (merged) | [Klik-Go/delivery-services#22](https://github.com/Klik-Go/delivery-services/pull/22) | Found when production checkout returned 500 (database not yet migrated) |
 | 7 | Rider app, dispatch, live tracking | ✅ Done (merged) | [Klik-Go/delivery-services#23](https://github.com/Klik-Go/delivery-services/pull/23) | Owner: rider sign-in needs SMS (Q30); rider pay rule (Q29); Vault secrets from Q25 now also drive dispatch |
 | 8 | Coordinator and Admin console | ✅ Done (merged) | [Klik-Go/delivery-services#24](https://github.com/Klik-Go/delivery-services/pull/24) | Owner: SLA targets and coaching rule (Q32); template editor moved to Phase 11 (Q33) |
-| 8.1 | Follow-up: demo riders + demo accounts reference | 🟡 In progress (PR open) | [Klik-Go/delivery-services#25](https://github.com/Klik-Go/delivery-services/pull/25) | Owner: run **Load demo riders**, add the test numbers in Supabase (docs/DEMO.md §4.2) |
-| 9 | Ratings, reorder, promos, referrals, loyalty | ⬜ Not started | | |
+| 8.1 | Follow-up: demo riders + demo accounts reference | ✅ Done (merged) | [Klik-Go/delivery-services#25](https://github.com/Klik-Go/delivery-services/pull/25) | Owner: run **Load demo riders**, add the test numbers in Supabase (docs/DEMO.md §4.2) |
+| 9 | Ratings, reorder, promos, referrals, loyalty | 🟡 In progress (PR open) | branch `phase-9-retention` | Owner: confirm stamp minimum, voucher life and referral guards (Q34) |
 | 10 | Finance: settlements, payouts, reports | ⬜ Not started | | |
 | 11 | Hardening: security, privacy, observability | ⬜ Not started | | |
 | 12 | Pilot launch | ⬜ Not started | | |
@@ -218,6 +218,7 @@ Owner request 2026-11-15: "create another set of seeder with a placeholder data 
 - [x] `pnpm seed:staff-link` (local only): one-time set-password link for a seeded staff account (they have no password).
 - [x] `features/demo-riders.feature`: online riders near a demo store in every zone, KYC queue with five placeholder documents per applicant (opened through the 60-second link), suspended reason and coaching list in the console, a demo rider signs in with the test number, reload resets an approved applicant, nothing is duplicated, hide leaves no rider online or approved.
 - [x] `docs/DEMO.md`: every demo account per role (local seed, demo stores, demo riders), how each signs in locally and on the hosted app, and the data each has.
+- [x] Merged ([Klik-Go/delivery-services#25](https://github.com/Klik-Go/delivery-services/pull/25)).
 - [ ] Owner: run **Load demo riders** with `action: load`, then add the printed numbers as Supabase test phone numbers (docs/DEMO.md §4.2).
 
 ### Phase 8 — Coordinator and admin console (branch `phase-8-ops-console`)
@@ -236,6 +237,24 @@ Deliverables:
 - [ ] Owner: confirm SLA targets and the coaching rule (Q32).
 
 Next: Phase 9, ratings, reorder, promos, referrals and loyalty (after review).
+
+### Phase 9 — Ratings, reorder, promos, referrals, loyalty (branch `phase-9-retention`)
+Acceptance (docs/BUILD_PLAN.md §6, Gherkin in `features/retention/`):
+- [x] Promo abuse: the same phone or device can't use a code twice, even from another account (`promos.feature`; the database guard `private.guard_promo_redemption` checks again under a lock, `retention.db.test.ts` and the repository test prove it).
+- [x] A rating is given once per order and target within 7 days of delivery, changeable for 24 hours (`ratings.feature`; unique per order, rater and target in the database).
+- [x] Reorder prices the same items today and flags sold-out, removed or changed items (`reorder.feature`).
+
+Deliverables:
+- [x] Ratings: the customer rates the store and the rider separately (stars, tags, comment); the rider rates the customer; averages kept by the database for stores, riders and customers; a rating of 2 or less opens a ticket for the zone's coordinator (`/admin/tickets`, resolve audited).
+- [x] Order history `/orders` with "Rate this order" and "Order again" (cart filled at today's prices; missing items listed).
+- [x] Promos: discount strategies (percent with cap, fixed, free delivery with cap) and eligibility rules (window, owner, zone, store, first N orders, minimum, total uses, peso budget, uses per account/phone/device); admin campaign page `/admin/promos` (create, switch off, uses and pesos given; audited).
+- [x] Referrals: a code per customer, entered before the first order; ₱50 voucher for both after the friend's first delivered order; guards for own code, existing customers, one per device, same address (void).
+- [x] Loyalty: a stamp per delivered order of ₱150+, 10 stamps → free-delivery voucher; `/rewards` page (code, stamp card, vouchers with "Use at checkout"). Rewards are personal promo codes, so checkout and the ledger need no new money path.
+- [x] Rider app: "Rate your customers" for the last 7 days.
+- [x] Migration `20261115100000_retention.sql` (rating edits and averages, support tickets + RLS, promo budget/first orders/owner, redemption phone/device hashes and guard, referral codes and device rule, loyalty vouchers, `orders.rewards_processed_at`) with DB tests; Prisma schema + ERD regenerated; rewards run with the background jobs.
+- [ ] Owner: confirm the numbers in Q34.
+
+Next: Phase 10, finance: settlements, payouts and reports (after review).
 
 ## Business validation (parallel, doc §8)
 - [ ] 20–30 customer interviews in the pilot barangay

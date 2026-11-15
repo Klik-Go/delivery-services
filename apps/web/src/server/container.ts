@@ -26,6 +26,11 @@ import {
   PrismaSettings,
   PrismaStaff,
   PrismaZoneAdmin,
+  PrismaOrderHistoryRepository,
+  PrismaPromoAdminRepository,
+  PrismaRatingRepository,
+  PrismaRewardsRepository,
+  PrismaTicketRepository,
   SupabasePhotoStorage,
   UnconfiguredMenuParser,
   UnconfiguredDeliveryProofStorage,
@@ -90,6 +95,10 @@ import {
   PaymentGatewayRegistry,
   PaymentWebhookService,
   PromoService,
+  OrderHistoryService,
+  RatingService,
+  RetentionAdminService,
+  RewardsService,
   RefundService,
   AdminOrderService,
   BackgroundJobs,
@@ -175,6 +184,11 @@ export interface Container {
   readonly staffAdmin: StaffAdminService;
   /** Applying to ride and uploading KYC documents. */
   readonly riderOnboarding: RiderOnboardingService;
+  /** Phase 9: ratings, order history and reorder, referrals and loyalty, tickets and campaigns. */
+  readonly ratings: RatingService;
+  readonly orderHistory: OrderHistoryService;
+  readonly rewards: RewardsService;
+  readonly retentionAdmin: RetentionAdminService;
   /** Dispatch ticks, queued messages and unfinished refunds (POST /api/internal/jobs). */
   readonly jobs: BackgroundJobs;
   readonly pushSubscriptions: PushSubscriptionService;
@@ -280,6 +294,13 @@ export function createContainer(env: ServerEnv): Container {
     logger,
   });
   const consoleAccess = new ConsoleAccess(authz, new PrismaAuditLog(prisma));
+  const hasher = new NodeContentHasher();
+  const rewards = new RewardsService({
+    rewards: new PrismaRewardsRepository(prisma),
+    hasher,
+    clock,
+    logger,
+  });
   const kycStorage = admin ? new SupabaseKycStorage(admin, logger) : new UnconfiguredKycStorage();
   const refunds = new RefundService({
     orders: orderStore,
@@ -394,7 +415,7 @@ export function createContainer(env: ServerEnv): Container {
       promos: new PromoService({ promos: new PrismaPromoRepository(prisma), clock }),
       orders: orderStore,
       gateways,
-      hasher: new NodeContentHasher(),
+      hasher,
       authz,
       clock,
       logger,
@@ -457,7 +478,25 @@ export function createContainer(env: ServerEnv): Container {
       authz,
       clock,
     }),
-    jobs: new BackgroundJobs({ notifications, lifecycle: orderStore, refunds, dispatch, logger }),
+    ratings: new RatingService({ ratings: new PrismaRatingRepository(prisma), clock, logger }),
+    orderHistory: new OrderHistoryService({
+      history: new PrismaOrderHistoryRepository(prisma),
+      pricing,
+    }),
+    rewards,
+    retentionAdmin: new RetentionAdminService({
+      access: consoleAccess,
+      tickets: new PrismaTicketRepository(prisma),
+      promos: new PrismaPromoAdminRepository(prisma),
+    }),
+    jobs: new BackgroundJobs({
+      notifications,
+      lifecycle: orderStore,
+      refunds,
+      dispatch,
+      rewards,
+      logger,
+    }),
     pushSubscriptions: new PushSubscriptionService({
       store: pushStore,
       publicKey: vapid?.publicKey ?? null,

@@ -19,6 +19,7 @@ import { compressToWebp } from "@/lib/compress-image";
 import { fetchData, requestJson } from "@/lib/post-json";
 import { useLiveTopic } from "@/lib/realtime";
 import { googleMapsLink, secondsLeft, wazeLink } from "@/lib/rider-location";
+import { RateCustomers } from "@/components/retention/rate-customers";
 import { SwipeConfirm } from "./swipe-confirm";
 import { useLocationSharing, useWakeLock } from "./use-rider-device";
 
@@ -154,6 +155,7 @@ export function RiderApp(): JSX.Element {
       ) : null}
 
       {earnings.data ? <EarningsCard earnings={earnings.data} /> : null}
+      <RateCustomers />
       <PushOptIn />
     </div>
   );

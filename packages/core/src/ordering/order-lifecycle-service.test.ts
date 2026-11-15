@@ -1,3 +1,4 @@
+import { BackgroundJobs } from "./background-jobs";
 import { describe, expect, it } from "vitest";
 import { sessionUser } from "../testing/session-users";
 import { barakoOrder, orderingWorld, type OrderingWorld } from "../testing/ordering-world";
@@ -85,7 +86,14 @@ describe("OrderLifecycleService", () => {
 
   it("rejects with a reason, gives the promo back and tells the customer", async () => {
     const { w, orderId } = await placed();
-    w.store.redemptions.push({ promoId: "p1", orderId, userId: "customer-1" });
+    w.store.redemptions.push({
+      promoId: "p1",
+      orderId,
+      userId: "customer-1",
+      discountCentavos: 5000,
+      phoneHash: null,
+      deviceHash: null,
+    });
     const rejected = await w.lifecycle.reject(orderId, w.owner, { reason: "Out of coffee beans" });
     expect(rejected.ok).toBe(true);
     expect(w.store.redemptions).toEqual([]);
@@ -118,6 +126,7 @@ describe("OrderLifecycleService", () => {
       refundsStarted: 1,
       refundsFailed: 0,
       dispatch: { expired: 0, offered: 0, flagged: 0 },
+      rewards: 0,
     });
     expect(await w.store.refundsDue(10)).toEqual([]);
   });
@@ -131,6 +140,7 @@ describe("OrderLifecycleService", () => {
       refundsStarted: 0,
       refundsFailed: 1,
       dispatch: { expired: 0, offered: 0, flagged: 0 },
+      rewards: 0,
     });
     expect(w.logger.lines.map((l) => l.message)).toContain("jobs.refund_failed");
   });
@@ -243,5 +253,24 @@ describe("OrderLifecycleService", () => {
     w.dispatch.fail = true;
     expect((await w.jobs.run()).dispatch).toEqual({ expired: 0, offered: 0, flagged: 0 });
     expect(w.logger.lines.map((l) => l.message)).toContain("jobs.dispatch_failed");
+  });
+
+  it("works out delivered orders' rewards with every run, and survives that failing", async () => {
+    const w = orderingWorld();
+    let fail = false;
+    const jobs = new BackgroundJobs({
+      notifications: { deliverQueued: () => Promise.resolve(0) },
+      lifecycle: w.store,
+      refunds: w.refunds,
+      rewards: {
+        processDelivered: () =>
+          fail ? Promise.reject(new Error("db down")) : Promise.resolve({ processed: 2 }),
+      },
+      logger: w.logger,
+    });
+    expect((await jobs.run()).rewards).toBe(2);
+    fail = true;
+    expect((await jobs.run()).rewards).toBe(0);
+    expect(w.logger.lines.map((l) => l.message)).toContain("jobs.rewards_failed");
   });
 });
