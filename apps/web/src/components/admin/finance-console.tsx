@@ -94,6 +94,12 @@ export function FinanceConsole({
   );
 }
 
+/** A finance API URL for one week; anything but a YYYY-MM-DD date is dropped, never put in a link. */
+function weekUrl(path: string, week: string): string {
+  const safe = /^\d{4}-\d{2}-\d{2}$/.test(week) ? week : "";
+  return `/api/admin/finance/${path}?${new URLSearchParams({ week: safe }).toString()}`;
+}
+
 function PayoutsTab({ week }: { readonly week: string }): JSX.Element {
   const t = useTranslations("Finance.payouts");
   const queryClient = useQueryClient();
@@ -101,7 +107,7 @@ function PayoutsTab({ week }: { readonly week: string }): JSX.Element {
     queryKey: ["finance-payouts", week],
     queryFn: () =>
       fetchData<{ payouts: Wire<PayoutRecord>[]; automatic: boolean }>(
-        `/api/admin/finance/payouts?week=${week}`,
+        weekUrl("payouts", week),
         t("failed"),
       ),
   });
@@ -138,7 +144,7 @@ function PayoutsTab({ week }: { readonly week: string }): JSX.Element {
         )}
         {due.length > 0 ? (
           <a
-            href={`/api/admin/finance/payouts/export?week=${week}`}
+            href={weekUrl("payouts/export", week)}
             className="text-brand-800 min-h-tap inline-flex items-center font-semibold underline"
           >
             {t("export")}
@@ -351,7 +357,7 @@ function ReportsTab({ week }: { readonly week: string }): JSX.Element {
   const t = useTranslations("Finance.reports");
   const report = useQuery({
     queryKey: ["finance-report", week],
-    queryFn: () => fetchData<WeekReport>(`/api/admin/finance/report?week=${week}`, t("failed")),
+    queryFn: () => fetchData<WeekReport>(weekUrl("report", week), t("failed")),
   });
   if (report.isPending) return <p className="text-ink-muted">{t("loading")}</p>;
   if (report.isError) return <FormError message={report.error.message} />;
@@ -361,13 +367,13 @@ function ReportsTab({ week }: { readonly week: string }): JSX.Element {
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap gap-4">
         <a
-          href={`/api/admin/finance/report/export?week=${week}`}
+          href={weekUrl("report/export", week)}
           className="text-brand-800 min-h-tap inline-flex items-center font-semibold underline"
         >
           {t("exportReport")}
         </a>
         <a
-          href={`/api/admin/finance/ledger/export?week=${week}`}
+          href={weekUrl("ledger/export", week)}
           className="text-brand-800 min-h-tap inline-flex items-center font-semibold underline"
         >
           {t("exportLedger")}
