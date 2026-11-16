@@ -297,15 +297,16 @@ export class PrismaFinanceRepository
   }): Promise<boolean> {
     return this.prisma.$transaction(async (tx) => {
       // Snapshot where the money went, in case the account changes later.
-      const account = (column: string) =>
-        Prisma.sql`coalesce(p.${Prisma.raw(column)}, (select a.${Prisma.raw(column)} from public.payout_accounts a
-                    where a.party_type = p.party_type and a.party_id = p.party_id))`;
       const changed = await tx.$executeRaw`
         update public.payouts p
            set status = 'paid', reference = ${input.reference}, paid_at = now(), paid_by = ${input.by}::uuid,
-               method = ${account("method")}, account_name = ${account("account_name")},
-               account_number = ${account("account_number")}, bank_name = ${account("bank_name")}
-         where p.id = ${input.id}::uuid and p.status = 'draft'`;
+               method = coalesce(p.method, a.method),
+               account_name = coalesce(p.account_name, a.account_name),
+               account_number = coalesce(p.account_number, a.account_number),
+               bank_name = coalesce(p.bank_name, a.bank_name)
+          from public.payouts q
+          left join public.payout_accounts a on a.party_type = q.party_type and a.party_id = q.party_id
+         where q.id = p.id and p.id = ${input.id}::uuid and p.status = 'draft'`;
       if (changed === 0) return false;
       await post(tx, input.ledger);
       return true;

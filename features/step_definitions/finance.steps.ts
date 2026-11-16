@@ -255,9 +255,9 @@ Then(
     );
     const row = lines.find((l) => l.includes(`"${name}"`));
     assert.ok(row, `${name} is not in the transfer list`);
-    assert.match(
-      row,
-      new RegExp(`,"GCash","Nena Santos","09170000011","",${amount.replace(".", "\\.")},""$`),
+    assert.ok(
+      row.endsWith(`,"GCash","Nena Santos","09170000011","",${amount},""`),
+      `unexpected transfer row: ${row}`,
     );
   },
 );

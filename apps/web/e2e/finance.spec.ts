@@ -61,21 +61,26 @@ async function staffPage(
   return context.newPage();
 }
 
-/** Books one balanced ledger transaction at a time (a past week, or now). */
+/** Books one balanced ledger transaction (a past week, or now) in one fixed statement. */
 async function book(
   lines: [string, string, string | null, number, number][],
   at: Date,
 ): Promise<void> {
-  const txn = randomUUID();
-  const values = lines
-    .map(
-      (_, i) =>
-        `($1, $${String(i * 5 + 2)}::public.ledger_account, $${String(i * 5 + 3)}::public.ledger_party, $${String(i * 5 + 4)}::uuid, $${String(i * 5 + 5)}::int, $${String(i * 5 + 6)}::int, 'e2e', $${String(lines.length * 5 + 2)})`,
-    )
-    .join(", ");
   await sql(
-    `insert into public.ledger_entries (txn_id, account, party_type, party_id, debit_centavos, credit_centavos, memo, created_at) values ${values}`,
-    [txn, ...lines.flat(), at],
+    `insert into public.ledger_entries (txn_id, account, party_type, party_id, debit_centavos, credit_centavos, memo, created_at)
+     select $1::uuid, l.account::public.ledger_account, l.party_type::public.ledger_party, l.party_id::uuid,
+            l.debit, l.credit, 'e2e', $7
+       from unnest($2::text[], $3::text[], $4::text[], $5::int[], $6::int[])
+         as l(account, party_type, party_id, debit, credit)`,
+    [
+      randomUUID(),
+      lines.map((l) => l[0]),
+      lines.map((l) => l[1]),
+      lines.map((l) => l[2]),
+      lines.map((l) => l[3]),
+      lines.map((l) => l[4]),
+      at,
+    ],
   );
 }
 
