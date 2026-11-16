@@ -66,7 +66,7 @@ describeDb("money: double-entry ledger and payouts", () => {
   it("rejects a payout period that ends before it starts", async () => {
     const err = await failureOf(db(), () =>
       db().query(
-        `insert into public.payouts (party_type, party_id, period_start, period_end, amount_centavos) values ('merchant', gen_random_uuid(), current_date, current_date - 1, 100)`,
+        `insert into public.payouts (party_type, party_id, period_start, period_end, amount_centavos, earnings_centavos) values ('merchant', gen_random_uuid(), current_date, current_date - 1, 100, 100)`,
       ),
     );
     expect(err).toMatch(/payouts_period_order/);

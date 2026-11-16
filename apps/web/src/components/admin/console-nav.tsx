@@ -9,6 +9,7 @@ const SECTIONS = [
   { href: "/admin", key: "live", adminOnly: false },
   { href: "/admin/riders", key: "riders", adminOnly: false },
   { href: "/admin/tickets", key: "tickets", adminOnly: false },
+  { href: "/admin/finance", key: "finance", adminOnly: false },
   { href: "/admin/zones", key: "zones", adminOnly: false },
   { href: "/admin/stores", key: "stores", adminOnly: false },
   { href: "/admin/merchants", key: "applications", adminOnly: false },

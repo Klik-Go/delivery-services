@@ -1,4 +1,11 @@
-import { ChevronRight, Camera, ClipboardList, Settings, UtensilsCrossed } from "lucide-react";
+import {
+  ChevronRight,
+  Camera,
+  ClipboardList,
+  Settings,
+  UtensilsCrossed,
+  Wallet,
+} from "lucide-react";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import type { JSX } from "react";
@@ -56,6 +63,17 @@ export default async function MerchantPage({
       lead: t("settingsLead"),
       Icon: Settings,
     },
+    // Money is the owner's business: staff don't see payouts.
+    ...(getContainer().authz.can(user, { type: "merchant.settings", merchantId: store.merchantId })
+      ? [
+          {
+            href: `/merchant/payouts${query}`,
+            title: t("payouts"),
+            lead: t("payoutsLead"),
+            Icon: Wallet,
+          },
+        ]
+      : []),
   ];
   return (
     <SurfaceShell title={store.name} eyebrow={t("eyebrow")} lead={t("lead")} who={who}>

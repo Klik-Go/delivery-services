@@ -39,7 +39,18 @@ const DOMAINS = [
   ],
   [
     "Payments and money",
-    ["order_delivery_pins", "payments", "refunds", "webhook_events", "ledger_entries", "payouts"],
+    [
+      "order_delivery_pins",
+      "payments",
+      "refunds",
+      "webhook_events",
+      "ledger_entries",
+      "payouts",
+      "payout_lines",
+      "payout_accounts",
+      "cod_remittances",
+      "settlement_runs",
+    ],
   ],
   [
     "Engagement and operations",

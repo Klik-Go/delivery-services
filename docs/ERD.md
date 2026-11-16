@@ -12,6 +12,8 @@ Cardinality: `||` exactly one, `|o` zero or one, `o{` zero or many. `auth_users`
 ```mermaid
 erDiagram
   profiles ||--o{ addresses : "user_id"
+  profiles |o--o{ cod_remittances : "received_by"
+  zones ||--o{ cod_remittances : "zone_id"
   profiles ||--o{ device_push_subscriptions : "user_id"
   profiles |o--o{ feature_flags : "updated_by"
   zones ||--o{ fee_rules : "zone_id"
@@ -29,6 +31,8 @@ erDiagram
   profiles |o--o{ orders : "cancelled_by"
   profiles ||--o{ orders : "customer_id"
   zones ||--o{ orders : "zone_id"
+  profiles |o--o{ payout_accounts : "updated_by"
+  profiles |o--o{ payouts : "paid_by"
   auth_users ||--o| profiles : "id"
   profiles ||--o{ promo_redemptions : "user_id"
   profiles |o--o{ promos : "owner_id"
@@ -40,6 +44,7 @@ erDiagram
   profiles |o--o{ rider_kyc_documents : "reviewed_by"
   profiles ||--o| riders : "user_id"
   zones ||--o{ riders : "zone_id"
+  profiles |o--o{ settlement_runs : "started_by"
   profiles |o--o{ support_tickets : "resolved_by"
   zones ||--o{ support_tickets : "zone_id"
   profiles |o--o{ user_roles : "granted_by"
@@ -239,6 +244,7 @@ erDiagram
 
 ```mermaid
 erDiagram
+  riders ||--o{ cod_remittances : "rider_id"
   riders ||--o{ dispatch_offers : "rider_id"
   riders |o--o{ orders : "rider_id"
   profiles |o--o{ rider_kyc_documents : "reviewed_by"
@@ -314,6 +320,7 @@ erDiagram
   riders |o--o{ orders : "rider_id"
   zones ||--o{ orders : "zone_id"
   orders ||--o| payments : "order_id"
+  orders |o--o{ payout_lines : "order_id"
   orders ||--o| promo_redemptions : "order_id"
   orders ||--o{ ratings : "order_id"
   orders |o--o{ referrals : "qualifying_order_id"
@@ -436,12 +443,20 @@ erDiagram
 
 ```mermaid
 erDiagram
+  profiles |o--o{ cod_remittances : "received_by"
+  riders ||--o{ cod_remittances : "rider_id"
+  zones ||--o{ cod_remittances : "zone_id"
   orders |o--o{ ledger_entries : "order_id"
   orders ||--o| order_delivery_pins : "order_id"
   orders ||--o| payments : "order_id"
+  profiles |o--o{ payout_accounts : "updated_by"
+  orders |o--o{ payout_lines : "order_id"
+  payouts ||--o{ payout_lines : "payout_id"
+  profiles |o--o{ payouts : "paid_by"
   orders ||--o{ refunds : "order_id"
   payments ||--o{ refunds : "payment_id"
   profiles |o--o{ refunds : "requested_by"
+  profiles |o--o{ settlement_runs : "started_by"
   order_delivery_pins {
     uuid order_id PK, FK
     text pin
@@ -510,6 +525,51 @@ erDiagram
     timestamptz paid_at
     timestamptz created_at
     timestamptz updated_at
+    int4 earnings_centavos
+    int4 cash_netted_centavos
+    text method
+    text account_name
+    text account_number
+    text bank_name
+    uuid paid_by FK
+    text failure_reason
+  }
+  payout_lines {
+    int8 id PK
+    uuid payout_id FK
+    text kind
+    uuid order_id FK
+    text description
+    int4 amount_centavos
+    timestamptz occurred_at
+  }
+  payout_accounts {
+    ledger_party party_type PK
+    uuid party_id PK
+    text method
+    text account_name
+    text account_number
+    text bank_name
+    uuid updated_by FK
+    timestamptz updated_at
+  }
+  cod_remittances {
+    uuid id PK
+    uuid rider_id FK
+    uuid zone_id FK
+    int4 amount_centavos
+    text reference
+    uuid received_by FK
+    uuid ledger_txn_id UK
+    timestamptz created_at
+  }
+  settlement_runs {
+    date period_start PK
+    date period_end
+    int4 payouts
+    int8 total_centavos
+    uuid started_by FK
+    timestamptz created_at
   }
 ```
 
@@ -690,6 +750,7 @@ Role helpers live in the `private` schema (`has_role`, `is_admin`, `is_merchant_
 |---|---|---|
 | `addresses` | on | `addresses_admin_select` (select · authenticated)<br>`addresses_owner_all` (all · authenticated) |
 | `audit_logs` | on | `audit_logs_select_admin` (select · authenticated) |
+| `cod_remittances` | on | `cod_remittances_select` (select · authenticated) |
 | `device_push_subscriptions` | on | `device_push_subscriptions_own` (all · authenticated) |
 | `dispatch_offers` | on | `dispatch_offers_select` (select · authenticated) |
 | `feature_flags` | on | `feature_flags_select` (select · authenticated) |
@@ -712,6 +773,8 @@ Role helpers live in the `private` schema (`has_role`, `is_admin`, `is_merchant_
 | `order_support_notes` | on | `order_support_notes_select_ops` (select · authenticated) |
 | `orders` | on | `orders_select` (select · authenticated) |
 | `payments` | on | `payments_select` (select · authenticated) |
+| `payout_accounts` | on | `payout_accounts_select` (select · authenticated) |
+| `payout_lines` | on | `payout_lines_select` (select · authenticated) |
 | `payouts` | on | `payouts_select` (select · authenticated) |
 | `profiles` | on | `profiles_select_own` (select · authenticated)<br>`profiles_select_zone_riders` (select · authenticated)<br>`profiles_update_own` (update · authenticated) |
 | `promo_redemptions` | on | `promo_redemptions_select` (select · authenticated) |
@@ -723,6 +786,7 @@ Role helpers live in the `private` schema (`has_role`, `is_admin`, `is_merchant_
 | `rider_location_breadcrumbs` | on | `breadcrumbs_insert_self` (insert · authenticated)<br>`breadcrumbs_select` (select · authenticated) |
 | `rider_locations` | on | `rider_locations_insert_self` (insert · authenticated)<br>`rider_locations_select` (select · authenticated)<br>`rider_locations_select_customer_delivery` (select · authenticated)<br>`rider_locations_update_self` (update · authenticated) |
 | `riders` | on | `riders_select` (select · authenticated)<br>`riders_select_customer_delivery` (select · authenticated)<br>`riders_update_self` (update · authenticated) |
+| `settlement_runs` | on | `settlement_runs_select_admin` (select · authenticated) |
 | `support_tickets` | on | `support_tickets_select_ops` (select · authenticated) |
 | `user_roles` | on | `user_roles_select` (select · authenticated) |
 | `waitlist_signups` | on | `waitlist_signups_admin_select` (select · authenticated) |

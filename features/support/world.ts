@@ -84,6 +84,15 @@ export interface RetentionScenario {
   ticketId?: string;
 }
 
+/** State for finance steps: the scenario's week and the last CSV downloaded. */
+export interface FinanceScenario {
+  week?: { start: string; end: string; startsAt: Date; endsAt: Date };
+  csv?: string;
+  cashBefore?: number;
+  payoutId?: string;
+  owner?: { client: ApiClient; storeId: string };
+}
+
 /** A seeded rider signed in for dispatch scenarios. */
 export interface RiderSession {
   readonly client: ApiClient;
@@ -127,6 +136,7 @@ export class KlikWorld extends World {
   readonly checkout: CheckoutScenario = {};
   readonly dispatch: DispatchScenario = { riders: new Map() };
   readonly ops: OpsScenario = {};
+  readonly finance: FinanceScenario = {};
   readonly retention: RetentionScenario = {
     customers: new Map(),
     run: Math.random().toString(36).slice(2, 10),
