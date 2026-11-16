@@ -12,6 +12,8 @@ export interface JobsRun {
   readonly dispatch: DispatchTick;
   /** Delivered orders whose stamps and referral rewards were worked out. */
   readonly rewards: number;
+  /** Payouts created by the weekly settlement (the first run after a week ends). */
+  readonly settled: number;
 }
 
 const NO_DISPATCH: DispatchTick = { expired: 0, offered: 0, flagged: 0 };
@@ -31,6 +33,7 @@ export class BackgroundJobs {
       refunds: RefundService;
       dispatch?: { tick(): Promise<DispatchTick> };
       rewards?: { processDelivered(limit: number): Promise<{ readonly processed: number }> };
+      settlement?: { settleDueWeek(): Promise<{ readonly payouts: number } | null> };
       logger: Logger;
       batchSize?: number;
     },
@@ -57,6 +60,7 @@ export class BackgroundJobs {
       }
     }
     const rewards = await this.rewardsRun(limit);
+    const settled = await this.settlementRun();
     if (
       notifications +
         refundsStarted +
@@ -73,9 +77,23 @@ export class BackgroundJobs {
         offersExpired: dispatch.expired,
         offersMade: dispatch.offered,
         rewards,
+        settled,
       });
     }
-    return { notifications, refundsStarted, refundsFailed, dispatch, rewards };
+    return { notifications, refundsStarted, refundsFailed, dispatch, rewards, settled };
+  }
+
+  /** Settles last week once it is over; a failure is logged and retried on the next run. */
+  private async settlementRun(): Promise<number> {
+    if (!this.deps.settlement) return 0;
+    try {
+      return (await this.deps.settlement.settleDueWeek())?.payouts ?? 0;
+    } catch (error) {
+      this.deps.logger.error("jobs.settlement_failed", {
+        err: error instanceof Error ? error.name : "unknown",
+      });
+      return 0;
+    }
   }
 
   /** Rewards can wait for the next run, so a failure is logged and the rest carries on. */

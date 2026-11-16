@@ -27,6 +27,7 @@ import {
   PrismaStaff,
   PrismaZoneAdmin,
   PrismaOrderHistoryRepository,
+  PrismaFinanceRepository,
   PrismaPromoAdminRepository,
   PrismaRatingRepository,
   PrismaRewardsRepository,
@@ -96,6 +97,11 @@ import {
   PaymentWebhookService,
   PromoService,
   OrderHistoryService,
+  ManualDisbursement,
+  PayoutService,
+  RemittanceService,
+  ReportService,
+  SettlementService,
   RatingService,
   RetentionAdminService,
   RewardsService,
@@ -189,6 +195,11 @@ export interface Container {
   readonly orderHistory: OrderHistoryService;
   readonly rewards: RewardsService;
   readonly retentionAdmin: RetentionAdminService;
+  /** Phase 10: weekly settlement, payouts and statements, cash hand-ins, reports. */
+  readonly settlement: SettlementService;
+  readonly payouts: PayoutService;
+  readonly remittances: RemittanceService;
+  readonly reports: ReportService;
   /** Dispatch ticks, queued messages and unfinished refunds (POST /api/internal/jobs). */
   readonly jobs: BackgroundJobs;
   readonly pushSubscriptions: PushSubscriptionService;
@@ -295,6 +306,13 @@ export function createContainer(env: ServerEnv): Container {
   });
   const consoleAccess = new ConsoleAccess(authz, new PrismaAuditLog(prisma));
   const hasher = new NodeContentHasher();
+  const finance = new PrismaFinanceRepository(prisma);
+  const settlement = new SettlementService({
+    settlements: finance,
+    access: consoleAccess,
+    clock,
+    logger,
+  });
   const rewards = new RewardsService({
     rewards: new PrismaRewardsRepository(prisma),
     hasher,
@@ -489,12 +507,23 @@ export function createContainer(env: ServerEnv): Container {
       tickets: new PrismaTicketRepository(prisma),
       promos: new PrismaPromoAdminRepository(prisma),
     }),
+    settlement,
+    payouts: new PayoutService({
+      payouts: finance,
+      access: consoleAccess,
+      authz,
+      disbursement: new ManualDisbursement(),
+      logger,
+    }),
+    remittances: new RemittanceService({ remittances: finance, access: consoleAccess, logger }),
+    reports: new ReportService({ reports: finance, access: consoleAccess }),
     jobs: new BackgroundJobs({
       notifications,
       lifecycle: orderStore,
       refunds,
       dispatch,
       rewards,
+      settlement,
       logger,
     }),
     pushSubscriptions: new PushSubscriptionService({

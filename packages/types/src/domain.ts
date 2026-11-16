@@ -120,6 +120,9 @@ export const LEDGER_ACCOUNTS = [
   "customer_refunds",
   // Phase 5: online payments held for the customer until the order is delivered or refunded.
   "customer_deposits",
+  // Phase 10: payouts approved but not yet sent, and Klik Go's own cash (bank and e-wallet).
+  "payouts_due",
+  "platform_cash",
 ] as const;
 export const LedgerAccountSchema = z.enum(LEDGER_ACCOUNTS);
 export type LedgerAccount = z.infer<typeof LedgerAccountSchema>;

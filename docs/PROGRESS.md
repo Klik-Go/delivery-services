@@ -20,8 +20,8 @@ Phases are defined in `docs/BUILD_PLAN.md` §6. Agents update this file in every
 | 7 | Rider app, dispatch, live tracking | ✅ Done (merged) | [Klik-Go/delivery-services#23](https://github.com/Klik-Go/delivery-services/pull/23) | Owner: rider sign-in needs SMS (Q30); rider pay rule (Q29); Vault secrets from Q25 now also drive dispatch |
 | 8 | Coordinator and Admin console | ✅ Done (merged) | [Klik-Go/delivery-services#24](https://github.com/Klik-Go/delivery-services/pull/24) | Owner: SLA targets and coaching rule (Q32); template editor moved to Phase 11 (Q33) |
 | 8.1 | Follow-up: demo riders + demo accounts reference | ✅ Done (merged) | [Klik-Go/delivery-services#25](https://github.com/Klik-Go/delivery-services/pull/25) | Owner: run **Load demo riders**, add the test numbers in Supabase (docs/DEMO.md §4.2) |
-| 9 | Ratings, reorder, promos, referrals, loyalty | 🟡 In progress (PR open) | [Klik-Go/delivery-services#26](https://github.com/Klik-Go/delivery-services/pull/26) | Owner: confirm stamp minimum, voucher life and referral guards (Q34) |
-| 10 | Finance: settlements, payouts, reports | ⬜ Not started | | |
+| 9 | Ratings, reorder, promos, referrals, loyalty | ✅ Done (merged) | [Klik-Go/delivery-services#26](https://github.com/Klik-Go/delivery-services/pull/26) | Owner: confirm stamp minimum, voucher life and referral guards (Q34) |
+| 10 | Finance: settlements, payouts, reports | 🟡 In progress (PR open) | [Klik-Go/delivery-services#29](https://github.com/Klik-Go/delivery-services/pull/29) | Owner: CPA/lawyer on withholding and payment rules before real payouts (Q35) |
 | 11 | Hardening: security, privacy, observability | ⬜ Not started | | |
 | 12 | Pilot launch | ⬜ Not started | | |
 
@@ -252,9 +252,29 @@ Deliverables:
 - [x] Loyalty: a stamp per delivered order of ₱150+, 10 stamps → free-delivery voucher; `/rewards` page (code, stamp card, vouchers with "Use at checkout"). Rewards are personal promo codes, so checkout and the ledger need no new money path.
 - [x] Rider app: "Rate your customers" for the last 7 days.
 - [x] Migration `20261115100000_retention.sql` (rating edits and averages, support tickets + RLS, promo budget/first orders/owner, redemption phone/device hashes and guard, referral codes and device rule, loyalty vouchers, `orders.rewards_processed_at`) with DB tests; Prisma schema + ERD regenerated; rewards run with the background jobs.
+- [x] Merged ([Klik-Go/delivery-services#26](https://github.com/Klik-Go/delivery-services/pull/26)).
 - [ ] Owner: confirm the numbers in Q34.
 
 Next: Phase 10, finance: settlements, payouts and reports (after review).
+
+### Phase 10 — Finance: settlements, payouts, reports (branch `phase-10-finance`)
+Acceptance (docs/BUILD_PLAN.md §6, Gherkin in `features/finance/`):
+- [x] Settlements equal the sum of ledger rows: each payout moves exactly its amount from the payable account to `payouts_due`, and its lines add up to it (`settlement.feature`, unit tests on an in-memory ledger, `finance-repository.db.test.ts`).
+- [x] A payout can't be marked paid twice: the service refuses, the update is conditional, and a database trigger freezes paid payouts (`payouts.feature`, `finance.db.test.ts`).
+- [x] Cash a rider owes nets against their earnings at settlement (`cod_remittance.feature`).
+- [x] CSVs open cleanly in Google Sheets: UTF-8 with BOM, CRLF, quoted text, bare numbers, formula-safe (`payouts.feature`, `reports.feature`, a Playwright download check).
+
+Deliverables:
+- [x] `SettlementService`: weekly (Mon–Sun Asia/Manila) from the ledger, idempotent per week (run row as lock), minimum ₱100 (smaller balances carry over), runs with the background jobs after a week ends; admins can settle a finished week by hand.
+- [x] `PayoutService`: transfer list CSV, mark paid with reference (audited, frozen after), mark failed (money back to the payable account, paid next week); `IDisbursementGateway` with `ManualDisbursement` for the pilot.
+- [x] Statements: `/merchant/payouts` (owners only; staff don't see money) and `/rider/payouts`, with lines and CSV downloads, and where they are paid (GCash, Maya or bank; `payout_accounts`).
+- [x] `RemittanceService`: coordinators record cash riders hand in (never more than they hold), freeing the cash limit (closes Q31).
+- [x] `ReportService`: GMV, take rate, contribution per order, refunds, promo cost and cash share by zone and week, and the ledger CSV mapped to the chart of accounts (docs/BUSINESS.md §6.5).
+- [x] `/admin/finance` (payouts, cash hand-ins, reports; coordinators see cash only).
+- [x] Migration `20261116100000_finance.sql` (ledger accounts `payouts_due` and `platform_cash`, payout accounts, payout lines, payout snapshot and freeze, cash hand-ins, settlement runs) with DB tests; Prisma schema + ERD regenerated.
+- [ ] Owner: CPA/lawyer review before real payouts (Q35).
+
+Next: Phase 11, hardening: security, privacy, observability and performance (after review).
 
 ## Business validation (parallel, doc §8)
 - [ ] 20–30 customer interviews in the pilot barangay

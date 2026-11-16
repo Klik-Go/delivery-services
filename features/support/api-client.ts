@@ -45,7 +45,10 @@ export class ApiClient {
       redirect: "manual",
     });
     this.storeCookies(response.headers);
-    const bodyText = await response.text();
+    // Keep a byte-order mark if there is one (CSV downloads start with it); text() would drop it.
+    const bodyText = new TextDecoder("utf-8", { ignoreBOM: true }).decode(
+      await response.arrayBuffer(),
+    );
     let json: unknown = undefined;
     if (response.headers.get("content-type")?.includes("application/json")) {
       json = JSON.parse(bodyText) as unknown;

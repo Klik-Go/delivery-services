@@ -453,6 +453,7 @@ model orders {
   riders                                                  riders?                      @relation(fields: [rider_id], references: [id], onUpdate: NoAction)
   zones                                                   zones                        @relation(fields: [zone_id], references: [id], onUpdate: NoAction)
   payments                                                payments?
+  payout_lines                                            payout_lines[]
   promo_redemptions                                       promo_redemptions?
   ratings                                                 ratings[]
   referrals                                               referrals[]
@@ -496,17 +497,27 @@ model payments {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model payouts {
-  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  party_type      ledger_party
-  party_id        String        @db.Uuid
-  period_start    DateTime      @db.Date
-  period_end      DateTime      @db.Date
-  amount_centavos Int
-  status          payout_status @default(draft)
-  reference       String?
-  paid_at         DateTime?     @db.Timestamptz(6)
-  created_at      DateTime      @default(now()) @db.Timestamptz(6)
-  updated_at      DateTime      @default(now()) @db.Timestamptz(6)
+  id                   String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  party_type           ledger_party
+  party_id             String         @db.Uuid
+  period_start         DateTime       @db.Date
+  period_end           DateTime       @db.Date
+  amount_centavos      Int
+  status               payout_status  @default(draft)
+  reference            String?
+  paid_at              DateTime?      @db.Timestamptz(6)
+  created_at           DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime       @default(now()) @db.Timestamptz(6)
+  earnings_centavos    Int            @default(0)
+  cash_netted_centavos Int            @default(0)
+  method               String?
+  account_name         String?
+  account_number       String?
+  bank_name            String?
+  paid_by              String?        @db.Uuid
+  failure_reason       String?
+  payout_lines         payout_lines[]
+  profiles             profiles?      @relation(fields: [paid_by], references: [id], onUpdate: NoAction)
 
   @@unique([party_type, party_id, period_start, period_end])
   @@index([party_type, party_id, period_start(sort: Desc)], map: "payouts_party_idx")
@@ -529,6 +540,7 @@ model profiles {
   rating_count                               Int                         @default(0)
   referral_code                              String?                     @unique
   addresses                                  addresses[]
+  cod_remittances                            cod_remittances[]
   device_push_subscriptions                  device_push_subscriptions[]
   feature_flags                              feature_flags[]
   invites_invites_accepted_byToprofiles      invites[]                   @relation("invites_accepted_byToprofiles")
@@ -540,6 +552,8 @@ model profiles {
   order_support_notes                        order_support_notes[]
   orders_orders_cancelled_byToprofiles       orders[]                    @relation("orders_cancelled_byToprofiles")
   orders_orders_customer_idToprofiles        orders[]                    @relation("orders_customer_idToprofiles")
+  payout_accounts                            payout_accounts[]
+  payouts                                    payouts[]
   users                                      users                       @relation(fields: [id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   promo_redemptions                          promo_redemptions[]
   promos                                     promos[]
@@ -549,6 +563,7 @@ model profiles {
   refunds                                    refunds[]
   rider_kyc_documents                        rider_kyc_documents[]
   riders                                     riders?
+  settlement_runs                            settlement_runs[]
   support_tickets                            support_tickets[]
   user_roles_user_roles_granted_byToprofiles user_roles[]                @relation("user_roles_granted_byToprofiles")
   user_roles_user_roles_user_idToprofiles    user_roles[]                @relation("user_roles_user_idToprofiles")
@@ -726,6 +741,7 @@ model riders {
   updated_at                 DateTime                     @default(now()) @db.Timestamptz(6)
   status_reason              String?
   payout_account_name        String?
+  cod_remittances            cod_remittances[]
   dispatch_offers            dispatch_offers[]
   orders                     orders[]
   rider_kyc_documents        rider_kyc_documents[]
@@ -791,6 +807,7 @@ model zones {
   coordinator_id        String?                  @db.Uuid
   created_at            DateTime                 @default(now()) @db.Timestamptz(6)
   updated_at            DateTime                 @default(now()) @db.Timestamptz(6)
+  cod_remittances       cod_remittances[]
   fee_rules             fee_rules[]
   invites               invites[]
   merchant_applications merchant_applications[]
@@ -942,6 +959,74 @@ model support_tickets {
   @@schema("public")
 }
 
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model cod_remittances {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  rider_id        String    @db.Uuid
+  zone_id         String    @db.Uuid
+  amount_centavos Int
+  reference       String
+  received_by     String?   @db.Uuid
+  ledger_txn_id   String    @unique @db.Uuid
+  created_at      DateTime  @default(now()) @db.Timestamptz(6)
+  profiles        profiles? @relation(fields: [received_by], references: [id], onUpdate: NoAction)
+  riders          riders    @relation(fields: [rider_id], references: [id], onUpdate: NoAction)
+  zones           zones     @relation(fields: [zone_id], references: [id], onUpdate: NoAction)
+
+  @@index([rider_id, created_at(sort: Desc)], map: "cod_remittances_rider_idx")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model payout_accounts {
+  party_type     ledger_party
+  party_id       String       @db.Uuid
+  method         String
+  account_name   String
+  account_number String
+  bank_name      String?
+  updated_by     String?      @db.Uuid
+  updated_at     DateTime     @default(now()) @db.Timestamptz(6)
+  profiles       profiles?    @relation(fields: [updated_by], references: [id], onUpdate: NoAction)
+
+  @@id([party_type, party_id])
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model payout_lines {
+  id              BigInt   @id @default(autoincrement())
+  payout_id       String   @db.Uuid
+  kind            String
+  order_id        String?  @db.Uuid
+  description     String
+  amount_centavos Int
+  occurred_at     DateTime @db.Timestamptz(6)
+  orders          orders?  @relation(fields: [order_id], references: [id], onUpdate: NoAction)
+  payouts         payouts  @relation(fields: [payout_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([payout_id, occurred_at], map: "payout_lines_payout_idx")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model settlement_runs {
+  period_start   DateTime  @id @db.Date
+  period_end     DateTime  @db.Date
+  payouts        Int       @default(0)
+  total_centavos BigInt    @default(0)
+  started_by     String?   @db.Uuid
+  created_at     DateTime  @default(now()) @db.Timestamptz(6)
+  profiles       profiles? @relation(fields: [started_by], references: [id], onUpdate: NoAction)
+
+  @@schema("public")
+}
+
 enum app_role {
   customer
   rider
@@ -1008,6 +1093,8 @@ enum ledger_account {
   promo_expense
   customer_refunds
   customer_deposits
+  payouts_due
+  platform_cash
 
   @@schema("public")
 }

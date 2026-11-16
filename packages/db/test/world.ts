@@ -203,10 +203,49 @@ export async function buildWorld(db: pg.ClientBase, fx: DbFixtures): Promise<Wor
            ($1, 'rider_payable', 'rider', $2, 0, 3900, $4)`;
   await db.query(ledger, [crypto.randomUUID(), riderA1, merchantA, order1]);
   await db.query(ledger, [crypto.randomUUID(), riderB, merchantB, order2]);
+  const payouts = await db.query<{ id: string }>(
+    `insert into public.payouts (party_type, party_id, period_start, period_end, amount_centavos, earnings_centavos)
+     values ('merchant', $1, current_date - 7, current_date - 1, 20000, 20000),
+            ('merchant', $2, current_date - 7, current_date - 1, 20000, 20000),
+            ('rider', $3, current_date - 7, current_date - 1, 3900, 3900),
+            ('rider', $4, current_date - 7, current_date - 1, 3900, 3900)
+     returning id`,
+    [merchantA, merchantB, riderA1, riderB],
+  );
+  for (const { id } of payouts.rows) {
+    await db.query(
+      `insert into public.payout_lines (payout_id, kind, description, amount_centavos, occurred_at)
+       values ($1, 'order', 'Delivered order', 20000, now())`,
+      [id],
+    );
+  }
+  // Where each store and rider is paid, and cash each rider handed in.
+  for (const [type, id] of [
+    ["merchant", merchantA],
+    ["merchant", merchantB],
+    ["rider", riderA1],
+    ["rider", riderB],
+  ] as const) {
+    await db.query(
+      `insert into public.payout_accounts (party_type, party_id, method, account_name, account_number)
+       values ($1, $2, 'gcash', 'Placeholder Name', '09170000000')`,
+      [type, id],
+    );
+  }
+  for (const [riderId, zoneId] of [
+    [riderA1, zoneA],
+    [riderB, zoneB],
+  ] as const) {
+    await db.query(
+      `insert into public.cod_remittances (rider_id, zone_id, amount_centavos, reference, ledger_txn_id)
+       values ($1, $2, 10000, 'Hand-in at the hub', gen_random_uuid())`,
+      [riderId, zoneId],
+    );
+  }
   await db.query(
-    `insert into public.payouts (party_type, party_id, period_start, period_end, amount_centavos)
-     values ('merchant', $1, current_date - 7, current_date - 1, 20000), ('merchant', $2, current_date - 7, current_date - 1, 20000)`,
-    [merchantA, merchantB],
+    `insert into public.settlement_runs (period_start, period_end)
+     values (date_trunc('week', current_date)::date - 7, date_trunc('week', current_date)::date - 1)
+     on conflict do nothing`,
   );
 
   await db.query(
