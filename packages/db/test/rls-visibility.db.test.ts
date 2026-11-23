@@ -245,6 +245,30 @@ describeDb("row-level security: who can see which rows", () => {
     }
   });
 
+  it("pabili: the customer, the zone coordinator and admins see the request and list; a rider only once offered", async () => {
+    const requests = `select order_id as id from public.pabili_requests where order_id = $1`;
+    const items = `select distinct order_id as id from public.pabili_items where order_id = $1`;
+    // Anonymous visitors have no grant on either table at all.
+    for (const q of [requests, items]) {
+      for (const viewer of ["customer1", "coordA", "admin"] as const) {
+        expect(await seen(viewer, q, [w.pabili1]), viewer).toEqual([w.pabili1]);
+      }
+      for (const viewer of [
+        "customer2",
+        "coordB",
+        "ownerA",
+        "staffA",
+        "riderA1",
+        "riderA2",
+      ] as const) {
+        expect(await seen(viewer, q, [w.pabili1]), viewer).toEqual([]);
+      }
+    }
+    await fx().offer(w.pabili1, w.riders.A2);
+    expect(await seen("riderA2", requests, [w.pabili1])).toEqual([w.pabili1]);
+    expect(await seen("riderA2", items, [w.pabili1])).toEqual([w.pabili1]);
+  });
+
   it("invites: each customer sees the code they redeemed; admins see all; rider shifts: the rider and admins", async () => {
     const q = `select code as id from public.pilot_invites where batch = 'world'`;
     expect(await seen("customer1", q)).toEqual(["WORLD001"]);

@@ -394,7 +394,7 @@ model orders {
   id                                                      String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   code                                                    String                       @unique @default(dbgenerated("private.new_order_code()"))
   customer_id                                             String                       @db.Uuid
-  merchant_id                                             String                       @db.Uuid
+  merchant_id                                             String?                      @db.Uuid
   rider_id                                                String?                      @db.Uuid
   zone_id                                                 String                       @db.Uuid
   status                                                  order_status                 @default(awaiting_payment)
@@ -438,6 +438,7 @@ model orders {
   arrived_store_at                                        DateTime?                    @db.Timestamptz(6)
   delivery_proof_path                                     String?
   rewards_processed_at                                    DateTime?                    @db.Timestamptz(6)
+  kind                                                    order_kind                   @default(store)
   dispatch_offers                                         dispatch_offers[]
   ledger_entries                                          ledger_entries[]
   loyalty_stamps_loyalty_stamps_order_idToorders          loyalty_stamps?              @relation("loyalty_stamps_order_idToorders")
@@ -449,9 +450,10 @@ model orders {
   order_support_notes                                     order_support_notes[]
   profiles_orders_cancelled_byToprofiles                  profiles?                    @relation("orders_cancelled_byToprofiles", fields: [cancelled_by], references: [id], onUpdate: NoAction)
   profiles_orders_customer_idToprofiles                   profiles                     @relation("orders_customer_idToprofiles", fields: [customer_id], references: [id], onUpdate: NoAction)
-  merchants                                               merchants                    @relation(fields: [merchant_id], references: [id], onUpdate: NoAction)
+  merchants                                               merchants?                   @relation(fields: [merchant_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
   riders                                                  riders?                      @relation(fields: [rider_id], references: [id], onUpdate: NoAction)
   zones                                                   zones                        @relation(fields: [zone_id], references: [id], onUpdate: NoAction)
+  pabili_requests                                         pabili_requests?
   payments                                                payments?
   payout_lines                                            payout_lines[]
   promo_redemptions                                       promo_redemptions?
@@ -745,6 +747,7 @@ model riders {
   updated_at                 DateTime                     @default(now()) @db.Timestamptz(6)
   status_reason              String?
   payout_account_name        String?
+  pabili_float_centavos      Int                          @default(0)
   cod_remittances            cod_remittances[]
   dispatch_offers            dispatch_offers[]
   orders                     orders[]
@@ -1100,6 +1103,44 @@ model rider_shifts {
   @@schema("public")
 }
 
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pabili_items {
+  id              String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  order_id        String             @db.Uuid
+  position        Int                @db.SmallInt
+  description     String
+  quantity        Int
+  note            String?
+  status          pabili_item_status @default(pending)
+  created_at      DateTime           @default(now()) @db.Timestamptz(6)
+  pabili_requests pabili_requests    @relation(fields: [order_id], references: [order_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([order_id, position])
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pabili_requests {
+  order_id           String                   @id @db.Uuid
+  store_name         String
+  store_notes        String?
+  pickup             Unsupported("geography")
+  budget_centavos    Int
+  item_cost_centavos Int?
+  receipt_path       String?
+  bought_at          DateTime?                @db.Timestamptz(6)
+  created_at         DateTime                 @default(now()) @db.Timestamptz(6)
+  pabili_items       pabili_items[]
+  orders             orders                   @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([pickup], map: "pabili_requests_pickup_gix", type: Gist)
+  @@schema("public")
+}
+
 enum app_role {
   customer
   rider
@@ -1311,6 +1352,21 @@ enum refund_status {
   pending
   succeeded
   failed
+
+  @@schema("public")
+}
+
+enum order_kind {
+  store
+  pabili
+
+  @@schema("public")
+}
+
+enum pabili_item_status {
+  pending
+  bought
+  unavailable
 
   @@schema("public")
 }

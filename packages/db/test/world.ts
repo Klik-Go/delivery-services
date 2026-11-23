@@ -40,6 +40,8 @@ export interface World {
   readonly order3: string;
   /** order4: customer1 @ A, picked up by riderA1 (active delivery). */
   readonly order4: string;
+  /** pabili1: customer1 @ A, a Pabili order Klik Go has taken (accepted), no rider yet. */
+  readonly pabili1: string;
 }
 
 export async function buildWorld(db: pg.ClientBase, fx: DbFixtures): Promise<World> {
@@ -156,6 +158,13 @@ export async function buildWorld(db: pg.ClientBase, fx: DbFixtures): Promise<Wor
   await fx.assignRider(order4, riderA1);
   for (const status of ["accepted", "preparing", "ready", "picked_up"] as const)
     await fx.setStatus(order4, status);
+
+  const pabili1 = await fx.pabiliOrder({
+    customerId: customer1,
+    zoneId: zoneA,
+    pickup: offsetLatLng(CENTRE_A, 300),
+    dropoff: dropA,
+  });
 
   for (const orderId of [order1, order2]) {
     await db.query(
@@ -384,5 +393,6 @@ export async function buildWorld(db: pg.ClientBase, fx: DbFixtures): Promise<Wor
     order2,
     order3,
     order4,
+    pabili1,
   };
 }

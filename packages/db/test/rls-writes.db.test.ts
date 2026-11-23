@@ -356,6 +356,33 @@ describeDb("row-level security: what each role may change", () => {
     }
   });
 
+  it("pabili requests, lists and rider floats are written by the server only, never by a client", async () => {
+    for (const user of [w.users.customer1, w.users.riderA1, w.users.coordA, w.users.admin]) {
+      const attempts = [
+        () =>
+          db().query(`update public.pabili_requests set budget_centavos = 1 where order_id = $1`, [
+            w.pabili1,
+          ]),
+        () =>
+          db().query(
+            `update public.pabili_requests set item_cost_centavos = 1, receipt_path = 'x', bought_at = now()`,
+          ),
+        () =>
+          db().query(
+            `insert into public.pabili_items (order_id, position, description, quantity) values ($1, 9, 'x', 1)`,
+            [w.pabili1],
+          ),
+        () => db().query(`update public.pabili_items set status = 'bought'`),
+        () => db().query(`delete from public.pabili_items`),
+        () => db().query(`update public.riders set pabili_float_centavos = 900000`),
+      ];
+      for (const attempt of attempts) {
+        const error = await asUser(db(), user, () => failureOf(db(), attempt));
+        expect(error).toMatch(/permission denied/);
+      }
+    }
+  });
+
   it("invites and rider shifts are written by the server only, never by a client", async () => {
     for (const user of [w.users.customer1, w.users.riderA1, w.users.admin]) {
       const attempts = [

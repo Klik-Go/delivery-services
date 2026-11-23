@@ -39,6 +39,8 @@ const DOMAINS = [
     [
       "orders",
       "order_items",
+      "pabili_requests",
+      "pabili_items",
       "order_events",
       "order_status_transitions",
       "dispatch_offers",
