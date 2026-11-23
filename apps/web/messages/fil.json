@@ -219,7 +219,9 @@
       "waitingRider": "Hinihintay ang rider."
     },
     "ordersLink": "Mga order",
-    "ordersLinkLead": "Tanggapin ang bagong order at markahang handa"
+    "ordersLinkLead": "Tanggapin ang bagong order at markahang handa",
+    "payouts": "Mga bayad",
+    "payoutsLead": "Lingguhang statement at kung saan ka namin babayaran."
   },
   "StoreSettings": {
     "title": "Settings ng tindahan",
@@ -658,7 +660,8 @@
       "week": "Ngayong linggo · {jobs, plural, one {# job} other {# job}}",
       "cash": "Hawak na cash: {held} sa {limit} na limit mo"
     },
-    "applyLink": "Tingnan ang aplikasyon mo"
+    "applyLink": "Tingnan ang aplikasyon mo",
+    "payouts": "Mga bayad sa iyo"
   },
   "Ops": {
     "nav": {
@@ -671,7 +674,8 @@
       "staff": "Staff",
       "label": "Mga bahagi ng console",
       "tickets": "Mababang rating",
-      "promos": "Mga promo"
+      "promos": "Mga promo",
+      "finance": "Pananalapi"
     },
     "loading": "Naglo-load…",
     "failed": "May nangyaring mali. Subukan ulit.",
@@ -1022,6 +1026,105 @@
       "ofBudget": "sa {budget}",
       "switchOff": "I-off",
       "switchOn": "I-on"
+    }
+  },
+  "Finance": {
+    "title": "Pananalapi",
+    "lead": "Lingguhang bayad, cash na inaabot ng mga rider, at mga ulat.",
+    "week": "Linggo (Lunes hanggang Linggo)",
+    "tabs": {
+      "payouts": "Mga bayad",
+      "cash": "Inabot na cash",
+      "reports": "Mga ulat"
+    },
+    "account": {
+      "methodLabel": "Ibabayad sa",
+      "method": {
+        "gcash": "GCash",
+        "maya": "Maya",
+        "bank": "Bangko"
+      },
+      "name": "Pangalan sa account (gaya sa ID)",
+      "mobileNumber": "Mobile number",
+      "accountNumber": "Account number",
+      "bank": "Bangko",
+      "note": "Sa account na nakapangalan sa iyo lang namin ipapadala ang bayad.",
+      "save": "I-save",
+      "change": "Palitan",
+      "failed": "Hindi namin na-save iyan. Subukan ulit."
+    },
+    "statements": {
+      "pageTitle": "Mga bayad",
+      "pageLead": "Lingguhang settlement: Lunes hanggang Linggo, binabayaran tuwing Biyernes.",
+      "ownerOnly": "Ang may-ari lang ng tindahan ang nakakakita ng mga bayad.",
+      "riderTitle": "Mga bayad sa iyo",
+      "riderLead": "Lingguhang kita, binabayaran tuwing Biyernes. Ibinabawas muna ang cash na hawak mo pa.",
+      "backToRider": "Bumalik sa rider app",
+      "accountTitle": "Saan ka namin babayaran",
+      "loading": "Kinukuha…",
+      "failed": "Hindi namin makuha ang mga bayad mo.",
+      "open": "Kinita, hindi pa na-settle: {amount}",
+      "cashHeld": "Cash mula sa COD na hawak mo pa: {amount}",
+      "schedule": "Nagsasara ang linggo tuwing Linggo at binabayaran tuwing Biyernes. Ang halagang mas mababa sa {minimum} ay sa susunod na linggo.",
+      "title": "Lingguhang statement",
+      "empty": "Wala pang statement.",
+      "week": "{from} – {to}",
+      "status": {
+        "draft": "Ipinapadala",
+        "approved": "Aprubado",
+        "paid": "Bayad na",
+        "failed": "Pumalya: sa susunod na linggo"
+      },
+      "details": "Tingnan ang mga order",
+      "hide": "Itago",
+      "csv": "I-download ang CSV",
+      "netted": "Ibinawas sa cash na hawak mo"
+    },
+    "payouts": {
+      "loading": "Kinukuha…",
+      "failed": "May mali. Subukan ulit.",
+      "settle": "I-settle ang linggong ito",
+      "due": "{count, plural, one {# bayad} other {# bayad}} na ipapadala · {total}",
+      "export": "I-download ang listahan ng transfer (CSV)",
+      "manual": "Mano-mano ang pagpapadala: i-transfer ang bawat halaga, tapos markahang bayad kasama ang reference.",
+      "automatic": "Kusang ipinapadala ang mga bayad.",
+      "empty": "Wala pang bayad para sa linggong ito.",
+      "store": "Tindahan",
+      "rider": "Rider",
+      "noAccount": "Wala pang payout account",
+      "netted": "Kinita {earned}; {cash} na cash ang ibinawas",
+      "reference": "Reference ng transfer",
+      "markPaid": "Markahang bayad",
+      "reason": "Bakit pumalya",
+      "markFailed": "Markahang pumalya"
+    },
+    "cash": {
+      "loading": "Kinukuha…",
+      "failed": "May mali. Subukan ulit.",
+      "lead": "Mga rider na may hawak na cash mula sa COD. Itala ang inaabot nila; lumuluwag ang cash limit nila.",
+      "empty": "Walang rider na may hawak na cash.",
+      "holds": "May hawak na {amount} (limit {limit})",
+      "amount": "Halagang natanggap (₱)",
+      "reference": "Resibo o reference",
+      "record": "Itala ang inabot"
+    },
+    "reports": {
+      "loading": "Kinukuha…",
+      "failed": "May mali. Subukan ulit.",
+      "exportReport": "I-download ang ulat (CSV)",
+      "exportLedger": "Ledger para sa bookkeeper (CSV)",
+      "col": {
+        "zone": "Zone",
+        "orders": "Order",
+        "gmv": "GMV",
+        "takeRate": "Take rate",
+        "promo": "Gastos sa promo",
+        "refunds": "Refund",
+        "contribution": "Kontribusyon",
+        "perOrder": "Bawat order",
+        "cod": "Bahagi ng cash"
+      },
+      "definitions": "GMV: pagkain at delivery at service fee ng mga na-deliver na order. Take rate: komisyon at fee na naiiwan sa Klik Go (pagkatapos ng bayad sa rider) ÷ GMV. Kontribusyon: iyon, bawas ang promo, gateway fee at refund."
     }
   }
 }

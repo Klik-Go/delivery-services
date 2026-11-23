@@ -201,6 +201,34 @@ describeDb("row-level security: who can see which rows", () => {
     expect(await seen("customer1", payouts, [[w.merchantA, w.merchantB]])).toEqual([]);
   });
 
+  it("payout accounts and payout lines: the owner, the rider and admins only", async () => {
+    const parties = [[w.merchantA, w.merchantB, w.riders.A1, w.riders.B]];
+    const accounts = `select party_id as id from public.payout_accounts where party_id = any($1)`;
+    expect(await seen("ownerA", accounts, parties)).toEqual([w.merchantA]);
+    expect(await seen("riderA1", accounts, parties)).toEqual([w.riders.A1]);
+    expect(await seen("admin", accounts, parties)).toHaveLength(4);
+    for (const viewer of ["staffA", "coordA", "customer1"] as const) {
+      expect(await seen(viewer, accounts, parties), viewer).toEqual([]);
+    }
+    const lines = `select distinct p.party_id as id from public.payout_lines l join public.payouts p on p.id = l.payout_id
+                    where p.party_id = any($1)`;
+    expect(await seen("ownerA", lines, parties)).toEqual([w.merchantA]);
+    expect(await seen("riderA1", lines, parties)).toEqual([w.riders.A1]);
+    expect(await seen("staffA", lines, parties)).toEqual([]);
+  });
+
+  it("cash hand-ins: the rider, the zone's coordinator and admins; settlement runs: admins", async () => {
+    const q = `select rider_id as id from public.cod_remittances where rider_id = any($1)`;
+    const riders = [[w.riders.A1, w.riders.B]];
+    expect(await seen("riderA1", q, riders)).toEqual([w.riders.A1]);
+    expect(await seen("coordA", q, riders)).toEqual([w.riders.A1]);
+    expect(await seen("admin", q, riders)).toEqual(sorted(w.riders.A1, w.riders.B));
+    expect(await seen("customer1", q, riders)).toEqual([]);
+    const runs = `select gen_random_uuid() as id from public.settlement_runs`;
+    expect(await seen("coordA", runs)).toEqual([]);
+    expect((await seen("admin", runs)).length).toBeGreaterThan(0);
+  });
+
   it("webhook events are server-only: not even admins read them through the API", async () => {
     const q = `select event_id as id from public.webhook_events where event_id = 'evt_test_1'`;
     expect(await seen("admin", q)).toEqual([]);

@@ -219,7 +219,9 @@
       "waitingRider": "Waiting for the rider."
     },
     "ordersLink": "Orders",
-    "ordersLinkLead": "Accept new orders and mark them ready"
+    "ordersLinkLead": "Accept new orders and mark them ready",
+    "payouts": "Payouts",
+    "payoutsLead": "Weekly statements and where we pay you."
   },
   "StoreSettings": {
     "title": "Store settings",
@@ -658,7 +660,8 @@
       "week": "This week · {jobs, plural, one {# job} other {# jobs}}",
       "cash": "Cash on hand: {held} of your {limit} limit"
     },
-    "applyLink": "See your application"
+    "applyLink": "See your application",
+    "payouts": "Your payouts"
   },
   "Ops": {
     "nav": {
@@ -671,7 +674,8 @@
       "staff": "Staff",
       "label": "Console sections",
       "tickets": "Low ratings",
-      "promos": "Promos"
+      "promos": "Promos",
+      "finance": "Finance"
     },
     "loading": "Loading…",
     "failed": "Something went wrong. Try again.",
@@ -1022,6 +1026,105 @@
       "ofBudget": "of {budget}",
       "switchOff": "Switch off",
       "switchOn": "Switch on"
+    }
+  },
+  "Finance": {
+    "title": "Finance",
+    "lead": "Weekly payouts, cash riders hand in, and reports.",
+    "week": "Week (Monday to Sunday)",
+    "tabs": {
+      "payouts": "Payouts",
+      "cash": "Cash hand-ins",
+      "reports": "Reports"
+    },
+    "account": {
+      "methodLabel": "Paid to",
+      "method": {
+        "gcash": "GCash",
+        "maya": "Maya",
+        "bank": "Bank"
+      },
+      "name": "Account name (as on the ID)",
+      "mobileNumber": "Mobile number",
+      "accountNumber": "Account number",
+      "bank": "Bank",
+      "note": "Payouts go only to an account in your own name.",
+      "save": "Save",
+      "change": "Change",
+      "failed": "We couldn't save that. Please try again."
+    },
+    "statements": {
+      "pageTitle": "Payouts",
+      "pageLead": "Weekly settlements: Monday to Sunday, paid on Friday.",
+      "ownerOnly": "Only the store owner can see payouts.",
+      "riderTitle": "Your payouts",
+      "riderLead": "Weekly earnings, paid on Friday. Cash you still hold is taken off first.",
+      "backToRider": "Back to the rider app",
+      "accountTitle": "Where we pay you",
+      "loading": "Loading…",
+      "failed": "We couldn't load your payouts.",
+      "open": "Earned, not yet settled: {amount}",
+      "cashHeld": "Cash on delivery you still hold: {amount}",
+      "schedule": "Weeks close on Sunday and are paid on Friday. Amounts under {minimum} wait for the next week.",
+      "title": "Weekly statements",
+      "empty": "No statements yet.",
+      "week": "{from} – {to}",
+      "status": {
+        "draft": "Being sent",
+        "approved": "Approved",
+        "paid": "Paid",
+        "failed": "Failed: paid next week"
+      },
+      "details": "See the orders",
+      "hide": "Hide",
+      "csv": "Download CSV",
+      "netted": "Taken off the cash you held"
+    },
+    "payouts": {
+      "loading": "Loading…",
+      "failed": "Something went wrong. Please try again.",
+      "settle": "Settle this week",
+      "due": "{count, plural, one {# payout} other {# payouts}} to send · {total}",
+      "export": "Download the transfer list (CSV)",
+      "manual": "Payouts are sent by hand: transfer each amount, then mark it paid with the reference.",
+      "automatic": "Payouts are sent automatically.",
+      "empty": "No payouts for this week yet.",
+      "store": "Store",
+      "rider": "Rider",
+      "noAccount": "No payout account yet",
+      "netted": "Earned {earned}; {cash} of cash taken off",
+      "reference": "Transfer reference",
+      "markPaid": "Mark paid",
+      "reason": "Why it failed",
+      "markFailed": "Mark failed"
+    },
+    "cash": {
+      "loading": "Loading…",
+      "failed": "Something went wrong. Please try again.",
+      "lead": "Riders who hold cash from cash-on-delivery orders. Record what they hand in; it frees their cash limit.",
+      "empty": "No rider is holding cash.",
+      "holds": "Holds {amount} (limit {limit})",
+      "amount": "Amount received (₱)",
+      "reference": "Receipt or reference",
+      "record": "Record hand-in"
+    },
+    "reports": {
+      "loading": "Loading…",
+      "failed": "Something went wrong. Please try again.",
+      "exportReport": "Download the report (CSV)",
+      "exportLedger": "Ledger for the bookkeeper (CSV)",
+      "col": {
+        "zone": "Zone",
+        "orders": "Orders",
+        "gmv": "GMV",
+        "takeRate": "Take rate",
+        "promo": "Promo cost",
+        "refunds": "Refunds",
+        "contribution": "Contribution",
+        "perOrder": "Per order",
+        "cod": "Cash share"
+      },
+      "definitions": "GMV: food plus delivery and service fees of delivered orders. Take rate: commission and fees Klik Go keeps (after rider pay) ÷ GMV. Contribution: that, less promos, gateway fees and refunds."
     }
   }
 }

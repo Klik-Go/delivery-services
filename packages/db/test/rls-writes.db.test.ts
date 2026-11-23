@@ -154,6 +154,32 @@ describeDb("row-level security: what each role may change", () => {
     expect(theirs).toMatch(/row-level security/);
   });
 
+  it("payout accounts, payouts and cash hand-ins are written by the server only", async () => {
+    for (const user of [w.users.ownerA, w.users.riderA1, w.users.admin, w.users.coordA]) {
+      const attempts = [
+        () =>
+          db().query(
+            `insert into public.payout_accounts (party_type, party_id, method, account_name, account_number)
+           values ('merchant', $1, 'gcash', 'Sneaky', '09171111111')
+           on conflict (party_type, party_id) do update set account_number = excluded.account_number`,
+            [w.merchantA],
+          ),
+        () =>
+          db().query(`update public.payouts set status = 'paid', reference = 'X', paid_at = now()`),
+        () =>
+          db().query(
+            `insert into public.cod_remittances (rider_id, zone_id, amount_centavos, reference, ledger_txn_id)
+           values ($1, $2, 1, 'x', gen_random_uuid())`,
+            [w.riders.A1, w.zoneA],
+          ),
+      ];
+      for (const attempt of attempts) {
+        const error = await asUser(db(), user, () => failureOf(db(), attempt));
+        expect(error).toMatch(/permission denied/);
+      }
+    }
+  });
+
   it("ratings and support tickets are written by the server only, never by a client", async () => {
     for (const user of [w.users.customer1, w.users.riderA1, w.users.admin]) {
       const rating = await asUser(db(), user, () =>

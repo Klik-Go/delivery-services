@@ -155,6 +155,12 @@ export function RiderApp(): JSX.Element {
       ) : null}
 
       {earnings.data ? <EarningsCard earnings={earnings.data} /> : null}
+      <Link
+        href="/rider/payouts"
+        className="text-brand-800 min-h-tap inline-flex items-center font-semibold underline"
+      >
+        {t("payouts")}
+      </Link>
       <RateCustomers />
       <PushOptIn />
     </div>

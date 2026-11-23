@@ -4,6 +4,16 @@ Agents add items here when a decision is blocked, docs conflict, or the plan cou
 
 ## Open
 
+### Q35. Before real payouts: tax, payment rules and our numbers (needs a CPA and a lawyer)
+- **BIR withholding.** Payments to stores (and possibly riders) may require creditable withholding tax (BIR 2307; e-marketplace rules under RR 16-2023) and monthly/quarterly filings. Payouts today pay the full amount; once a CPA confirms the rate and scope, withholding becomes a ledger line and a statement line.
+- **BSP rules.** Collecting customer money and paying stores may make Klik Go a payment aggregator or operator of a payment system (BSP registration), unless PayMongo's marketplace/split features carry that role. A lawyer should confirm before live payouts.
+- **Our numbers (please confirm):**
+  - Weeks run Monday to Sunday (Manila); settlement Monday, transfers by Friday (docs/BUSINESS.md §5.3).
+  - Minimum payout ₱100; smaller amounts carry over (Appendix A mentions a minimum without a figure).
+  - Refunds after delivery are Klik Go's cost (`customer_refunds`), not taken from the store's payout. Tell us if stores should bear refunds they caused.
+  - Cash a rider still holds is taken from their earnings first; the rest of the cash stays owed until handed in.
+- **Owner actions:** stores and riders enter their GCash/Maya/bank account in their payouts page before the first payout; admins mark each transfer with its reference.
+
 ### Q34. Rewards numbers and guards (decision taken; please confirm)
 - **Stamps:** one per delivered order of **₱150 or more** before fees (so tiny orders can't farm stamps); **10 stamps = one free delivery**. BUSINESS §4.2 gives "every 10th order" but no minimum.
 - **Referral reward:** **₱50 off** for both friends after the friend's first **delivered** order (cash orders count once delivered). Rewards are single-use vouchers that last **90 days**, rather than a wallet balance: no new money path, and they show up in Rewards with "Use at checkout".
@@ -25,8 +35,8 @@ Riders see their pay before accepting: **₱35 base + ₱10 per started km after
 ### Q30. Riders signing in on the hosted app (owner action before rider testing)
 Riders sign in with a texted code only: the placeholder code (Q20) is for customers and refuses riders on purpose. Until `SEMAPHORE_API_KEY` is set in Vercel, riders cannot sign in on production. For a demo before SMS is live, add the rider's number in Supabase → Authentication → Phone → **Test phone numbers and OTPs** (number without "+", a 6-digit code), then approve them as a rider (they need a `riders` row with status `active`; approve under `/admin/riders`). Ten ready-made demo riders come from **Actions → Load demo riders**; their numbers and the steps are in `docs/DEMO.md` §4. Remove test numbers before launch.
 
-### Q31. Cash on hand and remittances (recorded; Phase 10)
-Cash collected on delivery is booked as `rider_cash_on_hand` and counts against the rider's cash limit (default ₱3,000), so a rider who keeps cash stops getting cash orders. Riders hand cash in through remittances, which arrive with finance in Phase 10; until then a coordinator can raise a rider's `cash_limit_centavos` in the database if needed. The background jobs now run every 10 seconds (pg_cron → `/api/internal/jobs`); that is ~260k light requests a month on Vercel, which fits the Hobby/Pro limits but is worth watching.
+### Q31. Cash on hand and remittances (done in Phase 10)
+Cash collected on delivery is booked as `rider_cash_on_hand` and counts against the rider's cash limit (default ₱3,000), so a rider who keeps cash stops getting cash orders. Riders hand cash in to the coordinator, who records it in **Console → Finance → Cash hand-ins**; that frees their cash limit. Cash still held at the weekly settlement is taken from their earnings. The background jobs now run every 10 seconds (pg_cron → `/api/internal/jobs`); that is ~260k light requests a month on Vercel, which fits the Hobby/Pro limits but is worth watching.
 
 ### Q28. Demo data for showing Klik Go — how to load it and run a demo (owner, 2026-11-06)
 Owner request: "Fill out all the data needed for a test demo." The hosted database only gets migrations (never the local seed), so demo stores are loaded on purpose with **Actions → Load demo data**.

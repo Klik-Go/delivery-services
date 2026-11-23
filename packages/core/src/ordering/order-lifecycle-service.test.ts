@@ -127,6 +127,7 @@ describe("OrderLifecycleService", () => {
       refundsFailed: 0,
       dispatch: { expired: 0, offered: 0, flagged: 0 },
       rewards: 0,
+      settled: 0,
     });
     expect(await w.store.refundsDue(10)).toEqual([]);
   });
@@ -141,6 +142,7 @@ describe("OrderLifecycleService", () => {
       refundsFailed: 1,
       dispatch: { expired: 0, offered: 0, flagged: 0 },
       rewards: 0,
+      settled: 0,
     });
     expect(w.logger.lines.map((l) => l.message)).toContain("jobs.refund_failed");
   });
@@ -266,11 +268,16 @@ describe("OrderLifecycleService", () => {
         processDelivered: () =>
           fail ? Promise.reject(new Error("db down")) : Promise.resolve({ processed: 2 }),
       },
+      settlement: {
+        settleDueWeek: () =>
+          fail ? Promise.reject(new Error("db down")) : Promise.resolve({ payouts: 3 }),
+      },
       logger: w.logger,
     });
-    expect((await jobs.run()).rewards).toBe(2);
+    expect(await jobs.run()).toMatchObject({ rewards: 2, settled: 3 });
     fail = true;
-    expect((await jobs.run()).rewards).toBe(0);
+    expect(await jobs.run()).toMatchObject({ rewards: 0, settled: 0 });
     expect(w.logger.lines.map((l) => l.message)).toContain("jobs.rewards_failed");
+    expect(w.logger.lines.map((l) => l.message)).toContain("jobs.settlement_failed");
   });
 });
