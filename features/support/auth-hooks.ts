@@ -9,7 +9,10 @@ import type { KlikWorld } from "./world";
  * the hour are not blocked by the 5-codes-per-phone limit. Counters
  * per network (OTP and partner applications) are reset only for the documentation range
  * 198.51.100.0/24 that tests use, so random test networks that collide never inherit a used-up
- * budget. Real numbers and networks are never reset.
+ * budget. The API's per-account limits (60 changes, 300 reads a minute) are reset for the same
+ * reserved test accounts only: every scenario signs in the same test customer, so otherwise how
+ * many of its changes fall within one minute depends on how fast the machine runs the suite.
+ * Real numbers and networks are never reset.
  */
 Before({ tags: "@auth" }, async function (this: KlikWorld) {
   this.api.headers.set("x-forwarded-for", randomIp());
@@ -21,6 +24,10 @@ Before({ tags: "@auth" }, async function (this: KlikWorld) {
         or key = 'otp:ip:unknown'
         or key like 'otp:ip:198.51.100.%'
         or key like 'partner-apply:ip:198.51.100.%' or key like 'menu-import:merchant:5eed0000-%'
-        or key like 'delivery-pin:%'`,
+        or key like 'delivery-pin:%'
+        or key in (select 'api:' || kind || ':user:' || u.id::text
+                     from auth.users u cross join (values ('w'), ('r')) as k(kind)
+                    where u.phone like '6391700001%'
+                       or u.phone in ('639170000021', '639170000022'))`,
   );
 });
