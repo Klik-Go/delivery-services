@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { After, Given, Then, When } from "@cucumber/cucumber";
+import { LEGAL_VERSIONS } from "@klikgo/types";
 import type { ApiResponse } from "../support/api-client";
 import { signedInStaff } from "../support/staff-session";
+import { randomIp, randomMobile } from "../support/supabase-test-auth";
 import type { KlikWorld, RiderSession } from "../support/world";
 
 /** A sari-sari store near Kape't Tinapay (same zone as Ayala Avenue). */
@@ -80,6 +82,29 @@ After({ tags: "@pabili" }, async function (this: KlikWorld) {
     [SEEDED_RIDERS],
   );
 });
+
+/**
+ * Pabili scenarios use a fresh customer each, not the shared test customer, so their quotes and
+ * orders never eat into that customer's per-minute write limit (60) that store checkouts rely on.
+ */
+Given(
+  "a new customer of their own, signed in and delivering to Ayala Avenue, Makati",
+  async function (this: KlikWorld) {
+    const code = process.env.PLACEHOLDER_OTP_CODE;
+    assert.ok(code, "Needs PLACEHOLDER_OTP_CODE to sign in a fresh customer");
+    this.api.headers.set("x-forwarded-for", randomIp());
+    const phone = randomMobile();
+    const requested = await this.api.post("/api/auth/otp", { phone });
+    assert.equal(requested.status, 200, requested.bodyText);
+    const verified = await this.api.post("/api/auth/otp/verify", { phone, code });
+    assert.equal(verified.status, 200, verified.bodyText);
+    const agreed = await this.api.post("/api/me/consents", LEGAL_VERSIONS);
+    assert.equal(agreed.status, 201, agreed.bodyText);
+    this.checkout.customerId = data<{ userId: string }>(
+      await this.api.request("GET", "/api/me"),
+    ).userId;
+  },
+);
 
 Given(
   "Pabili is switched on with a {word} item limit and a {word} fee",

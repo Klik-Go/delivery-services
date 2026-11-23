@@ -8,7 +8,7 @@ Feature: Pabili, a rider buys a shopping list for the customer
   Background:
     Given Pabili is switched on with a ₱1,500.00 item limit and a ₱49.00 fee
     And riders "Rosa Rider" and "Rico Rider" are online near Kape't Tinapay, Rosa the nearest
-    And a signed-in customer delivering to Ayala Avenue, Makati
+    And a new customer of their own, signed in and delivering to Ayala Avenue, Makati
 
   Scenario: The list is priced with the zone's delivery fee and the Pabili fee
     When the customer asks for the price of a Pabili list from "Aling Nena Sari-sari" with a ₱500.00 limit
