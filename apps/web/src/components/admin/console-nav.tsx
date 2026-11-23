@@ -16,6 +16,8 @@ const SECTIONS = [
   { href: "/admin/promos", key: "promos", adminOnly: true },
   { href: "/admin/settings", key: "settings", adminOnly: true },
   { href: "/admin/staff", key: "staff", adminOnly: true },
+  { href: "/admin/kpis", key: "kpis", adminOnly: true },
+  { href: "/admin/invites", key: "invites", adminOnly: true },
   { href: "/admin/system", key: "system", adminOnly: true },
 ] as const;
 

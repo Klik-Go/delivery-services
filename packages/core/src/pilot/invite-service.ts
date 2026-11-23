@@ -99,7 +99,7 @@ export class PilotInviteService implements IOrderingAccess {
   /** A batch of codes for flyers or a partner store (admins; audited). */
   async createBatch(
     user: SessionUser | null,
-    input: { readonly batch: string; readonly count: number; readonly expiresInDays?: number },
+    input: { readonly batch: string; readonly count: number; readonly expiresInDays?: number | undefined },
   ): Promise<Result<{ readonly codes: readonly string[] }, AppError>> {
     const admin = this.deps.access.platform(user);
     if (!admin.ok) return admin;
@@ -126,7 +126,7 @@ export class PilotInviteService implements IOrderingAccess {
   /** Texts a code to the oldest waitlist sign-ups who have none yet (admins; audited). */
   async inviteWaitlist(
     user: SessionUser | null,
-    input: { readonly count: number; readonly expiresInDays?: number },
+    input: { readonly count: number; readonly expiresInDays?: number | undefined },
   ): Promise<Result<{ readonly invited: number; readonly notSent: number }, AppError>> {
     const admin = this.deps.access.platform(user);
     if (!admin.ok) return admin;

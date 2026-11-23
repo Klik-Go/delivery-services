@@ -676,7 +676,9 @@
       "tickets": "Mababang rating",
       "promos": "Mga promo",
       "finance": "Pananalapi",
-      "system": "Sistema"
+      "system": "Sistema",
+      "invites": "Imbitasyon",
+      "kpis": "KPI"
     },
     "loading": "Naglo-load…",
     "failed": "May nangyaring mali. Subukan ulit.",
@@ -1277,6 +1279,83 @@
       "lead": "Naabisuhan na kami. Subukan ulit, o bumalik sa home.",
       "retry": "Subukan ulit",
       "home": "Bumalik sa home"
+    }
+  },
+  "Pilot": {
+    "join": {
+      "title": "Ilagay ang iyong invite code",
+      "lead": "Bukas ang Klik Go sa mga inimbitahang customer sa aming unang barangay. Nasa flyer o sa text namin ang iyong code.",
+      "label": "Invite code",
+      "submit": "Magsimulang mag-order",
+      "failed": "Hindi namin ma-check ang code. Subukan ulit.",
+      "noCode": "Wala pang code? Sumali sa waitlist at ite-text ka namin kapag may puwesto na.",
+      "waitlist": "Sumali sa waitlist",
+      "done": "Pasok ka na! Dinadala ka namin sa Klik Go…"
+    },
+    "checkout": {
+      "inviteRequired": "Invite-only muna ang Klik Go. Ilagay ang iyong invite code para makapag-order.",
+      "enterCode": "Ilagay ang invite code"
+    },
+    "invites": {
+      "title": "Mga imbitasyon",
+      "lead": "Mga code para sa invite-only na pilot: flyers, partner na tindahan at ang waitlist.",
+      "loading": "Kinukuha ang mga imbitasyon…",
+      "failed": "Hindi makuha ang mga imbitasyon.",
+      "usage": "{redeemed} sa {total} na code ang nagamit",
+      "batchTitle": "Gumawa ng mga code",
+      "batch": "Pangalan ng batch (hal. Flyers Poblacion)",
+      "count": "Ilan",
+      "expires": "Mag-e-expire pagkalipas ng (araw, opsyonal)",
+      "create": "Gumawa ng mga code",
+      "created": "Mga bagong code",
+      "waitlistTitle": "Imbitahan ang waitlist",
+      "waitlistLead": "Magte-text ng code sa mga unang sumali sa waitlist na wala pang code.",
+      "waitlistCount": "Ilang tao",
+      "invite": "Ipadala ang imbitasyon",
+      "invited": "Naimbitahan ang {invited}; {notSent} text ang hindi naipadala.",
+      "listTitle": "Mga code",
+      "empty": "Wala pang code.",
+      "statusUsed": "nagamit {date}",
+      "statusSent": "na-text {date}",
+      "statusOpen": "hindi pa nagagamit",
+      "statusExpired": "expired na",
+      "copy": "Kopyahin ang mga code"
+    },
+    "kpis": {
+      "title": "KPIs",
+      "lead": "Mga numero ng pilot ngayong araw, nakaraang 7 at 30 araw (oras sa Manila), kasama ang mga target ng business plan.",
+      "loading": "Kinukuwenta ang mga numero…",
+      "failed": "Hindi makuha ang mga KPI.",
+      "period": {
+        "today": "Ngayon",
+        "7d": "7 araw",
+        "30d": "30 araw"
+      },
+      "metric": "Sukatan",
+      "target": "Target",
+      "orders": "Mga order",
+      "delivered": "Naihatid",
+      "gmv": "GMV",
+      "aov": "Karaniwang halaga ng order",
+      "takeRate": "Take rate",
+      "contribution": "Kita bawat order",
+      "completion": "Rate ng nakumpleto",
+      "platformCancel": "Kinansela ng Klik Go o ng tindahan",
+      "codShare": "Bahagi ng cash on delivery",
+      "customers": "Mga customer na nag-order",
+      "repeat": "Nag-order nang 2+ beses",
+      "merchants": "Mga tindahang may order",
+      "riders": "Mga rider na may 10+ biyahe",
+      "confirm": "Oras ng pagkumpirma ng tindahan",
+      "delivery": "Oras ng paghahatid (kumpirmado hanggang naihatid)",
+      "utilisation": "Paggamit ng oras ng rider",
+      "earningsPerHour": "Kita ng rider bawat online na oras",
+      "none": "—",
+      "seconds": "{value}s",
+      "minutes": "{value} min",
+      "trend": "Nakaraang 14 na araw",
+      "day": "Araw",
+      "external": "Ang NPS (survey), crash-free sessions (Sentry) at API uptime (uptime monitor) ay sinusubaybayan sa labas ng app; tingnan ang docs/LAUNCH.md."
     }
   }
 }

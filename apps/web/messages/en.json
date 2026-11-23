@@ -676,7 +676,9 @@
       "tickets": "Low ratings",
       "promos": "Promos",
       "finance": "Finance",
-      "system": "System"
+      "system": "System",
+      "invites": "Invites",
+      "kpis": "KPIs"
     },
     "loading": "Loading…",
     "failed": "Something went wrong. Try again.",
@@ -1277,6 +1279,83 @@
       "lead": "We have been told about it. Try again, or go back home.",
       "retry": "Try again",
       "home": "Go home"
+    }
+  },
+  "Pilot": {
+    "join": {
+      "title": "Enter your invite code",
+      "lead": "Klik Go is open to invited customers in our first barangay. Your code is on the flyer or in the text we sent you.",
+      "label": "Invite code",
+      "submit": "Start ordering",
+      "failed": "We could not check that code. Try again.",
+      "noCode": "No code yet? Join the waitlist and we'll text you when there's room.",
+      "waitlist": "Join the waitlist",
+      "done": "You're in! Taking you to Klik Go…"
+    },
+    "checkout": {
+      "inviteRequired": "Klik Go is invite-only for now. Enter your invite code to order.",
+      "enterCode": "Enter invite code"
+    },
+    "invites": {
+      "title": "Invites",
+      "lead": "Codes for the invite-only pilot: flyers, partner stores and the waitlist.",
+      "loading": "Loading invites…",
+      "failed": "Invites are unavailable.",
+      "usage": "{redeemed} of {total} codes used",
+      "batchTitle": "Create codes",
+      "batch": "Batch name (e.g. Flyers Poblacion)",
+      "count": "How many",
+      "expires": "Expire after (days, optional)",
+      "create": "Create codes",
+      "created": "New codes",
+      "waitlistTitle": "Invite the waitlist",
+      "waitlistLead": "Texts a code to the people who joined the waitlist first and have no code yet.",
+      "waitlistCount": "How many people",
+      "invite": "Send invites",
+      "invited": "Invited {invited}; {notSent} texts could not be sent.",
+      "listTitle": "Codes",
+      "empty": "No codes yet.",
+      "statusUsed": "used {date}",
+      "statusSent": "texted {date}",
+      "statusOpen": "not used",
+      "statusExpired": "expired",
+      "copy": "Copy codes"
+    },
+    "kpis": {
+      "title": "KPIs",
+      "lead": "The pilot's numbers for today, the last 7 and 30 days (Manila time), with the targets from the business plan.",
+      "loading": "Working out the numbers…",
+      "failed": "The KPIs are unavailable.",
+      "period": {
+        "today": "Today",
+        "7d": "7 days",
+        "30d": "30 days"
+      },
+      "metric": "Measure",
+      "target": "Target",
+      "orders": "Orders placed",
+      "delivered": "Delivered",
+      "gmv": "GMV",
+      "aov": "Average order value",
+      "takeRate": "Take rate",
+      "contribution": "Contribution per order",
+      "completion": "Completion rate",
+      "platformCancel": "Cancelled by Klik Go or the store",
+      "codShare": "Cash on delivery share",
+      "customers": "Customers who ordered",
+      "repeat": "Ordered 2+ times",
+      "merchants": "Stores with orders",
+      "riders": "Riders with 10+ trips",
+      "confirm": "Store confirmation time",
+      "delivery": "Delivery time (confirmed to delivered)",
+      "utilisation": "Rider utilisation",
+      "earningsPerHour": "Rider pay per online hour",
+      "none": "—",
+      "seconds": "{value}s",
+      "minutes": "{value} min",
+      "trend": "Last 14 days",
+      "day": "Day",
+      "external": "NPS (customer survey), crash-free sessions (Sentry) and API uptime (uptime monitor) are tracked outside the app; see docs/LAUNCH.md."
     }
   }
 }

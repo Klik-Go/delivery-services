@@ -1,0 +1,61 @@
+name: Smoke test (production)
+
+# features/smoke + features/health.feature (@smoke) against a deployed app, using public API calls
+# only (no database access). Run after each production deploy and every pilot morning
+# (docs/LAUNCH.md §5). Configure on the "production" environment:
+#   variable SMOKE_BASE_URL (e.g. https://your-domain), optional SMOKE_STORE_SLUG, SMOKE_LAT, SMOKE_LNG
+#   secrets  SMOKE_CUSTOMER_PHONE + SMOKE_OTP_CODE (a Supabase test number and its fixed code)
+on:
+  workflow_dispatch:
+    inputs:
+      place_order:
+        description: "Also place a cash order at the test store and cancel it at once"
+        type: boolean
+        default: false
+  schedule:
+    - cron: "17 23 * * *" # 07:17 Asia/Manila, before lunch
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Smoke (@smoke)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+    env:
+      BASE_URL: ${{ vars.SMOKE_BASE_URL }}
+      SMOKE_STORE_SLUG: ${{ vars.SMOKE_STORE_SLUG }}
+      SMOKE_LAT: ${{ vars.SMOKE_LAT }}
+      SMOKE_LNG: ${{ vars.SMOKE_LNG }}
+      SMOKE_CUSTOMER_PHONE: ${{ secrets.SMOKE_CUSTOMER_PHONE }}
+      SMOKE_OTP_CODE: ${{ secrets.SMOKE_OTP_CODE }}
+      SMOKE_PLACE_ORDER: ${{ inputs.place_order && 'true' || 'false' }}
+    steps:
+      - name: Check the configuration
+        id: config
+        run: |
+          if [ -z "$BASE_URL" ]; then
+            echo "::warning::Set the SMOKE_BASE_URL variable on the production environment (docs/LAUNCH.md). Skipping."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v7
+        if: steps.config.outputs.ready == 'true'
+      - uses: ./.github/actions/setup
+        if: steps.config.outputs.ready == 'true'
+      - name: Install the browser
+        if: steps.config.outputs.ready == 'true'
+        run: pnpm --filter @klikgo/web exec playwright install chromium
+      - name: Smoke test
+        if: steps.config.outputs.ready == 'true'
+        run: node --import tsx ./node_modules/@cucumber/cucumber/bin/cucumber.js --tags @smoke
+      - name: Upload the report
+        if: always() && steps.config.outputs.ready == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: smoke-report
+          path: reports/
+          if-no-files-found: ignore

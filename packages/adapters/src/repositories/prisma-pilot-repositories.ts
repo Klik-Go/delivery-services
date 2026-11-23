@@ -210,8 +210,8 @@ export class PrismaKpiRepository implements IKpiRepository {
         (select sum(f.amount_centavos) from public.refunds f
           where f.status = 'succeeded' and f.created_at >= ${from} and f.created_at < ${to}) as refunds,
         (select avg(extract(epoch from (o.accepted_at - o.placed_at)))::float8 from public.orders o
-          where o.accepted_at >= ${from} and o.accepted_at < ${to} and o.placed_at is not null) as confirm_s,
-        (select avg(extract(epoch from (delivered_at - accepted_at)))::float8 from d where accepted_at is not null) as delivery_s,
+          where o.accepted_at >= ${from} and o.accepted_at < ${to} and o.placed_at <= o.accepted_at) as confirm_s,
+        (select avg(extract(epoch from (delivered_at - accepted_at)))::float8 from d where accepted_at <= delivered_at) as delivery_s,
         (select count(*) from per_customer) as customers,
         (select count(*) from per_customer where n >= 2) as repeat_customers,
         (select count(distinct merchant_id) from d) as merchants,
@@ -224,7 +224,7 @@ export class PrismaKpiRepository implements IKpiRepository {
           where s.started_at < ${to} and coalesce(s.ended_at, ${to}) > ${from}) as online_s,
         (select sum(extract(epoch from (d.delivered_at - x.responded_at)))::float8
            from d join public.dispatch_offers x on x.order_id = d.id and x.rider_id = d.rider_id and x.status = 'accepted'
-          where x.responded_at is not null) as busy_s`;
+          where x.responded_at <= d.delivered_at) as busy_s`;
     return {
       placed: num(row?.placed),
       delivered: num(row?.delivered),
@@ -273,7 +273,7 @@ export class PrismaKpiRepository implements IKpiRepository {
                 from public.orders o
                where o.status = 'delivered' and (timezone('Asia/Manila', o.delivered_at))::date = days.day) as gmv,
              (select avg(extract(epoch from (o.accepted_at - o.placed_at)))::float8 from public.orders o
-               where o.placed_at is not null and (timezone('Asia/Manila', o.accepted_at))::date = days.day) as confirm_s
+               where o.placed_at <= o.accepted_at and (timezone('Asia/Manila', o.accepted_at))::date = days.day) as confirm_s
         from days
        order by days.day`;
     return rows.map((r) => ({

@@ -71,3 +71,41 @@ export const KycRetentionRolloutSchema = z.object({
   rejected_days: z.number().int().min(30).max(3650),
   inactive_days: z.number().int().min(90).max(3650),
 });
+
+// ---------------------------------------------------------------------------
+// Pilot launch (Phase 12)
+// ---------------------------------------------------------------------------
+
+/** POST /api/invites/redeem */
+export const RedeemInviteSchema = z.object({
+  code: z
+    .string()
+    .trim()
+    .min(4, "Enter your invite code.")
+    .max(20)
+    .regex(/^[A-Za-z0-9 -]+$/, "Codes have letters and numbers only."),
+});
+export type RedeemInviteInput = z.infer<typeof RedeemInviteSchema>;
+
+/** POST /api/admin/invites: a batch of codes for flyers or a partner store. */
+export const CreateInvitesSchema = z.object({
+  batch: z.string().trim().min(1, "Name the batch, e.g. Flyers Poblacion.").max(80),
+  count: z.number().int().min(1).max(200),
+  expiresInDays: z.number().int().min(1).max(365).optional(),
+});
+export type CreateInvitesInput = z.infer<typeof CreateInvitesSchema>;
+
+/** POST /api/admin/invites/waitlist: text codes to the oldest waiting people. */
+export const InviteWaitlistSchema = z.object({
+  count: z.number().int().min(1).max(200),
+  expiresInDays: z.number().int().min(1).max(365).optional(),
+});
+export type InviteWaitlistInput = z.infer<typeof InviteWaitlistSchema>;
+
+/** Settings for the pilot flags. */
+export const InviteOnlyRolloutSchema = z.object({
+  max_customers: z.number().int().min(1).max(100_000),
+});
+export const PilotScopeRolloutSchema = z.object({
+  categories: z.array(z.enum(["food", "grocery", "pharmacy"])).min(1),
+});
