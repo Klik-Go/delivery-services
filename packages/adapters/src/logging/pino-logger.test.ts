@@ -1,6 +1,7 @@
 import { Writable } from "node:stream";
 import { describe, expect, it } from "vitest";
 import { createPinoLogger } from "./pino-logger";
+import { currentRequestId, runWithRequestContext } from "./request-context";
 
 function captureLogs(): { stream: Writable; lines: () => Record<string, unknown>[] } {
   const chunks: string[] = [];
@@ -92,5 +93,25 @@ describe("PinoLogger", () => {
     logger.info("noise");
     logger.error("signal");
     expect(lines().map((l) => l.msg)).toEqual(["signal"]);
+  });
+
+  it("stamps every line written during a request with its id, even from deep in a service", async () => {
+    const { stream, lines } = captureLogs();
+    const logger = createPinoLogger({ level: "info", service: "klikgo-web", destination: stream });
+    const service = async (): Promise<void> => {
+      await Promise.resolve();
+      logger.info("dispatch.offered", { orderId: "o-1", contact_phone: "+639171234567" });
+    };
+    await runWithRequestContext({ requestId: "req-42" }, service);
+    logger.info("outside");
+    expect(lines()).toEqual([
+      expect.objectContaining({
+        msg: "dispatch.offered",
+        requestId: "req-42",
+        contact_phone: "[redacted]",
+      }),
+      expect.not.objectContaining({ requestId: expect.anything() }),
+    ]);
+    expect(currentRequestId()).toBeUndefined();
   });
 });

@@ -1,5 +1,6 @@
 import type { LogContext, Logger } from "@klikgo/core";
 import pino, { type DestinationStream, type Logger as Pino } from "pino";
+import { currentRequestId } from "./request-context";
 
 /** Log levels we allow in configuration. */
 export type LogLevel = "debug" | "info" | "warn" | "error";
@@ -29,6 +30,11 @@ const SENSITIVE_KEYS = [
   "cookie",
   "address",
   "landmark",
+  "contact_phone",
+  "contactPhone",
+  "account_number",
+  "accountNumber",
+  "street",
 ] as const;
 
 const REDACT_PATHS = SENSITIVE_KEYS.flatMap((key) => [key, `*.${key}`, `*.*.${key}`]);
@@ -65,6 +71,11 @@ export function createPinoLogger(options: PinoLoggerOptions): Logger {
       level: options.level,
       base: { service: options.service },
       messageKey: "msg",
+      // Every line written while a request runs carries its id (logging/request-context.ts).
+      mixin: () => {
+        const requestId = currentRequestId();
+        return requestId ? { requestId } : {};
+      },
       timestamp: pino.stdTimeFunctions.isoTime,
       formatters: { level: (label) => ({ level: label }) },
       serializers: { err: pino.stdSerializers.err },

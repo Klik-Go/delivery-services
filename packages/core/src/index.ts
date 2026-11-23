@@ -16,3 +16,6 @@ export * from "./ops";
 export * from "./retention";
 export * from "./finance";
 export * from "./shared/csv";
+export * from "./hardening";
+export * from "./shared/pii";
+export * from "./shared/file-type";

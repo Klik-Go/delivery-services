@@ -1,5 +1,14 @@
 import { randomBytes } from "node:crypto";
-import { AppError, err, ok, type IPhoneAccountAdmin, type Logger, type Result } from "@klikgo/core";
+import {
+  AppError,
+  err,
+  ok,
+  ServiceUnavailableError,
+  type IAccountAuthAdmin,
+  type IPhoneAccountAdmin,
+  type Logger,
+  type Result,
+} from "@klikgo/core";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**
@@ -54,5 +63,31 @@ export class SupabasePhoneAccountAdmin implements IPhoneAccountAdmin {
     if (!error) return ok(data?.id ?? null);
     this.logger.error("supabase.phone_account_lookup_failed", { code: error.code });
     return err(new AppError("INTERNAL", "Could not sign you in. Try again in a moment."));
+  }
+}
+
+/**
+ * Account erasure on the Supabase Auth side: a soft delete removes the phone, email, identities and
+ * sessions but keeps the user id, so orders and payouts (which reference it) stay intact.
+ */
+export class SupabaseAccountAuthAdmin implements IAccountAuthAdmin {
+  constructor(
+    private readonly admin: SupabaseClient,
+    private readonly logger: Logger,
+  ) {}
+
+  async softDelete(userId: string): Promise<Result<void, AppError>> {
+    const { error } = await this.admin.auth.admin.deleteUser(userId, true);
+    if (!error || error.status === 404) return ok(undefined);
+    this.logger.error("supabase.account_soft_delete_failed", {
+      userId,
+      status: error.status,
+      code: error.code,
+    });
+    return err(
+      new ServiceUnavailableError(
+        "We could not finish deleting your account. Try again in a moment.",
+      ),
+    );
   }
 }

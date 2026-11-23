@@ -301,6 +301,14 @@ export async function buildWorld(db: pg.ClientBase, fx: DbFixtures): Promise<Wor
     [customer1, order1],
   );
   await db.query(
+    `insert into public.consents (user_id, document, version)
+     values ($1, 'terms', '2026-11-23'), ($1, 'privacy', '2026-11-23'), ($2, 'terms', '2026-11-23')`,
+    [customer1, customer2],
+  );
+  await db.query(
+    `insert into public.job_runs (job, finished_at, ok, summary) values ('background', now(), true, '{}')`,
+  );
+  await db.query(
     `insert into public.audit_logs (actor_id, actor_role, action, entity_type, entity_id)
      values ($1, 'admin', 'kyc.view', 'rider_kyc_documents', null)`,
     [admin],

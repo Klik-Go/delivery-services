@@ -1,3 +1,4 @@
+import type { IFeatureSwitches } from "../hardening/ports";
 import type {
   CheckoutQuoteRequest,
   OrderStatus,
@@ -112,6 +113,9 @@ const LIVE_FOR_PIN: readonly OrderStatus[] = [
   "picked_up",
 ];
 
+/** Shown when the admin has paused online payments (docs/BUSINESS.md §12). */
+export const ONLINE_PAYMENTS_PAUSED = "Online payment is paused. Pay cash on delivery.";
+
 const invalid = (path: string, message: string): ValidationError =>
   new ValidationError(message, [{ path, message }]);
 
@@ -132,6 +136,8 @@ export class OrderService {
       clock: Clock;
       logger: Logger;
       notifier: IOrderNotifier;
+      /** online_payments off = cash on delivery only (gateway down). All on when not wired. */
+      switches?: IFeatureSwitches;
     },
   ) {}
 
@@ -152,7 +158,7 @@ export class OrderService {
       promoError,
       tipCentavos,
       totalCentavos,
-      paymentMethods: this.methodsFor(store),
+      paymentMethods: this.methodsFor(store, await this.onlinePayments()),
       slots: deliverySlots(store, this.deps.clock.now()).map((slot) => slot.toISOString()),
     });
   }
@@ -234,10 +240,14 @@ export class OrderService {
 
     const gateway = this.deps.gateways.forMethod(input.paymentMethod);
     if (!gateway) return err(invalid("paymentMethod", "That payment method is not available."));
+    const online = await this.onlinePayments();
+    if (gateway.paysUpfront && !online) {
+      return err(new ConflictError(ONLINE_PAYMENTS_PAUSED));
+    }
 
     const priced = await this.price(input, actor, context.deviceId ?? null);
     if (!priced.ok) return priced;
-    const checked = this.checkOrderable(input, priced.value, gateway);
+    const checked = this.checkOrderable(input, priced.value, gateway, online);
     if (!checked.ok) return checked;
     const { quote, store, promo, tipCentavos, totalCentavos } = priced.value;
 
@@ -410,6 +420,7 @@ export class OrderService {
     input: PlaceOrderRequest,
     priced: Priced,
     gateway: IPaymentGateway,
+    online: boolean,
   ): Result<void, AppError> {
     const { quote, store, promoError } = priced;
     if (quote.issues.length > 0 || quote.lines.length === 0) {
@@ -424,7 +435,7 @@ export class OrderService {
       return err(invalid("dropoff", "This store doesn't deliver to your pin."));
     }
     if (promoError) return err(invalid("promoCode", promoError));
-    if (!this.methodsFor(store).includes(input.paymentMethod)) {
+    if (!this.methodsFor(store, online).includes(input.paymentMethod)) {
       return err(invalid("paymentMethod", "This store doesn't take that payment method."));
     }
     if (gateway.paysUpfront && priced.totalCentavos <= 0) {
@@ -442,10 +453,16 @@ export class OrderService {
     return ok(undefined);
   }
 
-  private methodsFor(store: QuoteCatalog["merchant"]): PaymentMethod[] {
-    return this.deps.gateways
-      .availableMethods()
-      .filter((method) => store.acceptsCod || this.deps.gateways.forMethod(method)?.paysUpfront);
+  /** Methods this store takes now; online ones only while online payments are on. */
+  private methodsFor(store: QuoteCatalog["merchant"], online: boolean): PaymentMethod[] {
+    return this.deps.gateways.availableMethods().filter((method) => {
+      const upfront = this.deps.gateways.forMethod(method)?.paysUpfront ?? false;
+      return upfront ? online : store.acceptsCod;
+    });
+  }
+
+  private async onlinePayments(): Promise<boolean> {
+    return this.deps.switches ? this.deps.switches.isOn("online_payments") : true;
   }
 }
 

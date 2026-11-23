@@ -7,7 +7,7 @@ import { MenuImportService } from "./menu-import-service";
 
 const STORE = "merchant-a";
 const owner = sessionUser("owner-a", [{ role: "merchant_owner", merchantId: STORE }]);
-const photo = { data: new Uint8Array([1, 2, 3]), mimeType: "image/jpeg" };
+const photo = { data: new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0, 16]), mimeType: "image/jpeg" };
 
 function setup() {
   const parser = new FakeMenuParser();
@@ -21,6 +21,14 @@ function setup() {
 }
 
 describe("MenuImportService", () => {
+  it("refuses a file that only claims to be a photo", async () => {
+    const { service, parser } = setup();
+    const fake = { data: new TextEncoder().encode("%PDF-1.7"), mimeType: "image/jpeg" };
+    const refused = await service.readMenuPhoto(owner, STORE, fake);
+    expect(!refused.ok && refused.error.code).toBe("VALIDATION_FAILED");
+    expect(parser.images).toEqual([]);
+  });
+
   it("turns a menu photo into drafts with prices in centavos and a confidence", async () => {
     const { service } = setup();
     const drafts = await service.readMenuPhoto(owner, STORE, photo);

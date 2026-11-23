@@ -34,3 +34,7 @@ export * from "./notifications/web-push-sender";
 export * from "./repositories/prisma-notifications";
 export * from "./repositories/prisma-retention-repositories";
 export * from "./repositories/prisma-finance-repository";
+export * from "./repositories/prisma-hardening-repositories";
+export * from "./observability/sentry-error-reporter";
+export * from "./observability/posthog-analytics";
+export * from "./logging/request-context";

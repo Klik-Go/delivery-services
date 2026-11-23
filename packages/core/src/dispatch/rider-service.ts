@@ -1,3 +1,4 @@
+import { verifiedFileType } from "../shared/file-type";
 import type { IRateLimiter } from "../auth/ports";
 import type { SessionUser } from "../auth/session-user";
 import type { GeoPoint } from "../merchant/ports";
@@ -88,6 +89,9 @@ function manilaWeekStart(now: Date): Date {
   const daysSinceMonday = (weekday + 6) % 7;
   return new Date(midnight.getTime() - daysSinceMonday * 86_400_000);
 }
+
+/** Delivery proofs are photos, recognised from their bytes. */
+const PROOF_PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
 
 /**
  * Everything a rider does in the app (docs/BUSINESS.md §5.2 steps 4–6, §5.3): go online, share
@@ -332,6 +336,11 @@ export class RiderService {
     }
     if (!proof.photo) {
       return err(new ValidationError("Take a photo of the order at the door."));
+    }
+    if (!verifiedFileType(proof.photo.bytes, proof.photo.contentType, PROOF_PHOTO_TYPES)) {
+      return err(
+        new ValidationError("That file is not a photo. Take a photo of the order at the door."),
+      );
     }
     return ok(true);
   }

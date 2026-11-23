@@ -66,6 +66,8 @@ const DOMAINS = [
       "audit_logs",
       "feature_flags",
       "fee_rules",
+      "consents",
+      "job_runs",
     ],
   ],
 ];

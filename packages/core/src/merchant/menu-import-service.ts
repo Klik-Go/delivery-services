@@ -1,3 +1,4 @@
+import { verifiedFileType } from "../shared/file-type";
 import { MAX_MENU_IMPORT_BYTES, MENU_IMPORT_IMAGE_TYPES } from "@klikgo/types";
 import type { AuthorizationService } from "../auth/authorization-service";
 import { authorize } from "../auth/authorize";
@@ -37,7 +38,10 @@ export class MenuImportService {
   ): Promise<Result<ParsedMenuItem[], AppError>> {
     const allowed = authorize(this.deps.authz, user, { type: "merchant.manage", merchantId });
     if (!allowed.ok) return allowed;
-    if (!MENU_IMPORT_IMAGE_TYPES.some((type) => type === image.mimeType)) {
+    if (
+      !MENU_IMPORT_IMAGE_TYPES.some((type) => type === image.mimeType) ||
+      !verifiedFileType(image.data, image.mimeType, MENU_IMPORT_IMAGE_TYPES)
+    ) {
       return err(new ValidationError("Upload a photo (JPEG, PNG or WebP) of your menu."));
     }
     if (image.data.byteLength === 0 || image.data.byteLength > MAX_MENU_IMPORT_BYTES) {

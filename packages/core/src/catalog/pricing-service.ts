@@ -1,9 +1,15 @@
+import type { IFeatureSwitches } from "../hardening/ports";
 import type { CartQuoteRequest } from "@klikgo/types";
 import { NotFoundError, type AppError } from "../shared/errors";
 import { addCentavos, type Centavos } from "../shared/money";
 import { err, ok, type Result } from "../shared/result";
 import type { Clock } from "../ports/clock";
-import type { DeliveryFeeStrategy, FeeContext, SurchargeStrategy } from "./fee-strategies";
+import {
+  FlatZoneFee,
+  type DeliveryFeeStrategy,
+  type FeeContext,
+  type SurchargeStrategy,
+} from "./fee-strategies";
 import { etaRange, roadMeters } from "./geo";
 import { openingStatus, type OpeningStatus } from "./hours";
 import type { IPricingCatalog, IServiceArea, PricedItem, QuoteCatalog, ZoneFees } from "./ports";
@@ -44,6 +50,9 @@ export interface CartQuote {
   readonly opening: OpeningStatus;
 }
 
+/** While the flat fee is on, distance does not matter. */
+const FLAT_FEE: readonly DeliveryFeeStrategy[] = [new FlatZoneFee()];
+
 /**
  * Prices carts on the server (docs/BUILD_PLAN.md Phase 4): menu prices and choices from the
  * database, a delivery fee from the first strategy that applies, then surcharges. Never trusts a
@@ -57,13 +66,19 @@ export class PricingService {
       delivery: readonly DeliveryFeeStrategy[];
       surcharges: readonly SurchargeStrategy[];
       clock: Clock;
+      /** flat_delivery_fee on = every delivery costs the zone base fee. */
+      switches?: IFeatureSwitches;
     },
   ) {}
 
   /** The delivery fee for a trip of `distanceM` in a zone (also used for feed estimates). */
-  deliveryFee(fees: ZoneFees, distanceM: number): Centavos {
+  deliveryFee(
+    fees: ZoneFees,
+    distanceM: number,
+    strategies: readonly DeliveryFeeStrategy[] = this.deps.delivery,
+  ): Centavos {
     const context: FeeContext = { distanceM, subtotalCentavos: 0, fees };
-    for (const strategy of this.deps.delivery) {
+    for (const strategy of strategies) {
       const fee = strategy.deliveryFee(context);
       if (fee !== null) return fee;
     }
@@ -101,7 +116,8 @@ export class PricingService {
     const distanceM = roadMeters(merchant.location, request.dropoff);
     const zone = await this.deps.serviceArea.zoneFor(request.dropoff);
     const context: FeeContext = { distanceM, subtotalCentavos: subtotal, fees };
-    const deliveryFee = this.deliveryFee(fees, distanceM);
+    const flat = (await this.deps.switches?.isOn("flat_delivery_fee")) ?? false;
+    const deliveryFee = this.deliveryFee(fees, distanceM, flat ? FLAT_FEE : this.deps.delivery);
     const surcharge = (kind: SurchargeStrategy["kind"]): Centavos =>
       addCentavos(
         ...this.deps.surcharges.filter((s) => s.kind === kind).map((s) => s.amount(context)),

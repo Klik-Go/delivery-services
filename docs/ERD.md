@@ -14,6 +14,7 @@ erDiagram
   profiles ||--o{ addresses : "user_id"
   profiles |o--o{ cod_remittances : "received_by"
   zones ||--o{ cod_remittances : "zone_id"
+  profiles ||--o{ consents : "user_id"
   profiles ||--o{ device_push_subscriptions : "user_id"
   profiles |o--o{ feature_flags : "updated_by"
   zones ||--o{ fee_rules : "zone_id"
@@ -280,6 +281,7 @@ erDiagram
     timestamptz reviewed_at
     text rejection_reason
     timestamptz created_at
+    timestamptz purged_at
   }
   rider_locations {
     uuid rider_id PK, FK
@@ -577,6 +579,7 @@ erDiagram
 
 ```mermaid
 erDiagram
+  profiles ||--o{ consents : "user_id"
   profiles ||--o{ device_push_subscriptions : "user_id"
   profiles |o--o{ feature_flags : "updated_by"
   zones ||--o{ fee_rules : "zone_id"
@@ -737,6 +740,22 @@ erDiagram
     timestamptz created_at
     timestamptz updated_at
   }
+  consents {
+    uuid id PK
+    uuid user_id FK, UK
+    text document UK
+    text version UK
+    timestamptz accepted_at
+  }
+  job_runs {
+    int8 id PK
+    text job
+    timestamptz started_at
+    timestamptz finished_at
+    bool ok
+    jsonb summary
+    text error
+  }
 ```
 
 ## Row-level security policies
@@ -751,11 +770,13 @@ Role helpers live in the `private` schema (`has_role`, `is_admin`, `is_merchant_
 | `addresses` | on | `addresses_admin_select` (select · authenticated)<br>`addresses_owner_all` (all · authenticated) |
 | `audit_logs` | on | `audit_logs_select_admin` (select · authenticated) |
 | `cod_remittances` | on | `cod_remittances_select` (select · authenticated) |
+| `consents` | on | `consents_select` (select · authenticated) |
 | `device_push_subscriptions` | on | `device_push_subscriptions_own` (all · authenticated) |
 | `dispatch_offers` | on | `dispatch_offers_select` (select · authenticated) |
 | `feature_flags` | on | `feature_flags_select` (select · authenticated) |
 | `fee_rules` | on | `fee_rules_select` (select · anon, authenticated) |
 | `invites` | on | `invites_select` (select · authenticated) |
+| `job_runs` | on | `job_runs_select_admin` (select · authenticated) |
 | `ledger_entries` | on | `ledger_entries_select` (select · authenticated) |
 | `loyalty_stamps` | on | `loyalty_stamps_select` (select · authenticated) |
 | `menu_categories` | on | `menu_categories_member_write` (all · authenticated)<br>`menu_categories_select` (select · anon, authenticated) |

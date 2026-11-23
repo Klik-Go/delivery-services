@@ -3,7 +3,9 @@ import {
   ok,
   ServiceUnavailableError,
   type AppError,
+  type IKycFileRemover,
   type IKycStorage,
+  type IStorageProbe,
   type Logger,
   type Result,
 } from "@klikgo/core";
@@ -16,7 +18,7 @@ export const RIDER_KYC_BUCKET = "rider-kyc";
  * Rider documents in Supabase Storage (service role, server only). Riders upload through the BFF;
  * reviewers get links that expire after the given seconds. Nothing in the bucket is public.
  */
-export class SupabaseKycStorage implements IKycStorage {
+export class SupabaseKycStorage implements IKycStorage, IKycFileRemover, IStorageProbe {
   constructor(
     private readonly client: SupabaseClient,
     private readonly logger: Logger,
@@ -45,5 +47,33 @@ export class SupabaseKycStorage implements IKycStorage {
       return err(new ServiceUnavailableError("The document couldn't be saved. Try again."));
     }
     return ok(undefined);
+  }
+
+  /** Deletes files (retention and account erasure); files that are already gone are fine. */
+  async remove(paths: readonly string[]): Promise<Result<void, AppError>> {
+    if (paths.length === 0) return ok(undefined);
+    const { error } = await this.client.storage.from(RIDER_KYC_BUCKET).remove([...paths]);
+    if (error) {
+      this.logger.error("storage.kyc_remove_failed", {
+        files: paths.length,
+        message: error.message,
+      });
+      return err(new ServiceUnavailableError("ID files could not be deleted right now."));
+    }
+    return ok(undefined);
+  }
+
+  /** Readiness: the private bucket answers (lists at most one object, reads no file). */
+  async ping(): Promise<Result<void, AppError>> {
+    try {
+      const { error } = await this.client.storage.from(RIDER_KYC_BUCKET).list("", { limit: 1 });
+      if (!error) return ok(undefined);
+      this.logger.warn("storage.ping_failed", { message: error.message });
+    } catch (failure) {
+      this.logger.warn("storage.ping_failed", {
+        message: failure instanceof Error ? failure.name : "unknown",
+      });
+    }
+    return err(new ServiceUnavailableError("File storage is not answering."));
   }
 }
