@@ -19,6 +19,10 @@ export async function POST(request: Request): Promise<Response> {
   return runRoute(request, async (meta) => {
     const body = await parseBody(request, ConsentAcceptSchema);
     if (!body.ok) return jsonError(body.error, meta);
-    return respond(await getContainer().consents.accept(await getSessionUser(), body.value), meta, 201);
+    return respond(
+      await getContainer().consents.accept(await getSessionUser(), body.value),
+      meta,
+      201,
+    );
   });
 }

@@ -104,14 +104,14 @@ describe("PinoLogger", () => {
     };
     await runWithRequestContext({ requestId: "req-42" }, service);
     logger.info("outside");
-    expect(lines()).toEqual([
-      expect.objectContaining({
-        msg: "dispatch.offered",
-        requestId: "req-42",
-        contact_phone: "[redacted]",
-      }),
-      expect.not.objectContaining({ requestId: expect.anything() }),
-    ]);
+    const [inside, outside] = lines();
+    expect(inside).toMatchObject({
+      msg: "dispatch.offered",
+      requestId: "req-42",
+      contact_phone: "[redacted]",
+    });
+    expect(outside?.msg).toBe("outside");
+    expect(outside).not.toHaveProperty("requestId");
     expect(currentRequestId()).toBeUndefined();
   });
 });

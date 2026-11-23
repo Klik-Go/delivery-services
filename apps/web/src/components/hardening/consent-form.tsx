@@ -43,22 +43,22 @@ export function ConsentForm({ next }: { readonly next: string }): JSX.Element {
 
   return (
     <form onSubmit={(e) => void submit(e)} className="flex flex-col gap-4" noValidate>
-      <label className="text-ink flex min-h-tap items-start gap-3">
+      <label className="text-ink min-h-tap flex items-start gap-3">
         <input
           type="checkbox"
           checked={terms}
           onChange={(e) => setTerms(e.target.checked)}
-          className="mt-1 size-5"
+          className="mt-1 size-5 shrink-0"
           name="terms"
         />
         <span>{t.rich("terms", { link: link("/legal/terms") })}</span>
       </label>
-      <label className="text-ink flex min-h-tap items-start gap-3">
+      <label className="text-ink min-h-tap flex items-start gap-3">
         <input
           type="checkbox"
           checked={privacy}
           onChange={(e) => setPrivacy(e.target.checked)}
-          className="mt-1 size-5"
+          className="mt-1 size-5 shrink-0"
           name="privacy"
         />
         <span>{t.rich("privacy", { link: link("/legal/privacy") })}</span>

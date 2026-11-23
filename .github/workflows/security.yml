@@ -1,0 +1,46 @@
+name: Security
+
+# Secret scanning and dependency audit (docs/SECURITY.md, OWASP ASVS L1 14.2 / 2.10).
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "41 2 * * 1" # Mondays 10:41 Asia/Manila: new advisories for unchanged code
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  secrets:
+    name: Secret scan (gitleaks)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      # Pull requests: only the commits this PR adds. Elsewhere: the whole history.
+      - name: Scan commits for secrets
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          range=""
+          if [ -n "$BASE_SHA" ]; then range="--log-opts=${BASE_SHA}..HEAD"; fi
+          docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.28.0 \
+            git /repo --config /repo/.gitleaks.toml --redact --no-banner --exit-code 1 $range
+
+  audit:
+    name: Dependency audit (high and critical)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - name: pnpm audit
+        run: pnpm audit --audit-level high

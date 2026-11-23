@@ -1265,7 +1265,8 @@
       "storeLate": "hindi tinanggap ng tindahan sa oras",
       "noRider": "walang rider na kumuha",
       "refresh": "I-refresh",
-      "checkedAt": "Sinuri {time}"
+      "checkedAt": "Sinuri {time}",
+      "lead": "Mga background job, iskedyul ng database, pumalyang payment webhook at hindi naabutang deadline sa nakaraang 24 oras."
     },
     "fallback": {
       "addressSearchDown": "Hindi gumagana ang paghahanap ng address ngayon. Ilagay ang pin sa mapa o gamitin ang iyong lokasyon, at magdagdag ng landmark.",

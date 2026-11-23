@@ -1,0 +1,19 @@
+# gitleaks configuration (.github/workflows/security.yml). Default rules, plus allowlists for
+# values that are public by design. Never add a real secret here: rotate it instead.
+title = "Klik Go"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Public or fake values"
+regexes = [
+  # The Supabase CLI's fixed local-development keys and demo JWT secret (same for every install).
+  '''super-secret-jwt-token-with-at-least-32-characters-long''',
+  # Test-only placeholder codes and fake webhook secrets generated per CI run.
+  '''whsk_test_\$\(openssl''',
+]
+paths = [
+  '''pnpm-lock\.yaml''',
+  '''docs/ERD\.md''',
+]

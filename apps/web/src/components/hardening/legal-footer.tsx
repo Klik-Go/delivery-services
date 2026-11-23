@@ -3,7 +3,11 @@ import { getTranslations } from "next-intl/server";
 import type { JSX } from "react";
 
 /** Links to the privacy notice and terms (and the account page when signed in). */
-export async function LegalFooter({ signedIn = false }: { readonly signedIn?: boolean }): Promise<JSX.Element> {
+export async function LegalFooter({
+  signedIn = false,
+}: {
+  readonly signedIn?: boolean;
+}): Promise<JSX.Element> {
   const t = await getTranslations("Hardening");
   const link = "text-ink-muted min-h-tap inline-flex items-center text-sm underline";
   return (

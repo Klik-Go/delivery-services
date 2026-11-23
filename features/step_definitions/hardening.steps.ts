@@ -221,7 +221,7 @@ When(
 Then(
   "they are signed out and cannot sign in to that account again",
   async function (this: KlikWorld) {
-    assert.equal(this.lastResponse?.status, 200, this.lastResponse?.bodyText);
+    assert.equal(this.lastResponse?.status, 200, this.lastResponse?.bodyText ?? "");
     const { client, userId, phone } = person(this);
     const me = await client.request("GET", "/api/me");
     assert.equal(me.status, 401, me.bodyText);
@@ -283,7 +283,7 @@ Given(
       phone: randomMobile().slice(1),
       phone_confirm: true,
     });
-    assert.ok(created.user, error?.message);
+    assert.ok(created.user, error?.message ?? "No user");
     const userId = created.user.id;
     const [rider] = await this.db.query<{ id: string }>(
       `insert into public.riders (user_id, zone_id, vehicle_type, status)
@@ -296,7 +296,7 @@ Given(
     const uploaded = await adminClient()
       .storage.from(KYC_BUCKET)
       .upload(path, new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0, 16]), { contentType: "image/jpeg" });
-    assert.ok(!uploaded.error, uploaded.error?.message);
+    assert.ok(!uploaded.error, uploaded.error?.message ?? "");
     await this.db.query(
       `insert into public.rider_kyc_documents (rider_id, type, storage_path, status, reviewed_at, rejection_reason)
        values ($1, 'government_id', $2, 'rejected', now() - interval '91 days', 'Blurry photo')`,
@@ -499,7 +499,7 @@ When("a signed-in customer searches for {string}", async function (this: KlikWor
 });
 
 Then("they are told to drop the pin on the map themselves", function (this: KlikWorld) {
-  assert.equal(this.lastResponse?.status, 503, this.lastResponse?.bodyText);
+  assert.equal(this.lastResponse?.status, 503, this.lastResponse?.bodyText ?? "");
   assert.match(message(this.lastResponse), /Drop the pin on the map yourself/);
 });
 
@@ -580,7 +580,7 @@ When(
 );
 
 Then("the change is refused with status {int}", function (this: KlikWorld, status: number) {
-  assert.equal(this.lastResponse?.status, status, this.lastResponse?.bodyText);
+  assert.equal(this.lastResponse?.status, status, this.lastResponse?.bodyText ?? "");
 });
 
 When("Klik Go's own page sends a change", async function (this: KlikWorld) {
@@ -593,7 +593,7 @@ When("Klik Go's own page sends a change", async function (this: KlikWorld) {
 });
 
 Then("the change is not refused as cross-site", function (this: KlikWorld) {
-  assert.equal(this.lastResponse?.status, 202, this.lastResponse?.bodyText);
+  assert.equal(this.lastResponse?.status, 202, this.lastResponse?.bodyText ?? "");
 });
 
 Given("a rider applicant is signed in", async function (this: KlikWorld) {
@@ -629,7 +629,7 @@ When(
 );
 
 Then("the upload is refused with {string}", function (this: KlikWorld, expected: string) {
-  assert.equal(this.lastResponse?.status, 400, this.lastResponse?.bodyText);
+  assert.equal(this.lastResponse?.status, 400, this.lastResponse?.bodyText ?? "");
   assert.ok(message(this.lastResponse).includes(expected), message(this.lastResponse));
 });
 
@@ -658,7 +658,7 @@ When("the app reports that a visitor viewed a store", async function (this: Klik
 });
 
 Then("the event is accepted", function (this: KlikWorld) {
-  assert.equal(this.lastResponse?.status, 202, this.lastResponse?.bodyText);
+  assert.equal(this.lastResponse?.status, 202, this.lastResponse?.bodyText ?? "");
 });
 
 Then("an event that is not part of the funnel is refused", async function (this: KlikWorld) {
@@ -684,7 +684,7 @@ When(
 );
 
 Then("the error report is accepted", function (this: KlikWorld) {
-  assert.equal(this.lastResponse?.status, 202, this.lastResponse?.bodyText);
+  assert.equal(this.lastResponse?.status, 202, this.lastResponse?.bodyText ?? "");
 });
 
 Given("the background jobs have run", async function (this: KlikWorld) {

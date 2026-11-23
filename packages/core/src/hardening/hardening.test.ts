@@ -177,14 +177,15 @@ describe("AccountService", () => {
     expect(!stranger.ok && stranger.error.code).toBe("UNAUTHORIZED");
   });
 
-  it.each([
-    [{ roles: ["merchant_owner"] as const }, "Ask an admin to remove your staff access first."],
+  const inProgress: [Partial<FakeAccount["facts"]>, string][] = [
+    [{ roles: ["merchant_owner"] }, "Ask an admin to remove your staff access first."],
     [{ activeOrders: 1 }, "You have an order in progress."],
     [{ activeDeliveries: 1 }, "You have a delivery in progress."],
     [{ cashHeldCentavos: 5000 }, "Hand in the cash on delivery you hold"],
     [{ unpaidCentavos: 12000 }, "You still have earnings to be paid."],
-  ])("waits while something is in progress: %o", async (facts, message) => {
-    const { service, authAdmin } = world({ ...facts, roles: [...(facts.roles ?? ["customer"])] });
+  ];
+  it.each(inProgress)("waits while something is in progress: %o", async (facts, message) => {
+    const { service, authAdmin } = world(facts);
     const refused = await service.deleteAccount(customer, { confirm: "DELETE" });
     expect(!refused.ok && refused.error.code).toBe("CONFLICT");
     expect(!refused.ok && refused.error.message).toContain(message);

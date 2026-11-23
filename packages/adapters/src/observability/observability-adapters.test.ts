@@ -9,13 +9,20 @@ import {
   stackFrames,
 } from "./sentry-error-reporter";
 
+function bodyOf(init: RequestInit | undefined): string {
+  return typeof init?.body === "string" ? init.body : "";
+}
+
 function recordingFetch(status = 200) {
   const calls: { url: string; init: RequestInit }[] = [];
   const fake = (url: string | URL | Request, init?: RequestInit): Promise<Response> => {
-    calls.push({ url: String(url), init: init ?? {} });
+    calls.push({
+      url: typeof url === "string" ? url : url instanceof URL ? url.href : url.url,
+      init: init ?? {},
+    });
     return Promise.resolve(new Response(null, { status }));
   };
-  return { calls, fetch: fake as typeof fetch };
+  return { calls, fetch: fake };
 }
 
 describe("Sentry error reporter", () => {
@@ -74,7 +81,7 @@ describe("Sentry error reporter", () => {
     const [call] = calls;
     expect(call?.url).toBe("https://o1.ingest.sentry.io/api/4507/envelope/");
     expect(new Headers(call?.init.headers).get("x-sentry-auth")).toContain("sentry_key=abc123");
-    const [header, item, event] = String(call?.init.body)
+    const [header, item, event] = bodyOf(call?.init)
       .split("\n")
       .map((l) => JSON.parse(l) as Record<string, unknown>);
     expect(header).toMatchObject({ dsn: target.dsn });
@@ -123,7 +130,7 @@ describe("PostHog analytics", () => {
       at: new Date("2026-11-23T04:00:00Z"),
     });
     expect(calls[0]?.url).toBe("https://eu.i.posthog.com/capture/");
-    expect(JSON.parse(String(calls[0]?.init.body))).toEqual({
+    expect(JSON.parse(bodyOf(calls[0]?.init))).toEqual({
       api_key: "phc_test",
       event: "store_viewed",
       distinct_id: "anon-1",

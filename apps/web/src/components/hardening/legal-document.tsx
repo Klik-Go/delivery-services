@@ -9,12 +9,19 @@ interface Section {
 }
 
 /** A legal page (privacy notice or terms): the template text, its version and the review banner. */
-export async function LegalDocument({ document }: { readonly document: Doc }): Promise<JSX.Element> {
+export async function LegalDocument({
+  document,
+}: {
+  readonly document: Doc;
+}): Promise<JSX.Element> {
   const t = await getTranslations("Hardening.legal");
   const sections = t.raw(`${document}.sections`) as Section[];
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-screen-md flex-col gap-4 px-4 py-6">
-      <Link href="/" className="text-brand-800 min-h-tap inline-flex items-center font-semibold underline">
+      <Link
+        href="/"
+        className="text-brand-800 min-h-tap inline-flex items-center font-semibold underline"
+      >
         {t("back")}
       </Link>
       <h1 className="font-display text-ink text-3xl">{t(`${document}.title`)}</h1>

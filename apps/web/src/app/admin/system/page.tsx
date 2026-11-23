@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 export default async function AdminSystemPage(): Promise<JSX.Element> {
   const t = await getTranslations("Hardening.system");
   return (
-    <OpsPage path="/admin/system" title={t("title")} lead={t("jobs")}>
+    <OpsPage path="/admin/system" title={t("title")} lead={t("lead")}>
       {() => <SystemStatusView />}
     </OpsPage>
   );

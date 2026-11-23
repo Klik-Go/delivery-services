@@ -4,6 +4,15 @@ Agents add items here when a decision is blocked, docs conflict, or the plan cou
 
 ## Open
 
+### Q36. Privacy and launch paperwork (Phase 11; needs a lawyer and the owner)
+- **Legal text.** `/legal/privacy` and `/legal/terms` are templates marked "for lawyer review" (English, with a Filipino intro). A lawyer should review them, and a translator the Filipino version, before launch. Changing either text: update its date in `LEGAL_VERSIONS` (`packages/types/src/hardening.ts`) so everyone agrees again.
+- **Data Protection Officer.** Name one and set the contact in the privacy notice (placeholder now). Register with the National Privacy Commission when processing at scale (BUSINESS §7.2).
+- **Retention numbers (decision taken; please confirm):** financial records 10 years (BIR); rider ID files deleted 90 days after a rejection and 365 days after a rider stops riding (setting `kyc_retention`, editable); account deletion keeps orders and payouts but removes the person's details and addresses.
+- **Account deletion rules (decision taken; please confirm):** customers and riders delete their own account once nothing is in progress (no active order or delivery, no cash held, nothing still to be paid). Staff accounts are removed by an admin, because store records depend on them.
+- **Sentry and PostHog.** Off until `SENTRY_DSN` / `POSTHOG_API_KEY` are set in Vercel. Choose the data region (EU or US), sign each provider's DPA, and add them to the privacy notice's list (already named there). Both receive no names, phone numbers or addresses.
+- **Rate limits (decision taken):** 60 changes and 300 reads a minute per signed-in account; 600 reads a minute per network before sign-in (generous because mobile carriers share IPs). Tell us if real traffic hits them (`/admin/system` and the logs show `RATE_LIMITED`).
+- **Pilot peak for the load test (assumption):** 60 orders and 600 browsing sessions in the lunch hour; tested at 5× (runbooks/LOAD_TEST.md). Give us better numbers once the waitlist and merchant surveys are in.
+
 ### Q35. Before real payouts: tax, payment rules and our numbers (needs a CPA and a lawyer)
 - **BIR withholding.** Payments to stores (and possibly riders) may require creditable withholding tax (BIR 2307; e-marketplace rules under RR 16-2023) and monthly/quarterly filings. Payouts today pay the full amount; once a CPA confirms the rate and scope, withholding becomes a ledger line and a statement line.
 - **BSP rules.** Collecting customer money and paying stores may make Klik Go a payment aggregator or operator of a payment system (BSP registration), unless PayMongo's marketplace/split features carry that role. A lawyer should confirm before live payouts.
@@ -26,8 +35,8 @@ Tell us if any number should change or become a console setting.
 ### Q32. Console timers and the coaching rule (decision taken; please confirm)
 The board colours each live step against a target, amber at 80% and red at 100% (BUILD_PLAN): store confirmation **3 minutes**, cooking **the store's own prep time** (15 if none), pickup **10 minutes** after the food is ready, delivery **30 minutes** after pickup. Riders appear on the coaching list when their average rating is below **3.5** with at least **5** ratings (docs/BUSINESS.md §5.3 gives 3.5 but no minimum). Both are constants in `packages/core/src/ops` today; tell us if you want different numbers or want them editable as settings.
 
-### Q33. Editing notification wording (moved to Phase 11)
-BUILD_PLAN lists an English/Filipino template editor in the Phase 8 console. Message wording lives in code today (short, tested to fit one SMS), and a database editor needs per-locale storage, length checks and a review step so a typo cannot reach every customer. It is moved to Phase 11 (hardening); until then wording changes go through a normal PR. Say if you need it sooner.
+### Q33. Editing notification wording (recommendation: keep it in code through the pilot)
+BUILD_PLAN lists an English/Filipino template editor in the Phase 8 console; it was moved to Phase 11. Phase 11 is about making the app safe, and an editor that can change every customer's texts at once works against that: it needs per-locale storage, SMS length checks and a review step. Wording lives in code (short, tested to fit one SMS) and changes through a normal PR in minutes. We recommend revisiting after the pilot, when the wording has settled; say if you need it sooner and it becomes its own small phase.
 
 ### Q29. Rider pay per job (decision taken; please confirm the numbers)
 Riders see their pay before accepting: **₱35 base + ₱10 per started km after the first 2 km** (road distance store → customer, estimated as straight line × 1.3), plus the full tip. The values are in the `dispatch` feature flag (`rider_base_centavos`, `rider_per_km_centavos`, `rider_free_km`) and change without a deploy; the rule itself is `DistancePayRule` (a different rule is a new class). Klik Go keeps the delivery and service fees and the commission and pays the rider from them; on short, cheap orders the platform can make a loss on delivery (the ledger records it). Please confirm or give the pilot numbers.

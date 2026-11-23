@@ -81,7 +81,11 @@ export function SystemStatusView(): JSX.Element {
         </ul>
       </section>
 
-      <section aria-labelledby="sys-webhooks" className="flex flex-col gap-2" data-testid="system-webhooks">
+      <section
+        aria-labelledby="sys-webhooks"
+        className="flex flex-col gap-2"
+        data-testid="system-webhooks"
+      >
         <h2 id="sys-webhooks" className="text-ink text-lg font-bold">
           {t("webhooks")}
         </h2>
@@ -91,7 +95,8 @@ export function SystemStatusView(): JSX.Element {
           <ul className="flex flex-col gap-1">
             {s.webhookFailures.map((hook, index) => (
               <li key={`${hook.receivedAt}-${String(index)}`} className="text-ink text-sm">
-                {at(hook.receivedAt)} · {hook.gateway} {hook.type} · {hook.error ?? t("webhookStuck")}
+                {at(hook.receivedAt)} · {hook.gateway} {hook.type} ·{" "}
+                {hook.error ?? t("webhookStuck")}
               </li>
             ))}
           </ul>

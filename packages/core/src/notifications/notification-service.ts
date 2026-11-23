@@ -11,6 +11,8 @@ import type {
 } from "./ports";
 import { renderNotification } from "./templates";
 
+/** How many people of one audience are messaged at once. */
+const NOTIFY_BATCH = 10;
 /** Which channels carry each message. Channels without a configured sender are skipped. */
 export type NotificationPolicy = Readonly<
   Record<NotificationTemplate, readonly NotificationChannel[]>
@@ -127,8 +129,13 @@ export class NotificationService implements IOrderNotifier {
         });
         continue;
       }
-      for (const userId of userIds) {
-        await this.notify({ userId, template, orderId: order.id, params: filled });
+      // A store team is told in parallel batches: one slow phone must not hold the order up.
+      for (let i = 0; i < userIds.length; i += NOTIFY_BATCH) {
+        await Promise.all(
+          userIds
+            .slice(i, i + NOTIFY_BATCH)
+            .map((userId) => this.notify({ userId, template, orderId: order.id, params: filled })),
+        );
       }
     }
   }

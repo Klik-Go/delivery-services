@@ -1265,7 +1265,8 @@
       "storeLate": "store did not accept in time",
       "noRider": "no rider took it",
       "refresh": "Refresh",
-      "checkedAt": "Checked {time}"
+      "checkedAt": "Checked {time}",
+      "lead": "Background jobs, database schedules, failing payment webhooks and missed deadlines from the last 24 hours."
     },
     "fallback": {
       "addressSearchDown": "Address search isn't working right now. Drop the pin on the map, or use your location, and add a landmark.",

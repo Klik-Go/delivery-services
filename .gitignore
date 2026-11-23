@@ -32,3 +32,5 @@ supabase/.temp/
 .DS_Store
 *.log
 .vercel
+load/.sessions.json
+load/summary.json
