@@ -5,8 +5,9 @@ Feature: Protecting the API
 
   Scenario: Too many changes from one network in a minute are slowed down
     Given a visitor on their own network
-    When they send 61 changes within a minute
-    Then the 61st change is refused with status 429 and a Retry-After header
+    When they send 130 changes as fast as they can
+    Then at most 60 changes a minute are accepted
+    And the rest are refused with status 429 and a Retry-After header
 
   Scenario: A change sent from another website is refused
     When another website makes a visitor's browser send a change to Klik Go

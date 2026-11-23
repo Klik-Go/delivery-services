@@ -61,6 +61,19 @@ import {
   PrismaRecipientDirectory,
   SmsNotificationSender,
   WebPushSender,
+  NoopAnalytics,
+  NoopErrorReporter,
+  PostHogAnalytics,
+  PrismaAccountDataRepository,
+  PrismaConsentRepository,
+  PrismaFeatureSwitches,
+  PrismaJobRunRepository,
+  PrismaKycRetentionRepository,
+  PrismaSystemStatusRepository,
+  SentryErrorReporter,
+  SupabaseAccountAuthAdmin,
+  UnconfiguredAccountAuthAdmin,
+  parseSentryDsn,
 } from "@klikgo/adapters";
 import {
   AddressService,
@@ -128,7 +141,15 @@ import {
   type IPaymentGateway,
   type IRateLimiter,
   type IUserRoleRepository,
+  type IAnalytics,
+  type IErrorReporter,
   type Logger,
+  AccountService,
+  AnalyticsService,
+  ConsentService,
+  ErrorReportingService,
+  KycRetentionService,
+  SystemStatusService,
   type Result,
 } from "@klikgo/core";
 import { FakeMenuParser, FakePaymentGateway } from "@klikgo/core/testing";
@@ -136,6 +157,7 @@ import { getPrismaClient, LATEST_MIGRATION } from "@klikgo/db";
 import { randomBytes, randomUUID } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getServerEnv, type ServerEnv } from "./env";
+import { onUnexpectedError } from "./http/api-response";
 import { FakeCheckout } from "./payments/fake-checkout";
 import { supabaseAdminClient } from "./supabase/admin-client";
 
@@ -209,6 +231,12 @@ export interface Container {
   readonly fakeCheckout: FakeCheckout | null;
   /** True while the pre-launch placeholder sign-in code is on (sign-in screens say so). */
   readonly placeholderOtp: boolean;
+  /** Phase 11: consent, the person's data rights, error reporting, the funnel, system status. */
+  readonly consents: ConsentService;
+  readonly account: AccountService;
+  readonly errors: ErrorReportingService;
+  readonly analytics: AnalyticsService;
+  readonly systemStatus: SystemStatusService;
   /** Services bound to one request's Supabase session (cookies). */
   forRequest(supabase: SupabaseClient): RequestServices;
 }
@@ -250,12 +278,15 @@ export function createContainer(env: ServerEnv): Container {
     ? new SupabasePhotoStorage(admin, logger)
     : new UnconfiguredPhotoStorage(env.NEXT_PUBLIC_SUPABASE_URL);
   // Delivery fee: the zone's distance bands first, otherwise base fee + per-km (OCP: add strategies).
+  // Runtime switches (admin settings): cash-only mode and the flat delivery fee (doc §12).
+  const switches = new PrismaFeatureSwitches(prisma);
   const pricing = new PricingService({
     catalog,
     serviceArea,
     delivery: [new DistanceBandFee(), new ZoneBaseFee()],
     surcharges: [new SmallOrderFee(), new ServiceFee()],
     clock,
+    switches,
   });
   const feed = new FeedService({ serviceArea, catalog, pricing, photos, cache, clock });
   const menu = new MenuService({
@@ -304,7 +335,8 @@ export function createContainer(env: ServerEnv): Container {
     clock,
     logger,
   });
-  const consoleAccess = new ConsoleAccess(authz, new PrismaAuditLog(prisma));
+  const audit = new PrismaAuditLog(prisma);
+  const consoleAccess = new ConsoleAccess(authz, audit);
   const hasher = new NodeContentHasher();
   const finance = new PrismaFinanceRepository(prisma);
   const settlement = new SettlementService({
@@ -363,6 +395,7 @@ export function createContainer(env: ServerEnv): Container {
     healthService: new HealthService({ clock, version: env.APP_VERSION }),
     readiness: new ReadinessService({
       database: new PrismaDatabaseProbe(prisma),
+      ...(kycStorage instanceof SupabaseKycStorage ? { storage: kycStorage } : {}),
       expectedSchemaVersion: LATEST_MIGRATION,
       logger,
     }),
@@ -438,6 +471,7 @@ export function createContainer(env: ServerEnv): Container {
       clock,
       logger,
       notifier: notifications,
+      switches,
     }),
     paymentWebhooks,
     lifecycle,
@@ -470,6 +504,7 @@ export function createContainer(env: ServerEnv): Container {
     settingsAdmin: new SettingsService({
       access: consoleAccess,
       settings: new PrismaSettings(prisma),
+      onFlagChanged: () => switches.forget(),
     }),
     staffAdmin: new StaffAdminService({ access: consoleAccess, staff: new PrismaStaff(prisma) }),
     riderOnboarding: new RiderOnboardingService({
@@ -524,6 +559,14 @@ export function createContainer(env: ServerEnv): Container {
       dispatch,
       rewards,
       settlement,
+      kycRetention: new KycRetentionService({
+        retention: new PrismaKycRetentionRepository(prisma),
+        files: kycStorage,
+        audit,
+        clock,
+        logger,
+      }),
+      runs: { repository: new PrismaJobRunRepository(prisma), clock },
       logger,
     }),
     pushSubscriptions: new PushSubscriptionService({
@@ -542,6 +585,28 @@ export function createContainer(env: ServerEnv): Container {
           })
         : null,
     placeholderOtp: placeholderCode !== undefined,
+    consents: new ConsentService({ consents: new PrismaConsentRepository(prisma) }),
+    account: new AccountService({
+      accounts: new PrismaAccountDataRepository(prisma),
+      authAdmin: admin
+        ? new SupabaseAccountAuthAdmin(admin, logger)
+        : new UnconfiguredAccountAuthAdmin(),
+      audit,
+      rateLimiter,
+      clock,
+      logger,
+    }),
+    errors: new ErrorReportingService({
+      reporter: errorReporter(env, logger),
+      rateLimiter,
+      logger,
+    }),
+    analytics: new AnalyticsService({ analytics: analytics(env, logger), clock, logger }),
+    systemStatus: new SystemStatusService({
+      access: consoleAccess,
+      status: new PrismaSystemStatusRepository(prisma),
+      clock,
+    }),
     forRequest(supabase) {
       const gateway = new SupabaseAuthGateway(supabase, logger);
       const placeholder =
@@ -633,6 +698,27 @@ function paymentSetup(
   };
 }
 
+/** Sentry when a valid DSN is set; otherwise errors stay in the logs. */
+function errorReporter(env: ServerEnv, logger: Logger): IErrorReporter {
+  const target = parseSentryDsn(env.SENTRY_DSN);
+  if (!target) {
+    if (env.SENTRY_DSN) logger.warn("sentry.disabled", { reason: "SENTRY_DSN is not a valid DSN" });
+    return new NoopErrorReporter();
+  }
+  return new SentryErrorReporter(target, {
+    environment: env.SENTRY_ENVIRONMENT ?? env.VERCEL_ENV ?? env.NODE_ENV,
+    release: env.APP_VERSION,
+    logger,
+  });
+}
+
+/** PostHog when a project key is set; otherwise nothing is counted. */
+function analytics(env: ServerEnv, logger: Logger): IAnalytics {
+  return env.POSTHOG_API_KEY
+    ? new PostHogAnalytics({ apiKey: env.POSTHOG_API_KEY, host: env.POSTHOG_HOST, logger })
+    : new NoopAnalytics();
+}
+
 /** Gemini when a key is set; the deterministic fake only when asked for (tests, local demos). */
 function menuParser(env: ServerEnv, logger: Logger): IMenuParser {
   // The fake never answers real merchants: it is ignored on Vercel production.
@@ -646,6 +732,13 @@ let container: Container | undefined;
 
 /** Returns the process-wide container, created on first use. */
 export function getContainer(): Container {
-  container ??= createContainer(getServerEnv());
+  if (!container) {
+    const created = createContainer(getServerEnv());
+    // Unexpected 500s also go to the error tracker (scrubbed), never blocking the response.
+    onUnexpectedError((error, meta) => {
+      void created.errors.reportServer(error, { requestId: meta.requestId });
+    });
+    container = created;
+  }
   return container;
 }

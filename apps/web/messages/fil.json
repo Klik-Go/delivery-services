@@ -675,7 +675,8 @@
       "label": "Mga bahagi ng console",
       "tickets": "Mababang rating",
       "promos": "Mga promo",
-      "finance": "Pananalapi"
+      "finance": "Pananalapi",
+      "system": "Sistema"
     },
     "loading": "Naglo-load…",
     "failed": "May nangyaring mali. Subukan ulit.",
@@ -1125,6 +1126,156 @@
         "cod": "Bahagi ng cash"
       },
       "definitions": "GMV: pagkain at delivery at service fee ng mga na-deliver na order. Take rate: komisyon at fee na naiiwan sa Klik Go (pagkatapos ng bayad sa rider) ÷ GMV. Kontribusyon: iyon, bawas ang promo, gateway fee at refund."
+    }
+  },
+  "Hardening": {
+    "legal": {
+      "draft": "Template para suriin ng abogado. Hindi pa ito ang huling legal na teksto.",
+      "updated": "Bersyon ng {date}",
+      "back": "Bumalik sa Klik Go",
+      "privacyLink": "Abiso sa privacy",
+      "termsLink": "Mga tuntunin ng serbisyo",
+      "privacy": {
+        "title": "Abiso sa privacy",
+        "intro": "Ipinapaliwanag ng abisong ito kung anong personal na datos ang kinokolekta ng Klik Go, bakit namin ito ginagamit, sino ang nakakakita nito at ang iyong mga karapatan sa ilalim ng Data Privacy Act of 2012 (RA 10173). Ang buong teksto sa ibaba ay nasa Ingles habang hinihintay ang pagsusuri ng abogado at tagasalin.",
+        "sections": [
+          {
+            "heading": "Who we are",
+            "body": "Klik Go runs the ordering, delivery and payment service in this app and is the personal information controller for the data described here. Contact our Data Protection Officer at the privacy contact listed below."
+          },
+          {
+            "heading": "What we collect",
+            "body": "Your name and mobile number (to sign in and reach you about an order); delivery addresses and the map pin; your orders, payments and ratings; for riders, ID documents, vehicle details, live location while on duty and payout details; for stores, business and payout details; the device and browser details needed to keep your account secure."
+          },
+          {
+            "heading": "Why we use it",
+            "body": "To take and deliver your order, process payment and refunds, prevent fraud and abuse of promos, support you when something goes wrong, keep the records the law requires, and improve the service using counts that do not identify you."
+          },
+          {
+            "heading": "Who sees it",
+            "body": "The store preparing your order sees the items and your first name; the rider delivering it sees your name, drop-off pin, landmark and a way to call you, only while the order is active. We use service providers that process data for us under contract: hosting and database (Supabase, Vercel), payments (PayMongo), text messages (Semaphore), maps (Google Maps), and error and usage reports (Sentry, PostHog) which receive no names, phone numbers or addresses. We never sell your data and never send your personal data to an AI model."
+          },
+          {
+            "heading": "How long we keep it",
+            "body": "Orders, payments and payouts: 10 years, as tax law requires. Rider ID documents: deleted 90 days after a rejected application, or 1 year after a rider stops riding. Rider location history: deleted with the account. Everything else: until you delete your account."
+          },
+          {
+            "heading": "Your rights",
+            "body": "You may see and download your data (Account → Download my data), correct it, object to its use, and delete your account (Account → Delete my account). When you delete your account we erase your name, number, saved addresses and location history, and remove the address from past orders; the amounts stay, because the law requires us to keep financial records. You may also complain to the National Privacy Commission."
+          },
+          {
+            "heading": "Security",
+            "body": "Data is encrypted in transit, each person can only reach their own records, staff use two-factor sign-in, rider ID files are private and every view is logged."
+          },
+          {
+            "heading": "Contact",
+            "body": "Data Protection Officer: [privacy contact email to be set before launch]."
+          }
+        ]
+      },
+      "terms": {
+        "title": "Mga tuntunin ng serbisyo",
+        "intro": "Ang mga tuntuning ito ay para sa pag-order, paghahatid o pagbebenta sa Klik Go. Sa paggawa ng account, sumasang-ayon ka sa mga ito. Ang buong teksto sa ibaba ay nasa Ingles habang hinihintay ang pagsusuri ng abogado at tagasalin.",
+        "sections": [
+          {
+            "heading": "Your account",
+            "body": "You sign in with your own mobile number and keep your sign-in codes to yourself. One account per person. You must be at least 18, or order with a parent's or guardian's permission."
+          },
+          {
+            "heading": "Orders and prices",
+            "body": "Stores set their menu prices. Klik Go adds the delivery fee and any small-order or service fee shown before you place the order. The total you confirm at checkout is the total you pay."
+          },
+          {
+            "heading": "Payment",
+            "body": "You pay online (GCash, Maya, card or QR Ph) or in cash on delivery. If online payment is paused, cash on delivery stays available."
+          },
+          {
+            "heading": "Cancellations and refunds",
+            "body": "You can cancel until the store accepts your order. If a store rejects or cannot complete an order, or the delivery fails through no fault of yours, you get a full refund to how you paid."
+          },
+          {
+            "heading": "Delivery",
+            "body": "Riders deliver to the pin and landmark you give. For larger orders the rider asks for a 4-digit PIN shown only to you."
+          },
+          {
+            "heading": "Promos and rewards",
+            "body": "Promos and referral rewards follow the rules shown with them, one per person and device. We may cancel rewards gained by abuse."
+          },
+          {
+            "heading": "Fair use",
+            "body": "Do not misuse the app, harass riders or store staff, or try to get around security or limits."
+          },
+          {
+            "heading": "Liability",
+            "body": "Stores are responsible for their food and products. Klik Go is responsible for the ordering, payment and delivery service, to the extent the law allows."
+          },
+          {
+            "heading": "Changes",
+            "body": "If we change these terms we will ask you to agree again before you continue."
+          },
+          {
+            "heading": "Law",
+            "body": "These terms follow Philippine law."
+          }
+        ]
+      }
+    },
+    "consent": {
+      "title": "Bago ka magpatuloy",
+      "lead": "Basahin at sang-ayunan kung paano gumagana ang Klik Go at kung paano namin ginagamit ang iyong datos.",
+      "terms": "Sumasang-ayon ako sa <link>mga tuntunin ng serbisyo</link>",
+      "privacy": "Nabasa ko ang <link>abiso sa privacy</link> at pumapayag akong gamitin ng Klik Go ang aking datos gaya ng nakasulat",
+      "submit": "Sumang-ayon at magpatuloy",
+      "required": "Lagyan ng tsek ang dalawang kahon para magpatuloy.",
+      "failed": "Hindi namin na-save ang iyong pagsang-ayon. Subukan ulit."
+    },
+    "account": {
+      "title": "Ang iyong account",
+      "signIn": "Mag-sign in para makita ang iyong account.",
+      "dataTitle": "Ang iyong datos",
+      "dataLead": "I-download ang lahat ng hawak ng Klik Go tungkol sa iyo: profile, mga naka-save na address, order, rating at reward.",
+      "download": "I-download ang aking datos",
+      "deleteTitle": "Burahin ang aking account",
+      "deleteLead": "Buburahin nito ang iyong pangalan, numero, mga naka-save na address at kasaysayan ng lokasyon, at permanenteng ila-log out ka. Mananatili ang halaga ng mga dating order pero hindi na ang iyong address, dahil kailangan naming itago ang mga rekord pampinansyal ayon sa batas.",
+      "confirmLabel": "I-type ang DELETE para kumpirmahin",
+      "delete": "Burahin ang aking account",
+      "deleting": "Binubura…",
+      "deleted": "Nabura na ang iyong account. Salamat sa paggamit ng Klik Go.",
+      "failed": "Hindi namin nabura ang iyong account. Subukan ulit.",
+      "documents": "Basahin ang <privacy>abiso sa privacy</privacy> at ang <terms>mga tuntunin ng serbisyo</terms>."
+    },
+    "system": {
+      "title": "Kalagayan ng sistema",
+      "loading": "Sinusuri ang sistema…",
+      "failed": "Hindi makuha ang kalagayan ng sistema.",
+      "jobs": "Mga background job",
+      "jobsHealthy": "Tumatakbo: huling maayos na takbo {seconds}s ang nakalipas",
+      "jobsLate": "Huli: huling maayos na takbo {seconds}s ang nakalipas",
+      "jobsNever": "Wala pang maayos na takbo",
+      "lastRun": "Huling takbo {time}: {outcome}",
+      "ok": "ok",
+      "failedRun": "pumalya ({error})",
+      "cron": "Mga iskedyul ng database",
+      "cronNever": "hindi pa tumatakbo",
+      "webhooks": "Mga payment webhook na may problema (24 oras)",
+      "webhooksNone": "Walang pumalya o naipit na webhook.",
+      "webhookStuck": "naghihintay iproseso",
+      "sla": "Mga hindi naabutang deadline (24 oras)",
+      "slaNone": "Walang hindi naabutang deadline.",
+      "storeLate": "hindi tinanggap ng tindahan sa oras",
+      "noRider": "walang rider na kumuha",
+      "refresh": "I-refresh",
+      "checkedAt": "Sinuri {time}"
+    },
+    "fallback": {
+      "addressSearchDown": "Hindi gumagana ang paghahanap ng address ngayon. Ilagay ang pin sa mapa o gamitin ang iyong lokasyon, at magdagdag ng landmark.",
+      "onlinePaused": "Naka-pause ang online na bayad ngayon. Magbayad ng cash pagdating."
+    },
+    "errors": {
+      "title": "May nangyaring mali",
+      "lead": "Naabisuhan na kami. Subukan ulit, o bumalik sa home.",
+      "retry": "Subukan ulit",
+      "home": "Bumalik sa home"
     }
   }
 }

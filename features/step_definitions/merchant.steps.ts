@@ -6,6 +6,7 @@ import { ApiClient, type ApiResponse } from "../support/api-client";
 import { signedInStaff } from "../support/staff-session";
 import { adminClient, randomIp } from "../support/supabase-test-auth";
 import { BASE_URL, type KlikWorld } from "../support/world";
+import { agreeIfAsked } from "../support/consent";
 
 // ---------- helpers ----------
 
@@ -316,6 +317,7 @@ Then(
   "they land on the merchant dashboard for {string}",
   async function (this: KlikWorld, name: string) {
     const page = await this.page();
+    await agreeIfAsked(page);
     await page.waitForURL((url) => url.pathname === "/merchant");
     await expect(page.getByRole("heading", { level: 1, name })).toBeVisible();
   },

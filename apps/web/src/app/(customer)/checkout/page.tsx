@@ -8,6 +8,7 @@ import { PromoCodeSchema } from "@klikgo/types";
 import { CheckoutView, type CheckoutAddressDraft } from "@/components/customer/checkout-view";
 import { getSessionUser } from "@/server/auth/session";
 import { getContainer } from "@/server/container";
+import { FunnelStep } from "@/components/hardening/telemetry";
 import { readDeliveryLocation } from "@/server/customer/location";
 
 export const dynamic = "force-dynamic";
@@ -43,6 +44,7 @@ export default async function CheckoutPage({
   };
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-screen-sm flex-col gap-4 px-4 py-4">
+      <FunnelStep name="checkout_started" />
       <div className="flex items-center gap-2">
         <Link
           href="/cart"

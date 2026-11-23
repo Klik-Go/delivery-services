@@ -34,6 +34,7 @@ export function AddressSetup({
 }): JSX.Element {
   const t = useTranslations("Customer.address");
   const tCustomer = useTranslations("Customer");
+  const tFallback = useTranslations("Hardening.fallback");
   const router = useRouter();
   const [pin, setPin] = useState<Pin>(initial ?? DEFAULT_PIN);
   const [query, setQuery] = useState("");
@@ -43,6 +44,8 @@ export function AddressSetup({
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [outOfArea, setOutOfArea] = useState(false);
+  // The maps provider is down: say so and let the customer drop the pin (docs/BUSINESS.md §12).
+  const [searchDown, setSearchDown] = useState(!placesEnabled);
   const [form, setForm] = useState({
     label: "Home",
     landmark: "",
@@ -67,7 +70,10 @@ export function AddressSetup({
         `/api/geo/autocomplete?${params.toString()}`,
         undefined,
         "",
-      ).then((r) => setSuggestions(r.ok ? r.data : []));
+      ).then((r) => {
+        setSuggestions(r.ok ? r.data : []);
+        setSearchDown(!r.ok && r.code === "UNAVAILABLE");
+      });
     }, 300);
     return () => clearTimeout(timer);
     // Only re-query when the text changes; the pin is just a bias.
@@ -85,6 +91,7 @@ export function AddressSetup({
       t("noResults"),
     );
     if (place.ok) setPin(place.data.location);
+    else if (place.code === "UNAVAILABLE") setSearchDown(true);
     else setError(place.message);
   }
 
@@ -189,6 +196,11 @@ export function AddressSetup({
             </ul>
           ) : null}
         </div>
+      ) : null}
+      {searchDown ? (
+        <p role="status" className="bg-accent-100 text-ink rounded-lg p-3 text-sm font-semibold">
+          {tFallback("addressSearchDown")}
+        </p>
       ) : null}
       <PinMap value={pin} onChange={setPin} label={t("mapLabel")} />
       <Button variant="secondary" onClick={locate} disabled={locating} className="self-start">

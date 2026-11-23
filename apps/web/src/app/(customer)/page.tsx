@@ -8,6 +8,8 @@ import { SignOutButton } from "@/components/auth/sign-out-button";
 import { StoreCard } from "@/components/customer/store-card";
 import { getSessionUser } from "@/server/auth/session";
 import { getContainer } from "@/server/container";
+import { LegalFooter } from "@/components/hardening/legal-footer";
+import { FunnelStep } from "@/components/hardening/telemetry";
 import { readDeliveryLocation } from "@/server/customer/location";
 
 /** Customer home: "Deliver to", search, categories, featured promos and store rails. */
@@ -24,6 +26,7 @@ export default async function HomePage(): Promise<JSX.Element> {
 
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-screen-md flex-col gap-5 px-4 pt-4 pb-10">
+      <FunnelStep name="home_viewed" />
       <header className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <BrandLogo size={40} />
@@ -184,6 +187,7 @@ export default async function HomePage(): Promise<JSX.Element> {
           ))}
         </>
       )}
+      <LegalFooter signedIn={user !== null} />
     </div>
   );
 }

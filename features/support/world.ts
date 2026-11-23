@@ -116,6 +116,21 @@ export interface OpsScenario {
   link?: string;
 }
 
+/** State for the hardening steps (Phase 11): privacy rights, resilience, security, observability. */
+export interface HardeningScenario {
+  person?: { client: ApiClient; userId: string; phone: string };
+  firstNext?: string;
+  orderId?: string;
+  orderTotal?: number;
+  exported?: Record<string, unknown>;
+  rider?: { riderId: string; path: string };
+  visitor?: ApiClient;
+  statuses?: number[];
+  quotes?: number[];
+  /** Run after the scenario (switches put back, files removed). */
+  cleanups: (() => Promise<void>)[];
+}
+
 export const BASE_URL = process.env.BASE_URL ?? "http://localhost:3000";
 
 setDefaultTimeout(30_000);
@@ -137,6 +152,7 @@ export class KlikWorld extends World {
   readonly dispatch: DispatchScenario = { riders: new Map() };
   readonly ops: OpsScenario = {};
   readonly finance: FinanceScenario = {};
+  readonly hardening: HardeningScenario = { cleanups: [] };
   readonly retention: RetentionScenario = {
     customers: new Map(),
     run: Math.random().toString(36).slice(2, 10),

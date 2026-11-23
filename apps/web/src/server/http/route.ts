@@ -1,4 +1,5 @@
 import "server-only";
+import { runWithRequestContext } from "@klikgo/adapters";
 import { ValidationError, type AppError, type Result } from "@klikgo/core";
 import type { ApiMeta } from "@klikgo/types";
 import { z } from "zod";
@@ -15,11 +16,14 @@ export async function runRoute(
   handler: (meta: ApiMeta) => Promise<Response>,
 ): Promise<Response> {
   const meta = metaFor(request);
-  try {
-    return await handler(meta);
-  } catch (error) {
-    return jsonError(error, meta, getContainer().logger);
-  }
+  // Every log line written while this request runs carries its id, services included.
+  return runWithRequestContext({ requestId: meta.requestId }, async () => {
+    try {
+      return await handler(meta);
+    } catch (error) {
+      return jsonError(error, meta, getContainer().logger);
+    }
+  });
 }
 
 /** The `{ data }` envelope for a successful Result, or the mapped error. */

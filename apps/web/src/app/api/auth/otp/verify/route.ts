@@ -23,7 +23,8 @@ export async function POST(request: Request): Promise<Response> {
       roles,
       aal: "aal1",
     });
-    return jsonOk({ next }, meta);
+    // New accounts, and everyone after the terms change, agree to the documents first.
+    return jsonOk({ next: await container.consents.landingFor(result.value.userId, next) }, meta);
   } catch (error) {
     return jsonError(error, meta, container.logger);
   }

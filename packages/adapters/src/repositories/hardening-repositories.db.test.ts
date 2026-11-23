@@ -32,9 +32,11 @@ describeDb("hardening repositories (local Supabase, seed data)", () => {
     const userId = randomUUID();
     const phone = `+63917${String(Math.floor(Math.random() * 10_000_000)).padStart(7, "0")}`;
     await prisma.$executeRaw`
-      insert into auth.users (id, instance_id, aud, role, phone, raw_user_meta_data, created_at, updated_at)
+      insert into auth.users (id, instance_id, aud, role, phone, raw_user_meta_data, created_at, updated_at,
+                              confirmation_token, recovery_token, email_change_token_new, email_change)
       values (${userId}::uuid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
-              ${phone.slice(1)}, '{"full_name": "Erin Export"}', now(), now())`;
+              ${phone.slice(1)}, '{"full_name": "Erin Export"}', now(), now(), '', '', '', '')`;
+    // (Empty tokens, not NULL: Supabase Auth cannot list users whose token columns are NULL.)
     await prisma.$executeRaw`
       insert into public.addresses (user_id, label, location, landmark, barangay, city, contact_phone)
       values (${userId}::uuid, 'Home', extensions.st_setsrid(extensions.st_makepoint(${CENTRE.lng}, ${CENTRE.lat}), 4326)::extensions.geography,

@@ -81,9 +81,10 @@ describe("GooglePlaceSearch", () => {
       expect(!result.ok && result.error.code).toBe("UNAVAILABLE");
   });
 
-  it("without a key, suggests nothing and finds nothing", async () => {
+  it("without a key, reports search as unavailable and finds nothing", async () => {
     const places = new UnconfiguredPlaceSearch();
-    expect(await places.suggest()).toEqual({ ok: true, value: [] });
+    const suggested = await places.suggest();
+    expect(!suggested.ok && suggested.error.code).toBe("UNAVAILABLE");
     expect((await places.place("x")).ok).toBe(false);
   });
 });

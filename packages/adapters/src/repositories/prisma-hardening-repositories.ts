@@ -232,6 +232,11 @@ export class PrismaFeatureSwitches implements IFeatureSwitches {
     private readonly now: () => number = () => Date.now(),
   ) {}
 
+  /** Drops the cache (an admin changed a flag on this server). */
+  forget(): void {
+    this.cache = null;
+  }
+
   async isOn(key: SwitchKey): Promise<boolean> {
     if (!this.cache || this.now() - this.cache.at > this.ttlMs) {
       const rows = await this.prisma.feature_flags.findMany({

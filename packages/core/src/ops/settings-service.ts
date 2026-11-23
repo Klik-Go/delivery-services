@@ -10,7 +10,14 @@ import type { FeatureFlagView, ISettingsRepository } from "./ports";
  * known shape are checked before saving, so a typo cannot stop dispatch or cancel orders early.
  */
 export class SettingsService {
-  constructor(private readonly deps: { access: ConsoleAccess; settings: ISettingsRepository }) {}
+  constructor(
+    private readonly deps: {
+      access: ConsoleAccess;
+      settings: ISettingsRepository;
+      /** Told after every change, so cached switches on this server pick it up at once. */
+      onFlagChanged?: (key: string) => void;
+    },
+  ) {}
 
   async flags(user: SessionUser | null): Promise<Result<FeatureFlagView[], AppError>> {
     const admin = this.deps.access.platform(user);
@@ -39,6 +46,7 @@ export class SettingsService {
       }
     }
     await this.deps.settings.updateFlag(key, value, admin.value.id);
+    this.deps.onFlagChanged?.(key);
     await this.deps.access.record(
       admin.value,
       "feature_flag.update",

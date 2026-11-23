@@ -1,6 +1,7 @@
 import { BrandLogo } from "@klikgo/ui";
 import Link from "next/link";
 import type { JSX, ReactNode } from "react";
+import { LegalFooter } from "@/components/hardening/legal-footer";
 
 /** Centered card for every sign-in screen (mobile-first, 360 px). */
 export default function AuthLayout({ children }: { readonly children: ReactNode }): JSX.Element {
@@ -13,6 +14,7 @@ export default function AuthLayout({ children }: { readonly children: ReactNode 
       <section className="bg-surface rounded-card flex flex-col gap-5 border border-black/5 p-5 shadow-sm">
         {children}
       </section>
+      <LegalFooter />
     </main>
   );
 }

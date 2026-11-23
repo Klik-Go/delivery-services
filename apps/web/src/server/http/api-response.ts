@@ -21,6 +21,15 @@ const HTTP_STATUS_BY_CODE: Record<AppErrorCode, number> = {
 
 const GENERIC_ERROR_MESSAGE = "Something went wrong. Please try again.";
 
+/** Receives unexpected errors (the composition root points it at the error tracker). */
+type UnexpectedErrorSink = (error: unknown, meta: ApiMeta) => void;
+let unexpectedErrorSink: UnexpectedErrorSink | null = null;
+
+/** Sends every unexpected (500) error to `sink` as well as to the logs. */
+export function onUnexpectedError(sink: UnexpectedErrorSink | null): void {
+  unexpectedErrorSink = sink;
+}
+
 function envelope(
   body: { data: unknown; error: ApiError | null; meta: ApiMeta },
   status: number,
@@ -54,6 +63,7 @@ export function jsonError(error: unknown, meta: ApiMeta, logger?: Logger): Respo
     return envelope({ data: null, error: body, meta }, HTTP_STATUS_BY_CODE[error.code], headers);
   }
   logger?.error("unhandled error", { err: error, requestId: meta.requestId });
+  unexpectedErrorSink?.(error, meta);
   return envelope(
     { data: null, error: { code: "INTERNAL", message: GENERIC_ERROR_MESSAGE }, meta },
     500,

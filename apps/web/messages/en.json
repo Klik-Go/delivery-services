@@ -675,7 +675,8 @@
       "label": "Console sections",
       "tickets": "Low ratings",
       "promos": "Promos",
-      "finance": "Finance"
+      "finance": "Finance",
+      "system": "System"
     },
     "loading": "Loading…",
     "failed": "Something went wrong. Try again.",
@@ -1125,6 +1126,156 @@
         "cod": "Cash share"
       },
       "definitions": "GMV: food plus delivery and service fees of delivered orders. Take rate: commission and fees Klik Go keeps (after rider pay) ÷ GMV. Contribution: that, less promos, gateway fees and refunds."
+    }
+  },
+  "Hardening": {
+    "legal": {
+      "draft": "Template for lawyer review. This is not final legal text.",
+      "updated": "Version of {date}",
+      "back": "Back to Klik Go",
+      "privacyLink": "Privacy notice",
+      "termsLink": "Terms of service",
+      "privacy": {
+        "title": "Privacy notice",
+        "intro": "This notice explains what personal data Klik Go collects when you order, deliver or sell through the app, why we use it, who sees it and the rights you have under the Data Privacy Act of 2012 (RA 10173).",
+        "sections": [
+          {
+            "heading": "Who we are",
+            "body": "Klik Go runs the ordering, delivery and payment service in this app and is the personal information controller for the data described here. Contact our Data Protection Officer at the privacy contact listed below."
+          },
+          {
+            "heading": "What we collect",
+            "body": "Your name and mobile number (to sign in and reach you about an order); delivery addresses and the map pin; your orders, payments and ratings; for riders, ID documents, vehicle details, live location while on duty and payout details; for stores, business and payout details; the device and browser details needed to keep your account secure."
+          },
+          {
+            "heading": "Why we use it",
+            "body": "To take and deliver your order, process payment and refunds, prevent fraud and abuse of promos, support you when something goes wrong, keep the records the law requires, and improve the service using counts that do not identify you."
+          },
+          {
+            "heading": "Who sees it",
+            "body": "The store preparing your order sees the items and your first name; the rider delivering it sees your name, drop-off pin, landmark and a way to call you, only while the order is active. We use service providers that process data for us under contract: hosting and database (Supabase, Vercel), payments (PayMongo), text messages (Semaphore), maps (Google Maps), and error and usage reports (Sentry, PostHog) which receive no names, phone numbers or addresses. We never sell your data and never send your personal data to an AI model."
+          },
+          {
+            "heading": "How long we keep it",
+            "body": "Orders, payments and payouts: 10 years, as tax law requires. Rider ID documents: deleted 90 days after a rejected application, or 1 year after a rider stops riding. Rider location history: deleted with the account. Everything else: until you delete your account."
+          },
+          {
+            "heading": "Your rights",
+            "body": "You may see and download your data (Account → Download my data), correct it, object to its use, and delete your account (Account → Delete my account). When you delete your account we erase your name, number, saved addresses and location history, and remove the address from past orders; the amounts stay, because the law requires us to keep financial records. You may also complain to the National Privacy Commission."
+          },
+          {
+            "heading": "Security",
+            "body": "Data is encrypted in transit, each person can only reach their own records, staff use two-factor sign-in, rider ID files are private and every view is logged."
+          },
+          {
+            "heading": "Contact",
+            "body": "Data Protection Officer: [privacy contact email to be set before launch]."
+          }
+        ]
+      },
+      "terms": {
+        "title": "Terms of service",
+        "intro": "These terms apply when you use Klik Go to order, deliver or sell. By creating an account you agree to them.",
+        "sections": [
+          {
+            "heading": "Your account",
+            "body": "You sign in with your own mobile number and keep your sign-in codes to yourself. One account per person. You must be at least 18, or order with a parent's or guardian's permission."
+          },
+          {
+            "heading": "Orders and prices",
+            "body": "Stores set their menu prices. Klik Go adds the delivery fee and any small-order or service fee shown before you place the order. The total you confirm at checkout is the total you pay."
+          },
+          {
+            "heading": "Payment",
+            "body": "You pay online (GCash, Maya, card or QR Ph) or in cash on delivery. If online payment is paused, cash on delivery stays available."
+          },
+          {
+            "heading": "Cancellations and refunds",
+            "body": "You can cancel until the store accepts your order. If a store rejects or cannot complete an order, or the delivery fails through no fault of yours, you get a full refund to how you paid."
+          },
+          {
+            "heading": "Delivery",
+            "body": "Riders deliver to the pin and landmark you give. For larger orders the rider asks for a 4-digit PIN shown only to you."
+          },
+          {
+            "heading": "Promos and rewards",
+            "body": "Promos and referral rewards follow the rules shown with them, one per person and device. We may cancel rewards gained by abuse."
+          },
+          {
+            "heading": "Fair use",
+            "body": "Do not misuse the app, harass riders or store staff, or try to get around security or limits."
+          },
+          {
+            "heading": "Liability",
+            "body": "Stores are responsible for their food and products. Klik Go is responsible for the ordering, payment and delivery service, to the extent the law allows."
+          },
+          {
+            "heading": "Changes",
+            "body": "If we change these terms we will ask you to agree again before you continue."
+          },
+          {
+            "heading": "Law",
+            "body": "These terms follow Philippine law."
+          }
+        ]
+      }
+    },
+    "consent": {
+      "title": "Before you continue",
+      "lead": "Please read and agree to how Klik Go works and how we use your data.",
+      "terms": "I agree to the <link>terms of service</link>",
+      "privacy": "I have read the <link>privacy notice</link> and agree to Klik Go using my data as described",
+      "submit": "Agree and continue",
+      "required": "Tick both boxes to continue.",
+      "failed": "We could not save your agreement. Try again."
+    },
+    "account": {
+      "title": "Your account",
+      "signIn": "Sign in to see your account.",
+      "dataTitle": "Your data",
+      "dataLead": "Download everything Klik Go holds about you: your profile, saved addresses, orders, ratings and rewards.",
+      "download": "Download my data",
+      "deleteTitle": "Delete my account",
+      "deleteLead": "This erases your name, mobile number, saved addresses and location history and signs you out for good. Past orders keep their amounts but not your address, because the law requires us to keep financial records.",
+      "confirmLabel": "Type DELETE to confirm",
+      "delete": "Delete my account",
+      "deleting": "Deleting…",
+      "deleted": "Your account is deleted. Salamat for using Klik Go.",
+      "failed": "We could not delete your account. Try again.",
+      "documents": "Read the <privacy>privacy notice</privacy> and the <terms>terms of service</terms>."
+    },
+    "system": {
+      "title": "System status",
+      "loading": "Checking the system…",
+      "failed": "System status is unavailable.",
+      "jobs": "Background jobs",
+      "jobsHealthy": "Running: last good run {seconds}s ago",
+      "jobsLate": "Late: last good run {seconds}s ago",
+      "jobsNever": "No successful run yet",
+      "lastRun": "Last run {time}: {outcome}",
+      "ok": "ok",
+      "failedRun": "failed ({error})",
+      "cron": "Database schedules",
+      "cronNever": "not run yet",
+      "webhooks": "Payment webhooks with problems (24 h)",
+      "webhooksNone": "No failed or stuck webhooks.",
+      "webhookStuck": "waiting to be processed",
+      "sla": "Missed deadlines (24 h)",
+      "slaNone": "No missed deadlines.",
+      "storeLate": "store did not accept in time",
+      "noRider": "no rider took it",
+      "refresh": "Refresh",
+      "checkedAt": "Checked {time}"
+    },
+    "fallback": {
+      "addressSearchDown": "Address search isn't working right now. Drop the pin on the map, or use your location, and add a landmark.",
+      "onlinePaused": "Online payment is paused right now. Pay cash on delivery."
+    },
+    "errors": {
+      "title": "Something went wrong",
+      "lead": "We have been told about it. Try again, or go back home.",
+      "retry": "Try again",
+      "home": "Go home"
     }
   }
 }

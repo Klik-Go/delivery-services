@@ -48,6 +48,8 @@ export interface CheckoutQuote {
   readonly tipCentavos: Centavos;
   readonly totalCentavos: Centavos;
   readonly paymentMethods: readonly PaymentMethod[];
+  /** True while an admin has paused online payments (checkout explains why only cash is offered). */
+  readonly onlinePaymentsPaused: boolean;
   /** Today's "Schedule" slots (ISO times), empty when the store cannot take them. */
   readonly slots: readonly string[];
 }
@@ -150,6 +152,7 @@ export class OrderService {
     const priced = await this.price(input, actor, deviceId);
     if (!priced.ok) return priced;
     const { quote, store, promo, promoError, tipCentavos, totalCentavos } = priced.value;
+    const online = await this.onlinePayments();
     return ok({
       quote,
       promo: promo
@@ -158,7 +161,8 @@ export class OrderService {
       promoError,
       tipCentavos,
       totalCentavos,
-      paymentMethods: this.methodsFor(store, await this.onlinePayments()),
+      paymentMethods: this.methodsFor(store, online),
+      onlinePaymentsPaused: !online,
       slots: deliverySlots(store, this.deps.clock.now()).map((slot) => slot.toISOString()),
     });
   }

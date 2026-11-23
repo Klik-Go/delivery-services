@@ -2,18 +2,23 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { mapTileOrigin } from "./lib/map-tiles";
 import { buildContentSecurityPolicy, generateNonce } from "./security/csp";
+import { guardApiRequest } from "./server/http/api-gate";
 import { REQUEST_ID_HEADER, resolveRequestId } from "./server/http/request-id";
 
 /**
  * Next.js 16 Proxy (formerly middleware). On every page and API request it:
  *  1. refreshes the Supabase session (rotating an expired access token into fresh cookies), so
  *     Server Components and route handlers always see a valid session;
- *  2. assigns a request id and a fresh CSP nonce.
+ *  2. assigns a request id and a fresh CSP nonce;
+ *  3. on /api/*, refuses cross-site changes and applies the global rate limit (api-gate.ts).
  * Proxies always run on Node.js (CLAUDE.md: never Edge). Authorization is NOT done here; layouts
  * and route handlers check roles from the database (src/server/auth/guards.ts).
  */
 export async function proxy(request: NextRequest): Promise<NextResponse> {
-  const refreshedCookies = await refreshSupabaseSession(request);
+  const { cookies: refreshedCookies, userId } = await refreshSupabaseSession(request);
+  const requestId = resolveRequestId(request.headers.get(REQUEST_ID_HEADER));
+  const refused = await guardApiRequest(request, userId, requestId);
+  if (refused) return refused;
 
   const nonce = generateNonce();
   const csp = buildContentSecurityPolicy({
@@ -22,7 +27,6 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
     tileOrigin: mapTileOrigin(process.env.NEXT_PUBLIC_MAP_TILE_URL),
   });
-  const requestId = resolveRequestId(request.headers.get(REQUEST_ID_HEADER));
 
   // request.headers already carries refreshed cookies (request.cookies.set updates it).
   const requestHeaders = new Headers(request.headers);
@@ -45,8 +49,13 @@ type CookieToSet = {
   options: Parameters<NextResponse["cookies"]["set"]>[2];
 };
 
-/** Lets @supabase/ssr refresh the session; returns cookies to write on the response. */
-async function refreshSupabaseSession(request: NextRequest): Promise<CookieToSet[]> {
+/**
+ * Lets @supabase/ssr refresh the session; returns cookies to write on the response and the
+ * verified user id (used only to key the rate limit; roles are always read from the database).
+ */
+async function refreshSupabaseSession(
+  request: NextRequest,
+): Promise<{ cookies: CookieToSet[]; userId: string | null }> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   // Server-to-server callers (Supabase hooks, payment webhooks) have no session to refresh.
@@ -58,9 +67,9 @@ async function refreshSupabaseSession(request: NextRequest): Promise<CookieToSet
     path.startsWith("/api/webhooks/") ||
     path.startsWith("/api/internal/")
   )
-    return [];
+    return { cookies: [], userId: null };
   const hasSession = request.cookies.getAll().some((cookie) => cookie.name.startsWith("sb-"));
-  if (!hasSession) return [];
+  if (!hasSession) return { cookies: [], userId: null };
 
   let toSet: CookieToSet[] = [];
   const supabase = createServerClient(url, key, {
@@ -73,8 +82,9 @@ async function refreshSupabaseSession(request: NextRequest): Promise<CookieToSet
     },
   });
   // Verifies the JWT and refreshes it when expired (writes the new tokens through setAll).
-  await supabase.auth.getClaims();
-  return toSet;
+  const { data } = await supabase.auth.getClaims();
+  const sub = data?.claims.sub;
+  return { cookies: toSet, userId: typeof sub === "string" ? sub : null };
 }
 
 // No `runtime` key: Next.js 16 proxies always use Node.js and reject the option.

@@ -16,6 +16,7 @@ const SECTIONS = [
   { href: "/admin/promos", key: "promos", adminOnly: true },
   { href: "/admin/settings", key: "settings", adminOnly: true },
   { href: "/admin/staff", key: "staff", adminOnly: true },
+  { href: "/admin/system", key: "system", adminOnly: true },
 ] as const;
 
 /** The console's sections; promos, settings and staff are for admins only. */

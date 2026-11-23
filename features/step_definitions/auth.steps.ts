@@ -13,6 +13,7 @@ import {
   totpCode,
 } from "../support/supabase-test-auth";
 import { BASE_URL, type KlikWorld } from "../support/world";
+import { agreeIfAsked } from "../support/consent";
 
 interface Envelope {
   data?: Record<string, unknown> | null;
@@ -76,6 +77,7 @@ When(
 
 Then("they land on Home signed in as {string}", async function (this: KlikWorld, phone: string) {
   const page = await this.page();
+  await agreeIfAsked(page);
   await page.waitForURL((url) => url.pathname === "/");
   await expect(page.getByText(`Signed in as ${phone}`)).toBeVisible();
 });
@@ -159,7 +161,8 @@ Given("an admin signed in with their authenticator app", async function (this: K
     code: totpCode(factor.secret),
   });
   assert.equal(verify.status, 200, verify.bodyText);
-  assert.equal(body(verify.json).data?.next, "/admin");
+  // A new admin agrees to the terms and privacy notice first, then lands on the console.
+  assert.equal(body(verify.json).data?.next, "/consent?next=%2Fadmin");
 });
 
 Given(
@@ -202,6 +205,7 @@ When("enrols an authenticator app", async function (this: KlikWorld) {
 
 Then("they land on the merchant dashboard", async function (this: KlikWorld) {
   const page = await this.page();
+  await agreeIfAsked(page);
   await page.waitForURL((url) => url.pathname === "/merchant");
   // The store name is the page heading; "Merchant dashboard" labels it.
   await expect(page.getByText("Merchant dashboard", { exact: true })).toBeVisible();
