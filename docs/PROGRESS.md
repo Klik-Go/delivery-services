@@ -23,7 +23,7 @@ Phases are defined in `docs/BUILD_PLAN.md` §6. Agents update this file in every
 | 9 | Ratings, reorder, promos, referrals, loyalty | ✅ Done (merged) | [Klik-Go/delivery-services#26](https://github.com/Klik-Go/delivery-services/pull/26) | Owner: confirm stamp minimum, voucher life and referral guards (Q34) |
 | 10 | Finance: settlements, payouts, reports | ✅ Done (merged) | [Klik-Go/delivery-services#29](https://github.com/Klik-Go/delivery-services/pull/29) | Owner: CPA/lawyer on withholding and payment rules before real payouts (Q35) |
 | 11 | Hardening: security, privacy, observability | ✅ Done (merged) | [Klik-Go/delivery-services#32](https://github.com/Klik-Go/delivery-services/pull/32) | Owner: lawyer review of the legal pages, DPO, Sentry/PostHog keys, uptime monitor, staging restore (Q36, docs/SECURITY.md) |
-| 12 | Pilot launch readiness | 🟡 In progress (PR open) | (this PR) | Owner: production checklist, dry runs, go/no-go (docs/LAUNCH.md, Q37) |
+| 12 | Pilot launch readiness | 🟡 In progress (PR open) | [Klik-Go/delivery-services#33](https://github.com/Klik-Go/delivery-services/pull/33) | Owner: production checklist, dry runs, go/no-go (docs/LAUNCH.md, Q37) |
 
 Status values: ⬜ Not started · 🟡 In progress (PR open) · ✅ Done (merged) · ⛔ Blocked (say why)
 
