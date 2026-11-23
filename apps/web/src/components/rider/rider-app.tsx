@@ -20,6 +20,8 @@ import { fetchData, requestJson } from "@/lib/post-json";
 import { useLiveTopic } from "@/lib/realtime";
 import { googleMapsLink, secondsLeft, wazeLink } from "@/lib/rider-location";
 import { RateCustomers } from "@/components/retention/rate-customers";
+import { PabiliFloat } from "./pabili-float";
+import { PabiliShopping } from "./pabili-job";
 import { SwipeConfirm } from "./swipe-confirm";
 import { useLocationSharing, useWakeLock } from "./use-rider-device";
 
@@ -155,6 +157,9 @@ export function RiderApp(): JSX.Element {
       ) : null}
 
       {earnings.data ? <EarningsCard earnings={earnings.data} /> : null}
+      {rider.status === "active" ? (
+        <PabiliFloat floatCentavos={rider.pabiliFloatCentavos} onSaved={refresh} />
+      ) : null}
       <Link
         href="/rider/payouts"
         className="text-brand-800 min-h-tap inline-flex items-center font-semibold underline"
@@ -193,6 +198,7 @@ function OfferCard({
   readonly onDecline: () => void;
 }): JSX.Element {
   const t = useTranslations("Rider.offer");
+  const tPabili = useTranslations("Pabili.rider");
   const now = useNow(true);
   const left = secondsLeft(offer.expiresAt, now);
   return (
@@ -216,6 +222,14 @@ function OfferCard({
       </p>
       {offer.tipCentavos > 0 ? (
         <p className="text-ink">{t("tip", { amount: formatPeso(offer.tipCentavos) })}</p>
+      ) : null}
+      {offer.kind === "pabili" ? (
+        <p
+          className="bg-brand-50 text-brand-800 rounded-xl p-3 font-semibold"
+          data-testid="offer-pabili"
+        >
+          {tPabili("offer", { amount: formatPeso(offer.budgetCentavos) })}
+        </p>
       ) : null}
       <p className="text-ink flex items-center gap-2">
         <Store className="size-5 shrink-0" aria-hidden />
@@ -272,6 +286,8 @@ function JobCard({
   readonly refresh: () => void;
 }): JSX.Element {
   const t = useTranslations("Rider.job");
+  const tPabili = useTranslations("Pabili.rider");
+  const pabili = job.kind === "pabili";
   const [pin, setPin] = useState("");
   const [photo, setPhoto] = useState<File | null>(null);
   const [sending, setSending] = useState(false);
@@ -305,9 +321,13 @@ function JobCard({
         <span className="text-ink-muted text-sm">{job.code}</span>
       </div>
       <p className="text-ink font-semibold" role="status" data-testid="job-step">
-        {t(
-          `step.${job.status === "picked_up" ? "toCustomer" : job.arrivedStoreAt ? "atStore" : "toStore"}`,
-        )}
+        {pabili && job.status !== "picked_up"
+          ? tPabili(
+              `step.${job.status === "accepted" ? "toShop" : job.status === "preparing" ? "shopping" : "bought"}`,
+            )
+          : t(
+              `step.${job.status === "picked_up" ? "toCustomer" : job.arrivedStoreAt ? "atStore" : "toStore"}`,
+            )}
       </p>
       <p className="text-ink">
         {t("pay", { amount: formatPeso(job.earningsCentavos + job.tipCentavos) })}
@@ -320,7 +340,7 @@ function JobCard({
             <Store className="size-5 shrink-0" aria-hidden /> {job.store.name}
           </p>
           {job.store.address ? <p className="text-ink-muted">{job.store.address}</p> : null}
-          <ul className="text-ink list-disc pl-6 text-sm">
+          <ul className="text-ink list-disc pl-6 text-sm" hidden={pabili}>
             {job.items.map((item) => (
               <li key={item.name}>
                 {item.quantity} × {item.name}
@@ -353,14 +373,17 @@ function JobCard({
       </div>
       <NavLinks to={toStore ? job.store.location : job.dropoff.location} />
 
-      {toStore && !job.arrivedStoreAt ? (
+      {pabili && toStore ? (
+        <PabiliShopping job={job} busy={busy} call={call} onError={onError} refresh={refresh} />
+      ) : null}
+      {!pabili && toStore && !job.arrivedStoreAt ? (
         <SwipeConfirm
           label={t("arrived")}
           disabled={busy}
           onConfirm={() => void call(`${base}/arrived`)}
         />
       ) : null}
-      {toStore && job.arrivedStoreAt ? (
+      {!pabili && toStore && job.arrivedStoreAt ? (
         job.status === "ready" ? (
           <SwipeConfirm
             label={t("pickedUp")}

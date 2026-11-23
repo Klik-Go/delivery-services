@@ -34,7 +34,6 @@ import type {
   IReceiptStorage,
   PabiliLine,
   PabiliRecord,
-  PabiliSettings,
 } from "./ports";
 
 /** Shown while the admin has Pabili switched off. */

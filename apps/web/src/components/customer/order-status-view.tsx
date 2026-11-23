@@ -13,6 +13,7 @@ import { useLiveTopic } from "@/lib/realtime";
 import { RatingSheet } from "@/components/retention/rating-sheet";
 import { ReorderButton } from "@/components/retention/reorder-button";
 import { FunnelStep } from "@/components/hardening/telemetry";
+import { PabiliOrderPanel } from "@/components/pabili/pabili-order-panel";
 import { TrackingMap } from "./tracking-map";
 
 /** Statuses that still change without the customer doing anything (keep listening). */
@@ -43,6 +44,7 @@ export function OrderStatusView({
   readonly returned: "paid" | "cancelled" | null;
 }): JSX.Element {
   const t = useTranslations("Customer.order");
+  const tPabili = useTranslations("Pabili.order");
   const tMethod = useTranslations("Customer.checkout.method");
   const locale = useLocale();
   const queryClient = useQueryClient();
@@ -66,6 +68,16 @@ export function OrderStatusView({
   if (order.isPending) return <p className="text-ink-muted">{t("loading")}</p>;
   if (order.isError) return <FormError message={order.error.message} />;
   const o = order.data;
+  const pabili = o.kind === "pabili";
+  // Pabili reuses the statuses with its own words (no store: Klik Go takes it, the rider shops).
+  const statusLabel = (key: string): string =>
+    pabili && ["placed", "accepted", "preparing", "ready"].includes(key)
+      ? tPabili(`status.${key}`)
+      : t(`status.${key}`);
+  const stepLabel = (key: string): string =>
+    pabili && ["placed", "accepted", "preparing", "ready"].includes(key)
+      ? tPabili(`step.${key}`)
+      : t(`step.${key}`);
   const waiting = o.status === "awaiting_payment";
   const ended = o.status === "rejected" || o.status === "cancelled";
   const time = new Intl.DateTimeFormat(locale === "fil" ? "fil-PH" : "en-PH", {
@@ -104,7 +116,7 @@ export function OrderStatusView({
       </div>
       <p className="text-ink-muted">{o.merchantName}</p>
       <p className="text-ink text-xl font-semibold" role="status" data-testid="order-status">
-        {t(`status.${o.status}`)}
+        {statusLabel(o.status)}
       </p>
       {o.readyBy && (o.status === "preparing" || o.status === "accepted") ? (
         <p className="text-ink" data-testid="ready-by">
@@ -124,6 +136,7 @@ export function OrderStatusView({
           })}
         </p>
       ) : null}
+      {pabili ? <PabiliOrderPanel orderId={orderId} status={o.status} /> : null}
       {ON_MAP.has(o.status) ? <TrackingMap orderId={orderId} /> : null}
       {waiting && returned === "paid" ? <p className="text-ink-muted">{t("confirming")}</p> : null}
       {waiting && returned === "cancelled" ? (
@@ -147,7 +160,7 @@ export function OrderStatusView({
                   {at ? <Check className="size-4" /> : null}
                 </span>
                 <span className={`flex-1 ${at ? "text-ink font-semibold" : "text-ink-muted"}`}>
-                  {t(`step.${step.key}`)}
+                  {stepLabel(step.key)}
                 </span>
                 <span className="text-ink-muted text-sm">
                   {at ? time.format(new Date(at)) : ""}
@@ -183,7 +196,9 @@ export function OrderStatusView({
       {o.status === "delivered" ? (
         <>
           <RatingSheet orderId={orderId} />
-          <ReorderButton orderId={orderId} merchantName={o.merchantName} variant="secondary" />
+          {pabili ? null : (
+            <ReorderButton orderId={orderId} merchantName={o.merchantName} variant="secondary" />
+          )}
         </>
       ) : null}
       {o.canCancel ? (

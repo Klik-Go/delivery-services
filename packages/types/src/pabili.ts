@@ -78,3 +78,17 @@ export const PabiliRolloutSchema = z.object({
   max_trip_m: z.number().int().min(500).max(30_000),
 });
 export type PabiliRollout = z.infer<typeof PabiliRolloutSchema>;
+
+/** The customer's Pabili form (budget typed in whole pesos); the page turns it into PlacePabili. */
+export const PabiliFormSchema = z.object({
+  storeName: text(1, 120),
+  storeNotes: text(0, 300).optional(),
+  budgetPesos: z
+    .number({ message: "Enter the most the rider may spend, in pesos." })
+    .int("Whole pesos only.")
+    .positive("Enter the most the rider may spend, in pesos.")
+    .max(100_000),
+  items: z.array(PabiliLineSchema).min(1, "Add at least one item.").max(PABILI_MAX_LINES),
+  address: CheckoutAddressSchema,
+});
+export type PabiliFormInput = z.infer<typeof PabiliFormSchema>;

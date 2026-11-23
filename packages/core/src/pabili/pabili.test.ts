@@ -107,7 +107,7 @@ describe("PabiliService: pricing and placing", () => {
   it("tells the coordinator when no rider has enough float", async () => {
     const w = pabiliWorld();
     w.db.addRider({ id: "rosa", location: ROSA_AT, pabiliFloatCentavos: 10_000 });
-    const order = await placed(w as ReturnType<typeof setup>);
+    const order = await placed(w);
     expect(w.db.offers).toEqual([]);
     expect(w.db.order(order.orderId).flaggedAt).not.toBeNull();
   });

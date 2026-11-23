@@ -1,6 +1,6 @@
 import { formatPeso, type FeaturedPromo } from "@klikgo/core";
 import { BrandLogo } from "@klikgo/ui";
-import { MapPin, Search, Ticket } from "lucide-react";
+import { MapPin, Search, ShoppingBag, Ticket } from "lucide-react";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import type { JSX } from "react";
@@ -14,11 +14,13 @@ import { readDeliveryLocation } from "@/server/customer/location";
 
 /** Customer home: "Deliver to", search, categories, featured promos and store rails. */
 export default async function HomePage(): Promise<JSX.Element> {
-  const [t, tHome, user, location] = await Promise.all([
+  const [t, tHome, tPabili, user, location, pabili] = await Promise.all([
     getTranslations("Customer"),
     getTranslations("Home"),
+    getTranslations("Pabili.home"),
     getSessionUser(),
     readDeliveryLocation(),
+    getContainer().pabili.options(),
   ]);
   const feed = location
     ? await getContainer().feed.feed(location.location, user?.id ?? null)
@@ -117,6 +119,19 @@ export default async function HomePage(): Promise<JSX.Element> {
             <Search aria-hidden className="size-5" />
             {t("searchPlaceholder")}
           </Link>
+          {pabili.enabled ? (
+            <Link
+              href="/pabili"
+              className="bg-accent-400 text-ink rounded-card flex items-center gap-3 p-4"
+              data-testid="pabili-entry"
+            >
+              <ShoppingBag aria-hidden className="size-8 shrink-0" />
+              <span className="flex flex-col">
+                <span className="text-lg font-bold">{tPabili("title")}</span>
+                <span className="text-sm">{tPabili("lead")}</span>
+              </span>
+            </Link>
+          ) : null}
           {feed.categories.length > 1 ? (
             <nav
               aria-label={t("search.category")}

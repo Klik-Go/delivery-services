@@ -3,6 +3,7 @@ import {
   ServiceUnavailableError,
   type AppError,
   type IDeliveryProofStorage,
+  type IReceiptStorage,
   type IAccountAuthAdmin,
   type IKycFileRemover,
   type IKycStorage,
@@ -48,6 +49,19 @@ export class UnconfiguredDeliveryProofStorage implements IDeliveryProofStorage {
     return Promise.resolve(
       err(new ServiceUnavailableError("Delivery photos aren't set up yet. Ask support for help.")),
     );
+  }
+}
+
+/** Pabili receipts without the service-role key: recording a purchase says so instead of failing. */
+export class UnconfiguredReceiptStorage implements IReceiptStorage {
+  save(): Promise<Result<string, AppError>> {
+    return Promise.resolve(
+      err(new ServiceUnavailableError("Receipt photos aren't set up yet. Ask support for help.")),
+    );
+  }
+
+  signedUrl(): Promise<string | null> {
+    return Promise.resolve(null);
   }
 }
 

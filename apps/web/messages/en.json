@@ -1357,5 +1357,103 @@
       "day": "Day",
       "external": "NPS (customer survey), crash-free sessions (Sentry) and API uptime (uptime monitor) are tracked outside the app; see docs/LAUNCH.md."
     }
+  },
+  "Pabili": {
+    "home": {
+      "title": "Pabili",
+      "lead": "Can't find it here? A rider buys it for you from any store."
+    },
+    "form": {
+      "title": "Pabili",
+      "back": "Back",
+      "lead": "Tell us where to buy and what you need. A rider buys it with cash and you pay the receipt total plus the fees at your door.",
+      "off": "Pabili isn't available right now. Order from a store instead.",
+      "needAddress": "Set your delivery address first",
+      "where": "Where to buy",
+      "storeName": "Store name",
+      "storeNameHint": "e.g. Aling Nena's sari-sari, Puregold, the palengke",
+      "storeNotes": "How to find it (optional)",
+      "storeNotesHint": "e.g. beside the chapel",
+      "pinHint": "Move the map so the pin is on the store.",
+      "mapLabel": "Map: move it so the pin is on the store",
+      "list": "Your list",
+      "count": "{count} of {max} items",
+      "item": "Item {n}",
+      "itemHint": "e.g. Eggs (medium)",
+      "quantity": "How many",
+      "note": "Note (optional)",
+      "noteHint": "e.g. any brand, the big pack",
+      "remove": "Remove item {n}",
+      "removeShort": "Remove",
+      "add": "Add an item",
+      "budgetTitle": "Spending limit",
+      "budget": "Most the rider may spend on items (₱)",
+      "budgetHint": "Up to {max}. You pay only what's on the receipt.",
+      "summary": "What you'll pay",
+      "deliveryFee": "Delivery fee",
+      "serviceFee": "Pabili fee",
+      "items": "Items",
+      "upTo": "up to {amount}",
+      "maxToPay": "Most you'll pay",
+      "fillIn": "Add the store, an item and your spending limit to see the fees.",
+      "cashOnly": "Pay in cash at the door: the receipt total plus the fees.",
+      "pricing": "Working out the fees…",
+      "failed": "We couldn't place your Pabili order. Try again.",
+      "place": "Send to a rider · fees {amount}",
+      "placeIdle": "Send to a rider",
+      "placing": "Sending…"
+    },
+    "order": {
+      "title": "Pabili from {store}",
+      "loading": "Loading your list…",
+      "failed": "We couldn't load your list.",
+      "budget": "Spending limit",
+      "fees": "Delivery and Pabili fees",
+      "itemCost": "Items (receipt)",
+      "toPay": "Pay at the door",
+      "payLater": "You'll see the total once the rider has bought your items.",
+      "receipt": "See the receipt photo",
+      "bought": "bought",
+      "unavailable": "not available",
+      "status": {
+        "placed": "Sent to Klik Go",
+        "accepted": "Finding a rider to buy your items",
+        "preparing": "Your rider is shopping",
+        "ready": "Bought. Your rider is about to leave"
+      },
+      "step": {
+        "placed": "Order sent",
+        "accepted": "Taken by Klik Go",
+        "preparing": "Shopping",
+        "ready": "Bought"
+      }
+    },
+    "rider": {
+      "floatTitle": "Pabili float",
+      "floatLead": "Pabili jobs ask you to buy a customer's items with your own cash first; they pay you back at the door. Set the most you can spend.",
+      "floatNow": "You take Pabili jobs up to {amount}.",
+      "floatOff": "You don't take Pabili jobs.",
+      "floatLabel": "Your float (₱, 0 = no Pabili)",
+      "floatSave": "Save",
+      "floatSaved": "Saved.",
+      "failed": "That didn't work. Try again.",
+      "offer": "Pabili: you buy up to {amount} of items first; the customer pays you back.",
+      "budget": "Spend at most {amount} on items.",
+      "startShopping": "Swipe: I'm at the store",
+      "listTitle": "Shopping list",
+      "bought": "Swipe: bought, send the receipt",
+      "unavailable": "Not available",
+      "cost": "Receipt total (₱)",
+      "costHint": "Exactly what the receipt says.",
+      "overBudget": "That's over the customer's limit of {amount}. Call the customer and leave something out.",
+      "receipt": "Photo of the receipt",
+      "recorded": "Receipt recorded: {amount}.",
+      "step": {
+        "toShop": "Go to the store",
+        "shopping": "Shopping",
+        "bought": "Bought: pick up and go"
+      },
+      "boughtOutcome": "Bought"
+    }
   }
 }
