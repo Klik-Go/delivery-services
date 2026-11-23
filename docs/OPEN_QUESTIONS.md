@@ -4,6 +4,15 @@ Agents add items here when a decision is blocked, docs conflict, or the plan cou
 
 ## Open
 
+### Q38. Pabili rules (Phase 13; BUSINESS.md has none, so these are assumptions; please confirm)
+- **Off until you switch it on** (Settings → `pabili`). Limits in the same setting: item budget up to **₱1,500**, Pabili fee **₱49** on top of the zone's delivery fee, up to **20** lines, shop within **5 km** of the drop-off and in the same zone.
+- **Cash on delivery only**: the item cost is only known at the shop. The customer pays the receipt total plus the fees at the door; the receipt total can never exceed the limit they set (the rider is told to call and leave something out).
+- **Rider float**: riders choose how much cash they can spend up front (0 = no Pabili jobs, at most their cash limit). Offers go only to riders whose float covers the budget. Klik Go does not advance cash; if you want a platform float (e.g. a GCash top-up to riders), that is a follow-up.
+- **Money**: the item cost never enters the ledger (customer → rider directly); the fees settle like a cash order without a store (no commission). Rider pay uses the same distance rule (shop → drop-off).
+- **Not for Pabili (for now)**: promo codes, scheduled orders, reorder and store ratings (the customer rates the rider only). Food-only pilot scope does not hide Pabili; it has its own switch.
+- **Receipt photos** are kept like delivery photos (private bucket, opened only through five-minute links by the customer, the rider on the job, the zone coordinator and admins). Tell us if they should be deleted after a set time.
+- **Disputes** (wrong item, receipt doesn't match): handled by the coordinator with the receipt photo and a manual refund as in docs/runbooks/REFUND.md.
+
 ### Q37. Pilot launch decisions (Phase 12; please confirm)
 - **Invite-only and food-only are switched on by you on launch day** (`invite_only`, `pilot_scope` in Settings), not by the migration, so demo stores and tests keep working until then (docs/LAUNCH.md §4). The cap is 100 customers (BUSINESS §4.2); staff and riders never need a code.
 - **Invite codes** are 8 letters and digits without look-alikes, one person each, optional expiry. Waitlist invites go by SMS ("Klik Go: you're invited! Your code is … Order at <domain>/join?code=…"), oldest sign-ups first.

@@ -23,7 +23,8 @@ Phases are defined in `docs/BUILD_PLAN.md` §6. Agents update this file in every
 | 9 | Ratings, reorder, promos, referrals, loyalty | ✅ Done (merged) | [Klik-Go/delivery-services#26](https://github.com/Klik-Go/delivery-services/pull/26) | Owner: confirm stamp minimum, voucher life and referral guards (Q34) |
 | 10 | Finance: settlements, payouts, reports | ✅ Done (merged) | [Klik-Go/delivery-services#29](https://github.com/Klik-Go/delivery-services/pull/29) | Owner: CPA/lawyer on withholding and payment rules before real payouts (Q35) |
 | 11 | Hardening: security, privacy, observability | ✅ Done (merged) | [Klik-Go/delivery-services#32](https://github.com/Klik-Go/delivery-services/pull/32) | Owner: lawyer review of the legal pages, DPO, Sentry/PostHog keys, uptime monitor, staging restore (Q36, docs/SECURITY.md) |
-| 12 | Pilot launch readiness | 🟡 In progress (PR open) | [Klik-Go/delivery-services#33](https://github.com/Klik-Go/delivery-services/pull/33) | Owner: production checklist, dry runs, go/no-go (docs/LAUNCH.md, Q37) |
+| 12 | Pilot launch readiness | ✅ Done (merged) | [Klik-Go/delivery-services#33](https://github.com/Klik-Go/delivery-services/pull/33) | Owner: production checklist, dry runs, go/no-go (docs/LAUNCH.md, Q37) |
+| 13 | Pabili mode (buy for me) | 🟡 In progress (PR open) | (link after opening) | Off by default; owner: confirm the rules (Q38) |
 
 Status values: ⬜ Not started · 🟡 In progress (PR open) · ✅ Done (merged) · ⛔ Blocked (say why)
 
@@ -316,8 +317,22 @@ Deliverables:
 - [x] docs/LAUNCH.md (environments, production checklist, pilot settings, dry runs, go/no-go, status), seven runbooks in docs/runbooks/, docs/COORDINATOR_GUIDE.md.
 - [x] Migration `20261124100000_pilot_launch.sql` (`pilot_invites`, `rider_shifts` + trigger, `private.redeem_invite`, three switches) with DB tests; Prisma schema + ERD regenerated.
 - [ ] Owner: production checklist P1–P18 (LAUNCH §3), Q37.
+- [x] Merged ([Klik-Go/delivery-services#33](https://github.com/Klik-Go/delivery-services/pull/33)).
 
-Next: the pilot itself; later phases (13+) once the pilot shows positive contribution per order (BUILD_PLAN §6).
+### Phase 13 — Pabili mode (branch `phase-13-pabili`)
+Deliverables (docs/BUILD_PLAN.md §4 and §6 "Later phases"; rules in OPEN_QUESTIONS Q38):
+- [x] Free-text shopping list (up to 20 lines) for any store, palengke or sari-sari store, with a shop pin and a spending limit: `/pabili`, `features/pabili/pabili.feature`.
+- [x] Item-cost cap (`pabili` setting, ₱1,500 by default) and a Pabili fee (₱49) on top of the zone's delivery fee; cash on delivery only.
+- [x] Rider float (COD float): riders set how much they can spend up front; offers go only to riders whose float covers the budget (`PabiliFloatStrategy`).
+- [x] Receipt photo: the rider ticks each line bought or not available, enters the receipt total (never above the limit, enforced in the service and the database) and photographs the receipt (private bucket `pabili-receipts`, five-minute links for the customer, the rider, the zone coordinator and admins).
+- [x] Same lifecycle and `order_events`: placed → accepted (Klik Go) → preparing (shopping) → ready (bought) → picked up → delivered; the customer may cancel until a rider takes the job; the store deadline never applies.
+- [x] Settlement: the item cost passes from customer to rider; the ledger records the fees and the rider's pay only.
+- [x] Orders without a store everywhere: live updates, coordinator board, history, tracking, ratings (rider only), notifications, erasure (list notes cleared). Fixed on the way: the order-view rule would have shown store-less orders to every coordinator.
+- [x] Migration `20261125100000_pabili.sql` (`order_kind`, `pabili_requests`, `pabili_items`, `riders.pabili_float_centavos`, `private.order_pickups`, bucket, setting) with DB tests; Prisma schema + ERD regenerated.
+- [x] Evidence: unit tests `pabili.test.ts`; DB tests `pabili.db.test.ts`, `pabili-repositories.db.test.ts`, RLS visibility and write tests; 6 Cucumber scenarios; Playwright `e2e/pabili.spec.ts` (Pixel 7 + desktop, axe). Screenshots: `docs/screenshots/phase-13-pabili-*.png`.
+- [ ] Owner: confirm the rules (Q38) and switch `pabili` on in Settings when wanted.
+
+Next: wait for review; later phases (14+) per BUILD_PLAN §6.
 
 ## Business validation (parallel, doc §8)
 - [ ] 20–30 customer interviews in the pilot barangay

@@ -12,7 +12,7 @@ Status: ✅ done · 🟡 in progress · ⬜ to do · 👤 owner action.
 | Invite-only gate: customers order only after redeeming a code; capped at 100 customers | ✅ | Settings → `invite_only`; `/admin/invites`; customers enter codes at `/join` (flyer QR codes link to `/join?code=…`) |
 | Waitlist import: text a code to the oldest waitlist sign-ups | ✅ | `/admin/invites` → Invite the waitlist (needs SMS, Q13) |
 | Pilot scope: food stores only; scheduled orders on/off | ✅ | Settings → `pilot_scope`, `scheduled_orders` |
-| Pabili and surge pricing | ✅ off | Not built (Phase 13 and later), so off by construction |
+| Pabili | ✅ off | Built in Phase 13, off by default (Settings → `pabili`, Q38). Surge pricing is not built |
 | Free delivery on the first 3 orders (BUSINESS §4.2) | ✅ | `/admin/promos`: a free-delivery campaign limited to customers' first 3 orders |
 | KPI dashboard (BUSINESS §13) | ✅ | `/admin/kpis`, reviewed daily |
 | System status, uptime checks, error tracking | ✅ | `/admin/system`, `/api/health/ready`, Sentry (docs/runbooks/UPTIME.md) |
