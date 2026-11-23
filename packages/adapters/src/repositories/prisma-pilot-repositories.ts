@@ -54,7 +54,7 @@ export class PrismaPilotSettings implements IPilotSettings {
     const rollout = (key: string): Record<string, unknown> => {
       const value = flag(key)?.rollout;
       return value && typeof value === "object" && !Array.isArray(value)
-        ? (value as Record<string, unknown>)
+        ? (value)
         : {};
     };
     const max = rollout("invite_only").max_customers;

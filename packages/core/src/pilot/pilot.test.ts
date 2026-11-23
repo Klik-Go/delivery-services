@@ -245,7 +245,7 @@ describe("the pilot switches at checkout and in the feed", () => {
       clock,
       pilot,
     });
-    expect((await feed.feed(AYALA, null)).categories.sort()).toEqual(["food", "grocery"]);
+    expect([...(await feed.feed(AYALA, null)).categories].sort()).toEqual(["food", "grocery"]);
     pilot.set({ categories: ["food"] });
     const scoped = await feed.feed(AYALA, null);
     expect(scoped.categories).toEqual(["food"]);

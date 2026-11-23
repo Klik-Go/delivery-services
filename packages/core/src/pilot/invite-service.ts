@@ -99,7 +99,11 @@ export class PilotInviteService implements IOrderingAccess {
   /** A batch of codes for flyers or a partner store (admins; audited). */
   async createBatch(
     user: SessionUser | null,
-    input: { readonly batch: string; readonly count: number; readonly expiresInDays?: number | undefined },
+    input: {
+      readonly batch: string;
+      readonly count: number;
+      readonly expiresInDays?: number | undefined;
+    },
   ): Promise<Result<{ readonly codes: readonly string[] }, AppError>> {
     const admin = this.deps.access.platform(user);
     if (!admin.ok) return admin;

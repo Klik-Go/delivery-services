@@ -4,6 +4,14 @@ Agents add items here when a decision is blocked, docs conflict, or the plan cou
 
 ## Open
 
+### Q37. Pilot launch decisions (Phase 12; please confirm)
+- **Invite-only and food-only are switched on by you on launch day** (`invite_only`, `pilot_scope` in Settings), not by the migration, so demo stores and tests keep working until then (docs/LAUNCH.md §4). The cap is 100 customers (BUSINESS §4.2); staff and riders never need a code.
+- **Invite codes** are 8 letters and digits without look-alikes, one person each, optional expiry. Waitlist invites go by SMS ("Klik Go: you're invited! Your code is … Order at <domain>/join?code=…"), oldest sign-ups first.
+- **Cash refunds are not in the app.** A refund on a cash-on-delivery order is sent by hand (GCash) and noted on the order (docs/runbooks/REFUND.md); the ledger does not record it yet. Fine for a 100-customer pilot; if it happens often, a "manual refund" console action that books `customer_refunds` against `platform_cash` is a small follow-up.
+- **KPI definitions** (docs/ARCHITECTURE.md §4m): "retention" on the dashboard is the share of the period's customers who ordered twice or more in it, a proxy for BUSINESS §13.1's 30-day retention until the pilot has enough history. Tell us if you want a different definition.
+- **Staging**: a second Supabase project, `STAGING_`-prefixed migration secrets, Vercel previews pointed at it (docs/LAUNCH.md §2). Until it exists, migrations go straight to production after approval, as today.
+- **Dry runs and go/no-go** are yours (docs/LAUNCH.md §6–7): three staged days with real food, every runbook rehearsed, zero P0 bugs.
+
 ### Q36. Privacy and launch paperwork (Phase 11; needs a lawyer and the owner)
 - **Legal text.** `/legal/privacy` and `/legal/terms` are templates marked "for lawyer review" (English, with a Filipino intro). A lawyer should review them, and a translator the Filipino version, before launch. Changing either text: update its date in `LEGAL_VERSIONS` (`packages/types/src/hardening.ts`) so everyone agrees again.
 - **Data Protection Officer.** Name one and set the contact in the privacy notice (placeholder now). Register with the National Privacy Commission when processing at scale (BUSINESS §7.2).

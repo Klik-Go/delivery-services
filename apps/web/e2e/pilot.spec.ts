@@ -48,7 +48,8 @@ test.describe("Feature: invite-only pilot", () => {
     await admin.getByRole("button", { name: "Create codes" }).click();
     const codes = admin.getByTestId("new-codes");
     await expect(codes).toBeVisible();
-    const code = ((await codes.locator("p.font-mono").textContent()) ?? "").trim().split(/\s+/)[0] ?? "";
+    const code =
+      ((await codes.locator("p.font-mono").textContent()) ?? "").trim().split(/\s+/)[0] ?? "";
     expect(code).toMatch(/^[A-Z0-9]{8}$/);
     await expect(admin.getByRole("listitem").filter({ hasText: code })).toContainText("not used");
     expect(await seriousViolations(admin)).toEqual([]);
@@ -71,14 +72,19 @@ test.describe("Feature: invite-only pilot", () => {
       await page.getByRole("button", { name: "Agree and continue" }).click();
     }
     await page.waitForURL((url) => url.pathname === "/join");
-    await expect(page.getByRole("heading", { level: 1, name: "Enter your invite code" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Enter your invite code" }),
+    ).toBeVisible();
     await expect(page.getByLabel("Invite code")).toHaveValue(code);
     expect(await seriousViolations(page)).toEqual([]);
     await shot(page, `${project}-join`);
     await page.getByRole("button", { name: "Start ordering" }).click();
     await page.waitForURL((url) => url.pathname === "/");
     const used = (
-      await sql("select redeemed_at is not null as used from public.pilot_invites where code = $1", [code])
+      await sql(
+        "select redeemed_at is not null as used from public.pilot_invites where code = $1",
+        [code],
+      )
     ).rows[0] as { used: boolean };
     expect(used.used).toBe(true);
   });
