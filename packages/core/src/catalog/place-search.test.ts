@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { InMemoryRateLimiter } from "../testing/auth-fakes";
 import { FakePlaceSearch, MemoryCache } from "../testing/catalog-fakes";
-import { PlaceSearchService } from "./place-search";
+import { err } from "../shared/result";
+import { NotFoundError, ServiceUnavailableError } from "../shared/errors";
+import { ADDRESS_SEARCH_DOWN, PlaceSearchService } from "./place-search";
 
 const SESSION = "3f2b6f4e-8a1c-4c55-9d3e-2b1f0e9a7c11";
 
@@ -43,5 +45,27 @@ describe("PlaceSearchService", () => {
       "RATE_LIMITED",
       "RATE_LIMITED",
     ]);
+  });
+
+  it("tells the customer to drop the pin when the maps provider is down", async () => {
+    const down = new PlaceSearchService({
+      places: {
+        suggest: () => Promise.resolve(err(new ServiceUnavailableError("Google said 503"))),
+        place: (id: string) =>
+          Promise.resolve(
+            id === "gone"
+              ? err(new NotFoundError("Place", id))
+              : err(new ServiceUnavailableError("x")),
+          ),
+      },
+      cache: new MemoryCache(),
+      rateLimiter: new InMemoryRateLimiter(),
+    });
+    const suggested = await down.suggest("ayala", SESSION, null, { clientIp: "1.1.1.1" });
+    expect(!suggested.ok && suggested.error.message).toBe(ADDRESS_SEARCH_DOWN);
+    const place = await down.place("p", SESSION, { clientIp: "1.1.1.1" });
+    expect(!place.ok && place.error.message).toBe(ADDRESS_SEARCH_DOWN);
+    const missing = await down.place("gone", SESSION, { clientIp: "1.1.1.1" });
+    expect(!missing.ok && missing.error.code).toBe("NOT_FOUND");
   });
 });

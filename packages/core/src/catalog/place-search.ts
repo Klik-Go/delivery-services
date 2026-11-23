@@ -1,6 +1,6 @@
 import type { IRateLimiter, RateLimitRule } from "../auth/ports";
 import type { GeoPoint } from "../merchant/ports";
-import { RateLimitedError, type AppError } from "../shared/errors";
+import { RateLimitedError, ServiceUnavailableError, type AppError } from "../shared/errors";
 import { err, ok, type Result } from "../shared/result";
 import type { ICache } from "./ports";
 
@@ -26,6 +26,13 @@ export interface IPlaceSearch {
   ): Promise<Result<PlaceSuggestion[], AppError>>;
   place(id: string, session: string): Promise<Result<PlaceLocation, AppError>>;
 }
+
+/**
+ * What the customer is told when the maps provider is down: the address screen still works with
+ * a dropped pin or the phone's location (docs/BUSINESS.md §12, Phase 11 resilience).
+ */
+export const ADDRESS_SEARCH_DOWN =
+  "Address search isn't working right now. Drop the pin on the map yourself, or use your location.";
 
 /** Autocomplete costs money per call: 60 keystroke lookups per network per minute. */
 export const PLACE_LOOKUPS_PER_IP: RateLimitRule = { limit: 60, windowSeconds: 60 };
@@ -53,7 +60,9 @@ export class PlaceSearchService {
     if (hit) return ok(hit);
     const result = await this.deps.places.suggest(query, session, near);
     if (result.ok) this.deps.cache.set(key, result.value, CACHE_SECONDS);
-    return result;
+    return result.ok || result.error.code !== "UNAVAILABLE"
+      ? result
+      : err(new ServiceUnavailableError(ADDRESS_SEARCH_DOWN));
   }
 
   async place(
@@ -68,7 +77,9 @@ export class PlaceSearchService {
     if (hit) return ok(hit);
     const result = await this.deps.places.place(id, session);
     if (result.ok) this.deps.cache.set(key, result.value, CACHE_SECONDS);
-    return result;
+    return result.ok || result.error.code !== "UNAVAILABLE"
+      ? result
+      : err(new ServiceUnavailableError(ADDRESS_SEARCH_DOWN));
   }
 
   private async limit(clientIp: string): Promise<RateLimitedError | null> {

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { opsWorld } from "../testing";
 import { REQUIRED_KYC_DOCUMENTS } from "./ports";
 
-const PHOTO = { bytes: new Uint8Array([1, 2, 3]), contentType: "image/jpeg" };
+const PHOTO = { bytes: new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0, 16]), contentType: "image/jpeg" };
 
 /** Ella applies in Makati and uploads all five documents. */
 async function applied() {
@@ -21,6 +21,32 @@ async function applied() {
 }
 
 describe("RiderOnboardingService", () => {
+  it("refuses a file whose bytes are not a photo or a PDF, whatever it claims to be", async () => {
+    const w = opsWorld();
+    const ella = { ...w.customer, id: "ella" };
+    await w.onboarding.apply(ella, {
+      zoneId: "makati",
+      vehicleType: "motorcycle",
+      plateNo: "NAB 1234",
+      fullName: "Ella Rider",
+      payoutAccountName: "Ella Rider",
+    });
+    const page = new TextEncoder().encode("<!doctype html><script>alert(1)</script>");
+    const refused = await w.onboarding.upload(ella, "government_id", {
+      bytes: page,
+      contentType: "image/jpeg",
+    });
+    expect(!refused.ok && refused.error.message).toContain("That file is not a photo or a PDF");
+    expect(w.state.files.size).toBe(0);
+    // A PNG sent as "image/jpeg" is stored as the PNG it really is.
+    const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+    expect(
+      (await w.onboarding.upload(ella, "government_id", { bytes: png, contentType: "image/jpeg" }))
+        .ok,
+    ).toBe(true);
+    expect([...w.state.files.keys()][0]).toMatch(/\.png$/);
+  });
+
   it("creates a pending rider once and stores documents in the rider's private folder", async () => {
     const { w, ella, riderId } = await applied();
     expect([...w.state.files.keys()].every((path) => path.startsWith(`${riderId}/`))).toBe(true);
@@ -80,7 +106,7 @@ describe("RiderOnboardingService", () => {
     });
     w.kyc.down = true;
     const failed = await w.onboarding.upload(ella, "government_id", {
-      bytes: new Uint8Array([1]),
+      bytes: new TextEncoder().encode("%PDF-1.7\n"),
       contentType: "application/pdf",
     });
     expect(!failed.ok && failed.error.code).toBe("UNAVAILABLE");

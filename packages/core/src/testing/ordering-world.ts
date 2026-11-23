@@ -15,6 +15,7 @@ import { RefundService } from "../ordering/refund-service";
 import type { InMemoryCatalog } from "./catalog-fakes";
 import { AYALA, catalogWorld } from "./catalog-world";
 import { FakeClock } from "./fake-clock";
+import { InMemorySwitches } from "./hardening-fakes";
 import { MemoryLogger } from "./memory-logger";
 import {
   FakeContentHasher,
@@ -82,6 +83,8 @@ export interface OrderingWorld {
   readonly dispatch: DispatchStub;
   /** Kape't Tinapay's owner, signed in with TOTP. */
   readonly owner: SessionUser;
+  /** online_payments and flat_delivery_fee, flipped by tests. */
+  readonly switches: InMemorySwitches;
 }
 
 /** Every checkout service wired with in-memory fakes (the composition root, for unit tests). */
@@ -102,12 +105,14 @@ export function orderingWorld(now = new Date("2026-11-02T03:00:00Z")): OrderingW
   const ledger = new LedgerService();
   const states = new OrderStateMachine();
   const webhooks = new InMemoryWebhookEvents();
+  const switches = new InMemorySwitches();
   const pricing = new PricingService({
     catalog,
     serviceArea: area,
     delivery: [new DistanceBandFee(), new ZoneBaseFee()],
     surcharges: [new SmallOrderFee(), new ServiceFee()],
     clock,
+    switches,
   });
   const promos = new PromoService({ promos: promoRepo, clock });
   const hasher = new FakeContentHasher();
@@ -121,6 +126,7 @@ export function orderingWorld(now = new Date("2026-11-02T03:00:00Z")): OrderingW
     clock,
     logger,
     notifier,
+    switches,
   });
   const refunds = new RefundService({
     orders: store,
@@ -184,5 +190,6 @@ export function orderingWorld(now = new Date("2026-11-02T03:00:00Z")): OrderingW
     jobs,
     dispatch,
     owner,
+    switches,
   };
 }

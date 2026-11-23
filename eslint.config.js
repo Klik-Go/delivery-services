@@ -6,7 +6,7 @@ export default [
   { ignores: ["apps/**", "packages/**", "supabase/**"] },
   ...createConfig({ tsconfigRootDir: import.meta.dirname }),
   {
-    files: ["features/**/*.ts", "scripts/**"],
+    files: ["features/**/*.ts", "scripts/**", "load/**"],
     rules: { "no-console": "off" },
   },
 ];

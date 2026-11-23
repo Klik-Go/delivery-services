@@ -21,8 +21,8 @@ Phases are defined in `docs/BUILD_PLAN.md` §6. Agents update this file in every
 | 8 | Coordinator and Admin console | ✅ Done (merged) | [Klik-Go/delivery-services#24](https://github.com/Klik-Go/delivery-services/pull/24) | Owner: SLA targets and coaching rule (Q32); template editor moved to Phase 11 (Q33) |
 | 8.1 | Follow-up: demo riders + demo accounts reference | ✅ Done (merged) | [Klik-Go/delivery-services#25](https://github.com/Klik-Go/delivery-services/pull/25) | Owner: run **Load demo riders**, add the test numbers in Supabase (docs/DEMO.md §4.2) |
 | 9 | Ratings, reorder, promos, referrals, loyalty | ✅ Done (merged) | [Klik-Go/delivery-services#26](https://github.com/Klik-Go/delivery-services/pull/26) | Owner: confirm stamp minimum, voucher life and referral guards (Q34) |
-| 10 | Finance: settlements, payouts, reports | 🟡 In progress (PR open) | [Klik-Go/delivery-services#29](https://github.com/Klik-Go/delivery-services/pull/29) | Owner: CPA/lawyer on withholding and payment rules before real payouts (Q35) |
-| 11 | Hardening: security, privacy, observability | ⬜ Not started | | |
+| 10 | Finance: settlements, payouts, reports | ✅ Done (merged) | [Klik-Go/delivery-services#29](https://github.com/Klik-Go/delivery-services/pull/29) | Owner: CPA/lawyer on withholding and payment rules before real payouts (Q35) |
+| 11 | Hardening: security, privacy, observability | 🟡 In progress (PR open) | [Klik-Go/delivery-services#32](https://github.com/Klik-Go/delivery-services/pull/32) | Owner: lawyer review of the legal pages, DPO, Sentry/PostHog keys, uptime monitor, staging restore (Q36, docs/SECURITY.md) |
 | 12 | Pilot launch | ⬜ Not started | | |
 
 Status values: ⬜ Not started · 🟡 In progress (PR open) · ✅ Done (merged) · ⛔ Blocked (say why)
@@ -272,9 +272,32 @@ Deliverables:
 - [x] `ReportService`: GMV, take rate, contribution per order, refunds, promo cost and cash share by zone and week, and the ledger CSV mapped to the chart of accounts (docs/BUSINESS.md §6.5).
 - [x] `/admin/finance` (payouts, cash hand-ins, reports; coordinators see cash only).
 - [x] Migration `20261116100000_finance.sql` (ledger accounts `payouts_due` and `platform_cash`, payout accounts, payout lines, payout snapshot and freeze, cash hand-ins, settlement runs) with DB tests; Prisma schema + ERD regenerated.
+- [x] Merged ([Klik-Go/delivery-services#29](https://github.com/Klik-Go/delivery-services/pull/29)).
 - [ ] Owner: CPA/lawyer review before real payouts (Q35).
 
 Next: Phase 11, hardening: security, privacy, observability and performance (after review).
+
+### Phase 11 — Hardening: security, privacy, observability, performance (branch `phase-11-hardening`)
+Acceptance (docs/BUILD_PLAN.md §6, Gherkin in `features/hardening/`):
+- [x] Load test at 5× the expected pilot peak with p95 < 500 ms and no errors: locally 516 requests, 0 failed, p95 201 ms (docs/runbooks/LOAD_TEST.md); k6 in CI (**Load test** workflow).
+- [x] Security checklist done with open items listed: OWASP ASVS L1 pass in docs/SECURITY.md (SEC-1 … SEC-9).
+- [ ] Restore from backup tested in staging: local drill done (row counts and ledger balance match, docs/runbooks/BACKUP_RESTORE.md); staging restore is an owner action (SEC-4).
+- [x] Zero high-severity findings open: CodeQL, `pnpm audit --audit-level high` (after pinning `effect`), gitleaks in CI.
+
+Deliverables:
+- [x] Errors to Sentry with personal data scrubbed (server, uncaught render errors, browser crashes through the BFF); request ids on every log line.
+- [x] `/api/health/ready` checks file storage too; uptime runbook (docs/runbooks/UPTIME.md).
+- [x] Funnel events (home → store → cart → checkout → placed → paid) to PostHog, ids only, DNT/GPC honoured.
+- [x] `/admin/system`: job lag, database schedules, failing webhooks, missed deadlines.
+- [x] Rate limit and same-site origin check on every public API route (proxy); upload type checked from the bytes.
+- [x] Secret scanning (gitleaks) and dependency audit in CI (**Security** workflow).
+- [x] Privacy notice and terms (templates for lawyer review), consent recorded at sign-up, data download and account deletion, KYC file retention job.
+- [x] Resilience: cash-on-delivery-only switch, flat delivery fee switch, address search fallback to a dropped pin.
+- [x] Performance: k6 lunch-peak script; store-team notifications in parallel; no missing indexes found (`pg_stat_statements`).
+- [x] Migration `20261123100000_hardening.sql` (`consents`, `job_runs`, `rider_kyc_documents.purged_at`, three settings, `private.erase_account`, `private.kyc_documents_due_for_purge`) with DB tests; Prisma schema + ERD regenerated.
+- [ ] Owner: Q36 (lawyer, DPO, Sentry/PostHog keys and regions), uptime monitor, staging restore, penetration test (SEC-1 … SEC-7).
+
+Next: Phase 12, pilot launch (after review).
 
 ## Business validation (parallel, doc §8)
 - [ ] 20–30 customer interviews in the pilot barangay

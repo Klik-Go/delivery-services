@@ -5,6 +5,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
 import type { JSX, ReactNode } from "react";
 import { lilitaOne } from "./fonts";
+import { ClientErrorReporter } from "@/components/hardening/telemetry";
 import "./globals.css";
 
 /** Localised title and description. */
@@ -36,7 +37,10 @@ export default async function RootLayout({
   return (
     <html lang={locale} className={lilitaOne.variable}>
       <body className="min-h-dvh">
-        <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        <NextIntlClientProvider>
+          <ClientErrorReporter />
+          {children}
+        </NextIntlClientProvider>
       </body>
     </html>
   );

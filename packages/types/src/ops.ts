@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { KycRetentionRolloutSchema } from "./hardening";
 import { FeeRuleKindSchema, KycDocumentTypeSchema, VehicleTypeSchema } from "./domain";
 
 /** Every console action that changes something carries a short reason for the audit log. */
@@ -188,6 +189,9 @@ export const MerchantSlaRolloutSchema = z
 export const FLAG_ROLLOUT_SCHEMAS: Readonly<Record<string, z.ZodType>> = {
   dispatch: DispatchRolloutSchema,
   merchant_sla: MerchantSlaRolloutSchema,
+  kyc_retention: KycRetentionRolloutSchema,
+  online_payments: z.object({}).strict(),
+  flat_delivery_fee: z.object({}).strict(),
 };
 
 /** PUT /api/admin/feature-flags/:key */

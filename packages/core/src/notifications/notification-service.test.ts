@@ -36,11 +36,12 @@ describe("NotificationService", () => {
   it("tells the whole store team about a new order by push and in the app", async () => {
     const w = world();
     await w.service.statusChanged(ORDER, "placed");
-    expect(w.log.rows.map((r) => [r.userId, r.channel, r.template, r.status])).toEqual([
-      ["owner-1", "push", "order_new", "sent"],
+    // The team is told in parallel, so only the set of messages matters, not their order.
+    expect(w.log.rows.map((r) => [r.userId, r.channel, r.template, r.status]).sort()).toEqual([
       ["owner-1", "in_app", "order_new", "sent"],
-      ["staff-1", "push", "order_new", "sent"],
+      ["owner-1", "push", "order_new", "sent"],
       ["staff-1", "in_app", "order_new", "sent"],
+      ["staff-1", "push", "order_new", "sent"],
     ]);
     expect(w.sender("push")?.sent[0]?.rendered).toEqual({
       title: "New order KG-ABC234",

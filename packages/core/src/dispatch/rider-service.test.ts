@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { dispatchWorld, ROSA_AT, sessionUser } from "../testing";
 import { maskPhone } from "./rider-service";
 
-const PHOTO = { bytes: new Uint8Array([1, 2, 3]), contentType: "image/jpeg" };
+const PHOTO = { bytes: new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0, 16]), contentType: "image/jpeg" };
 
 /** Rosa holds order o1 (cash on delivery, ₱239.00 with a ₱20.00 tip in it). */
 async function onJob(
@@ -133,6 +133,10 @@ describe("RiderService", () => {
 
     const noPhoto = await w.riders.delivered(rosa, "o1", {});
     expect(!noPhoto.ok && noPhoto.error.code).toBe("VALIDATION_FAILED");
+    const notAPhoto = await w.riders.delivered(rosa, "o1", {
+      photo: { bytes: new TextEncoder().encode("<html>"), contentType: "image/jpeg" },
+    });
+    expect(!notAPhoto.ok && notAPhoto.error.message).toMatch(/not a photo/);
 
     const done = await w.riders.delivered(rosa, "o1", { photo: PHOTO });
     expect(done).toEqual({ ok: true, value: { orderId: "o1", status: "delivered" } });

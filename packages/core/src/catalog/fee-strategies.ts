@@ -42,6 +42,16 @@ export class ZoneBaseFee implements DeliveryFeeStrategy {
   }
 }
 
+/**
+ * The zone base fee whatever the distance: for when pins or distances cannot be trusted (maps
+ * down, docs/BUSINESS.md §12). Chosen by the flat_delivery_fee switch, not by zone rules.
+ */
+export class FlatZoneFee implements DeliveryFeeStrategy {
+  deliveryFee({ fees }: FeeContext): Centavos {
+    return fees.baseFeeCentavos;
+  }
+}
+
 /** fee_rules kind small_order_fee: charged when the subtotal is below the rule's minimum. */
 export class SmallOrderFee implements SurchargeStrategy {
   readonly kind = "small_order" as const;

@@ -1,3 +1,4 @@
+import { verifiedFileType } from "../shared/file-type";
 import type { KycDocumentType, VehicleType } from "@klikgo/types";
 import type { SessionUser } from "../auth/session-user";
 import type { Logger } from "../ports/logger";
@@ -18,6 +19,11 @@ const EXTENSIONS: Readonly<Record<string, string>> = {
   "image/webp": "webp",
   "application/pdf": "pdf",
 };
+
+/** ID documents may be photos or PDFs, recognised from their bytes. */
+const KYC_FILE_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"] as const;
+export const NOT_A_DOCUMENT =
+  "That file is not a photo or a PDF. Upload a photo or a PDF of the document.";
 
 /**
  * Applying to ride (docs/BUSINESS.md Appendix B): a signed-in person picks their zone and
@@ -90,9 +96,13 @@ export class RiderOnboardingService {
     if (current && current.status !== "rejected") {
       return err(new ConflictError("This document is already uploaded and waiting for review."));
     }
+    // Trust the bytes, not the browser: a web page renamed to .jpg must never reach the bucket.
+    const actual = verifiedFileType(file.bytes, file.contentType, KYC_FILE_TYPES);
+    if (!actual)
+      return err(new ValidationError(NOT_A_DOCUMENT, [{ path: "file", message: NOT_A_DOCUMENT }]));
     const id = this.deps.newId?.() ?? globalThis.crypto.randomUUID();
-    const path = `${rider.id}/${type}-${id}.${EXTENSIONS[file.contentType] ?? "jpg"}`;
-    const stored = await this.deps.storage.upload(path, file);
+    const path = `${rider.id}/${type}-${id}.${EXTENSIONS[actual] ?? "jpg"}`;
+    const stored = await this.deps.storage.upload(path, { bytes: file.bytes, contentType: actual });
     if (!stored.ok) return stored;
     const documentId = await this.deps.onboarding.addDocument({
       riderId: rider.id,

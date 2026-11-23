@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 import {
+  agreeIfAsked,
   apiSession,
   authStackConfigured,
   E2E_PHONES,
@@ -39,6 +40,7 @@ test.describe("Feature: phone sign-in", () => {
     await page.getByLabel("Digit 1").fill(TEST_OTP_CODE);
     await page.getByRole("button", { name: "Verify" }).click();
 
+    await agreeIfAsked(page);
     await page.waitForURL((url) => url.pathname === "/");
     await expect(page.getByText(`Signed in as ${phone}`)).toBeVisible();
     await page.getByRole("button", { name: "Sign out" }).first().click();
@@ -99,6 +101,7 @@ test.describe("Feature: staff invitation with two-factor sign-in", () => {
     await page.getByLabel("Digit 1").fill(totpCode(secret.trim()));
     await page.getByRole("button", { name: "Verify" }).click();
 
+    await agreeIfAsked(page);
     await page.waitForURL((url) => url.pathname === "/merchant");
     await expect(page.getByText("Merchant dashboard", { exact: true })).toBeVisible();
     await expect(

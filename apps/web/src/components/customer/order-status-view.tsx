@@ -12,6 +12,7 @@ import { fetchData, postJson } from "@/lib/post-json";
 import { useLiveTopic } from "@/lib/realtime";
 import { RatingSheet } from "@/components/retention/rating-sheet";
 import { ReorderButton } from "@/components/retention/reorder-button";
+import { FunnelStep } from "@/components/hardening/telemetry";
 import { TrackingMap } from "./tracking-map";
 
 /** Statuses that still change without the customer doing anything (keep listening). */
@@ -92,6 +93,7 @@ export function OrderStatusView({
 
   return (
     <div className="flex flex-col gap-4">
+      {o.paymentStatus === "paid" ? <FunnelStep name="order_paid" orderId={o.id} /> : null}
       <div className="flex items-start justify-between gap-2">
         <h1 className="text-ink text-2xl font-bold">{t("title", { code: o.code })}</h1>
         {live === "live" && LIVE.has(o.status) ? (

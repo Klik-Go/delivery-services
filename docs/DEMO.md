@@ -23,6 +23,10 @@ what data comes with it.
 Staff accounts always need a password **and** an authenticator app (TOTP, AAL2). The first sign-in
 from a one-time link asks for both. Customers and riders never have passwords.
 
+Everyone (customers, riders and staff) agrees to the terms and privacy notice once, on the
+**Before you continue** screen right after their first sign-in (and again if either document
+changes). Each person can download their data or delete their account at `/account`.
+
 ## 2. Local seed (`supabase/seed.sql`)
 
 `pnpm db:reset` loads this seed into the local database. The hosted database never gets it. Every

@@ -17,3 +17,9 @@ allowBuilds:
   sharp: true
   supabase: true
   unrs-resolver: true
+
+# Security overrides for transitive dependencies (Phase 11 dependency audit). Exact, patched
+# versions; remove each once the parent package ships the fix.
+overrides:
+  # GHSA-7589-6fvf-x4pw (high, ReDoS) via prisma > @prisma/config > effect.
+  effect: 3.22.4

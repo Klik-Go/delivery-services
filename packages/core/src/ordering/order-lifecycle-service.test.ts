@@ -128,6 +128,7 @@ describe("OrderLifecycleService", () => {
       dispatch: { expired: 0, offered: 0, flagged: 0 },
       rewards: 0,
       settled: 0,
+      kycPurged: 0,
     });
     expect(await w.store.refundsDue(10)).toEqual([]);
   });
@@ -143,6 +144,7 @@ describe("OrderLifecycleService", () => {
       dispatch: { expired: 0, offered: 0, flagged: 0 },
       rewards: 0,
       settled: 0,
+      kycPurged: 0,
     });
     expect(w.logger.lines.map((l) => l.message)).toContain("jobs.refund_failed");
   });

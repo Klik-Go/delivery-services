@@ -4,6 +4,7 @@ import { After, Before, Given, Then, When } from "@cucumber/cucumber";
 import { expect } from "@playwright/test";
 import { adminClient } from "../support/supabase-test-auth";
 import type { KlikWorld } from "../support/world";
+import { agreeIfAsked } from "../support/consent";
 
 /**
  * The server only has a placeholder code when PLACEHOLDER_OTP_CODE is set for the run (CI sets a
@@ -62,6 +63,7 @@ Given("the rider number {string}", function (this: KlikWorld, phone: string) {
 Given("they have signed in with the test code before", async function (this: KlikWorld) {
   await signInWithTestCode(this);
   const page = await this.page();
+  await agreeIfAsked(page);
   await page.waitForURL((url) => url.pathname === "/");
   const userId = await currentUserId(this);
   assert.ok(userId, "first sign-in did not create a session");
@@ -75,6 +77,7 @@ When("they sign in with their phone and the test code", async function (this: Kl
 
 Then("they land on Home signed in with that number", async function (this: KlikWorld) {
   const page = await this.page();
+  await agreeIfAsked(page);
   await page.waitForURL((url) => url.pathname === "/");
   const e164 = `+63${(this.auth.phone ?? "").replace(/\s/g, "").slice(1)}`;
   await expect(page.getByText(`Signed in as ${e164}`)).toBeVisible();
@@ -82,6 +85,7 @@ Then("they land on Home signed in with that number", async function (this: KlikW
 
 Then("they are signed in to the same account as before", async function (this: KlikWorld) {
   const page = await this.page();
+  await agreeIfAsked(page);
   await page.waitForURL((url) => url.pathname === "/");
   assert.equal(await currentUserId(this), this.auth.userId);
 });

@@ -17,8 +17,9 @@ export type ZoneScope = "all" | readonly string[];
 
 /** One audit_logs row (append-only). */
 export interface AuditEntry {
-  readonly actorId: string;
-  readonly actorRole: AppRole;
+  /** null for the system (background jobs). */
+  readonly actorId: string | null;
+  readonly actorRole: AppRole | null;
   readonly action: string;
   readonly entityType: string;
   readonly entityId: string | null;

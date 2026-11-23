@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { AppError } from "../shared/errors";
+import { AppError, ServiceUnavailableError } from "../shared/errors";
 import { err, ok, type Result } from "../shared/result";
 import { MemoryLogger } from "../testing";
 import type { IDatabaseProbe } from "./readiness-service";
@@ -19,6 +19,7 @@ describe("ReadinessService", () => {
     expect(await service.check()).toEqual({
       status: "ready",
       database: "ok",
+      storage: "skipped",
       schemaVersion: "20261110100000",
       expectedSchemaVersion: "20261110100000",
     });
@@ -64,5 +65,29 @@ describe("ReadinessService", () => {
       schemaVersion: null,
     });
     expect(logger.lines.map((l) => l.message)).toContain("readiness.database_unreachable");
+  });
+
+  it("checks file storage too, and is not ready while storage is down", async () => {
+    const storage = (result: Result<void, AppError>) => ({ ping: () => Promise.resolve(result) });
+    const healthy = new ReadinessService({
+      database: probe(ok("20261110100000")),
+      storage: storage(ok(undefined)),
+      expectedSchemaVersion: "20261110100000",
+      logger: new MemoryLogger(),
+    });
+    expect(await healthy.check()).toMatchObject({ status: "ready", storage: "ok" });
+    const logger = new MemoryLogger();
+    const down = new ReadinessService({
+      database: probe(ok("20261110100000")),
+      storage: storage(err(new ServiceUnavailableError("storage down"))),
+      expectedSchemaVersion: "20261110100000",
+      logger,
+    });
+    expect(await down.check()).toMatchObject({
+      status: "not_ready",
+      database: "ok",
+      storage: "unreachable",
+    });
+    expect(logger.lines.some((e) => e.message === "readiness.storage_unreachable")).toBe(true);
   });
 });

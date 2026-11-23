@@ -8,6 +8,7 @@ import { getTranslations } from "next-intl/server";
 import type { JSX } from "react";
 import { OpeningLabel } from "@/components/customer/opening-label";
 import { StoreMenu } from "@/components/customer/store-menu";
+import { FunnelStep } from "@/components/hardening/telemetry";
 import { getContainer } from "@/server/container";
 import { readDeliveryLocation } from "@/server/customer/location";
 
@@ -40,6 +41,7 @@ export default async function StorePage({ params }: Params): Promise<JSX.Element
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-screen-md flex-col gap-4 px-4 pt-4">
+      <FunnelStep name="store_viewed" storeId={store.merchantId} />
       <Link
         href="/"
         className="text-brand-800 min-h-tap inline-flex items-center gap-1 self-start font-semibold"

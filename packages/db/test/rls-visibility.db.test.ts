@@ -229,6 +229,22 @@ describeDb("row-level security: who can see which rows", () => {
     expect((await seen("admin", runs)).length).toBeGreaterThan(0);
   });
 
+  it("consents: each person sees their own agreements; admins see all; job runs: admins only", async () => {
+    const q = `select distinct user_id as id from public.consents where user_id = any($1)`;
+    const people = [[w.users.customer1, w.users.customer2]];
+    expect(await seen("customer1", q, people)).toEqual([w.users.customer1]);
+    expect(await seen("customer2", q, people)).toEqual([w.users.customer2]);
+    expect(await seen("admin", q, people)).toEqual(sorted(w.users.customer1, w.users.customer2));
+    for (const viewer of ["ownerA", "coordA", "riderA1"] as const) {
+      expect(await seen(viewer, q, people), viewer).toEqual([]);
+    }
+    const runs = `select id::text as id from public.job_runs`;
+    expect((await seen("admin", runs)).length).toBeGreaterThan(0);
+    for (const viewer of ["coordA", "ownerA", "customer1"] as const) {
+      expect(await seen(viewer, runs), viewer).toEqual([]);
+    }
+  });
+
   it("webhook events are server-only: not even admins read them through the API", async () => {
     const q = `select event_id as id from public.webhook_events where event_id = 'evt_test_1'`;
     expect(await seen("admin", q)).toEqual([]);

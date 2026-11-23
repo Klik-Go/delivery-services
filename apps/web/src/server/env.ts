@@ -72,6 +72,17 @@ const ServerEnvSchema = z
       (value) => (value === "" ? undefined : value),
       z.string().min(32, "must be at least 32 characters").optional(),
     ),
+    // Error tracking (Phase 11): a Sentry DSN (https://<key>@<host>/<project>). Events are sent from
+    // the server only, with personal data scrubbed; unset = errors go to the logs only.
+    SENTRY_DSN: optionalUrl,
+    SENTRY_ENVIRONMENT: optionalString,
+    // Product analytics (Phase 11): PostHog project key and host for the ordering funnel. Server
+    // side only, ids only; unset = nothing is counted.
+    POSTHOG_API_KEY: optionalString,
+    POSTHOG_HOST: z.preprocess(
+      (value) => (value === "" ? undefined : value),
+      z.url().default("https://us.i.posthog.com"),
+    ),
     // "fake" uses the deterministic test menu reader (local dev, Cucumber, Playwright only).
     MENU_PARSER: z.preprocess(
       (value) => (value === "" ? undefined : value),

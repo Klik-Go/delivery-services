@@ -22,7 +22,8 @@ export async function POST(request: Request): Promise<Response> {
       code: body.value.code,
     });
     if (!result.ok) return jsonError(result.error, meta, container.logger);
-    return jsonOk({ next: container.authz.landingPath(user.value) }, meta);
+    const next = container.authz.landingPath(user.value);
+    return jsonOk({ next: await container.consents.landingFor(user.value.id, next) }, meta);
   } catch (error) {
     return jsonError(error, meta, container.logger);
   }

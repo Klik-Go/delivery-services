@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState, type JSX } from "react";
 import { itemCount, useCart, type CartStore } from "@/lib/cart-store";
+import { trackFunnel } from "@/lib/telemetry";
 import { useHydrated } from "@/lib/use-hydrated";
 import { BottomSheet } from "./bottom-sheet";
 
@@ -226,7 +227,10 @@ function ItemSheet({
   function submit(): void {
     if (missing) return;
     if (add(store, line) === "replace") setConfirmReplace(true);
-    else onClose();
+    else {
+      trackFunnel({ name: "cart_item_added", storeId: store.merchantId }, `cart:${item.id}`);
+      onClose();
+    }
   }
 
   return (

@@ -20,6 +20,7 @@ import { FormError } from "@/components/auth/form-error";
 import { TextField } from "@/components/auth/text-field";
 import { useCart } from "@/lib/cart-store";
 import { requestJson } from "@/lib/post-json";
+import { trackFunnel } from "@/lib/telemetry";
 import { useHydrated } from "@/lib/use-hydrated";
 
 /** The address fields as the form edits them (empty strings for blanks). */
@@ -45,6 +46,7 @@ export function CheckoutView({
   readonly initialPromo?: string | null;
 }): JSX.Element {
   const t = useTranslations("Customer.checkout");
+  const tFallback = useTranslations("Hardening.fallback");
   const tCart = useTranslations("Customer.cart");
   const locale = useLocale();
   const router = useRouter();
@@ -158,6 +160,7 @@ export function CheckoutView({
       return;
     }
     clear();
+    trackFunnel({ name: "order_placed", orderId: result.data.orderId });
     if (result.data.checkoutUrl) window.location.assign(result.data.checkoutUrl);
     else router.push(`/orders/${result.data.orderId}`);
   };
@@ -256,6 +259,14 @@ export function CheckoutView({
 
       <fieldset className="flex flex-col gap-2">
         <legend className="text-ink mb-2 text-lg font-bold">{t("payment")}</legend>
+        {data?.onlinePaymentsPaused ? (
+          <p
+            role="status"
+            className="bg-accent-100 text-ink mb-2 rounded-lg p-3 text-sm font-semibold"
+          >
+            {tFallback("onlinePaused")}
+          </p>
+        ) : null}
         {methods.map((m) => (
           <label
             key={m}

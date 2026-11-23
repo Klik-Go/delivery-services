@@ -1,5 +1,5 @@
 import { randomBytes, randomInt } from "node:crypto";
-import { request as playwrightRequest, type APIRequestContext } from "@playwright/test";
+import { request as playwrightRequest, type APIRequestContext, type Page } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { Secret, TOTP } from "otpauth";
 import pg from "pg";
@@ -178,4 +178,17 @@ export async function merchantIdByName(name: string): Promise<string> {
   const id = (rows.rows[0] as { id: string } | undefined)?.id;
   if (!id) throw new Error(`No merchant named ${name} (run pnpm db:reset)`);
   return id;
+}
+
+/**
+ * After a sign-in, a person who has not agreed to the current terms and privacy notice is sent to
+ * /consent first (Phase 11). Ticks both boxes and continues when that happens.
+ */
+export async function agreeIfAsked(page: Page): Promise<void> {
+  await page.waitForURL((url) => url.pathname !== "/auth/verify" && url.pathname !== "/auth/mfa");
+  if (new URL(page.url()).pathname !== "/consent") return;
+  await page.getByRole("checkbox", { name: /terms of service/ }).check();
+  await page.getByRole("checkbox", { name: /privacy notice/ }).check();
+  await page.getByRole("button", { name: "Agree and continue" }).click();
+  await page.waitForURL((url) => url.pathname !== "/consent");
 }

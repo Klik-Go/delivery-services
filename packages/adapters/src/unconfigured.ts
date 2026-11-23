@@ -3,6 +3,8 @@ import {
   ServiceUnavailableError,
   type AppError,
   type IDeliveryProofStorage,
+  type IAccountAuthAdmin,
+  type IKycFileRemover,
   type IKycStorage,
   type IMenuParser,
   type IPhotoStorage,
@@ -50,12 +52,26 @@ export class UnconfiguredDeliveryProofStorage implements IDeliveryProofStorage {
 }
 
 /** Rider documents without the service-role key: uploads and review links say so instead of failing. */
-export class UnconfiguredKycStorage implements IKycStorage {
+export class UnconfiguredKycStorage implements IKycStorage, IKycFileRemover {
   signedUrl(): Promise<Result<string, AppError>> {
     return Promise.resolve(err(new ServiceUnavailableError("Rider documents aren't set up yet.")));
   }
 
   upload(): Promise<Result<void, AppError>> {
     return Promise.resolve(err(new ServiceUnavailableError("Rider documents aren't set up yet.")));
+  }
+
+  /** Nothing can be deleted without storage; the retention job retries on its next run. */
+  remove(): Promise<Result<void, AppError>> {
+    return Promise.resolve(err(new ServiceUnavailableError("Rider documents aren't set up yet.")));
+  }
+}
+
+/** Without the service-role key accounts cannot be erased on the Supabase Auth side. */
+export class UnconfiguredAccountAuthAdmin implements IAccountAuthAdmin {
+  softDelete(): Promise<Result<void, AppError>> {
+    return Promise.resolve(
+      err(new ServiceUnavailableError("Account deletion isn't set up yet. Contact support.")),
+    );
   }
 }

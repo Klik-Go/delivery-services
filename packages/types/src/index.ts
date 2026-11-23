@@ -10,3 +10,4 @@ export * from "./rider";
 export * from "./ops";
 export * from "./retention";
 export * from "./finance";
+export * from "./hardening";

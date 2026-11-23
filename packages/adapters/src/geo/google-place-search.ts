@@ -125,8 +125,9 @@ export class GooglePlaceSearch implements IPlaceSearch {
 
 /** Without a key: no suggestions (customers use GPS or drag the pin), never an exception. */
 export class UnconfiguredPlaceSearch implements IPlaceSearch {
+  /** Without a key there is no search: the customer drops the pin instead (same as an outage). */
   suggest(): Promise<Result<PlaceSuggestion[], AppError>> {
-    return Promise.resolve(ok([]));
+    return Promise.resolve(err(unavailable()));
   }
 
   place(id: string): Promise<Result<PlaceLocation, AppError>> {

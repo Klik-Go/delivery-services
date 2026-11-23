@@ -337,6 +337,25 @@ describeDb("row-level security: what each role may change", () => {
     }
   });
 
+  it("consents and job runs are written by the server only, never by a client", async () => {
+    for (const user of [w.users.customer1, w.users.admin]) {
+      const attempts = [
+        () =>
+          db().query(
+            `insert into public.consents (user_id, document, version) values ($1, 'terms', '2030-01-01')`,
+            [user],
+          ),
+        () => db().query(`delete from public.consents where user_id = $1`, [user]),
+        () => db().query(`insert into public.job_runs (job) values ('background')`),
+        () => db().query(`update public.job_runs set ok = false`),
+      ];
+      for (const attempt of attempts) {
+        const error = await asUser(db(), user, () => failureOf(db(), attempt));
+        expect(error).toMatch(/permission denied/);
+      }
+    }
+  });
+
   it("the waitlist is written by the server only, never directly by a client", async () => {
     for (const actor of [w.users.customer1, w.users.admin, null]) {
       const err = await asUser(db(), actor, () =>
