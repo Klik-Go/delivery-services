@@ -92,6 +92,14 @@ async function codOrder(world: KlikWorld, client: ApiClient, store: string): Pro
     [store],
   );
   assert.ok(row, `${store} has no plain item`);
+  // Scenarios run at any hour; the seeded store keeps lunch and dinner hours, so open it all day.
+  const allDay = [{ open: "00:00", close: "23:59" }];
+  await world.db.query(`update public.merchants set hours = $2, is_open = true where id = $1`, [
+    row.merchant_id,
+    JSON.stringify(
+      Object.fromEntries(["mon", "tue", "wed", "thu", "fri", "sat", "sun"].map((d) => [d, allDay])),
+    ),
+  ]);
   return client.request("POST", "/api/orders", {
     json: {
       merchantId: row.merchant_id,

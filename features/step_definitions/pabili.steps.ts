@@ -233,7 +233,7 @@ async function customerView(world: KlikWorld): Promise<PabiliView> {
 Then(
   "the customer sees {word} for the items, {word} to pay at the door and a link to the receipt",
   async function (this: KlikWorld, items: string, toPay: string) {
-    assert.equal(this.lastResponse?.status, 200, this.lastResponse?.bodyText);
+    assert.equal(this.lastResponse?.status, 200, this.lastResponse?.bodyText ?? "");
     const view = await customerView(this);
     assert.equal(view.status, "ready");
     assert.equal(view.itemCostCentavos, centavos(items));
@@ -249,7 +249,7 @@ Then(
 Then(
   "the Pabili order is delivered after these steps: {}",
   async function (this: KlikWorld, steps: string) {
-    assert.equal(this.lastResponse?.status, 200, this.lastResponse?.bodyText);
+    assert.equal(this.lastResponse?.status, 200, this.lastResponse?.bodyText ?? "");
     const rows = await this.db.query<{ to_status: string }>(
       "select to_status::text from public.order_events where order_id = $1 order by id",
       [orderId(this)],
@@ -262,7 +262,7 @@ Then(
 );
 
 Then("the purchase is refused with {string}", function (this: KlikWorld, text: string) {
-  assert.equal(this.lastResponse?.status, 400, this.lastResponse?.bodyText);
+  assert.equal(this.lastResponse?.status, 400, this.lastResponse?.bodyText ?? "");
   assert.match(message(this.lastResponse), new RegExp(text));
 });
 
