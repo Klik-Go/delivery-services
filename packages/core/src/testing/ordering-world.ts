@@ -16,6 +16,7 @@ import type { InMemoryCatalog } from "./catalog-fakes";
 import { AYALA, catalogWorld } from "./catalog-world";
 import { FakeClock } from "./fake-clock";
 import { InMemorySwitches } from "./hardening-fakes";
+import { InMemoryPilotInvites, InMemoryPilotSettings } from "./pilot-fakes";
 import { MemoryLogger } from "./memory-logger";
 import {
   FakeContentHasher,
@@ -85,6 +86,9 @@ export interface OrderingWorld {
   readonly owner: SessionUser;
   /** online_payments and flat_delivery_fee, flipped by tests. */
   readonly switches: InMemorySwitches;
+  /** invite_only, pilot_scope and scheduled_orders, set by tests. */
+  readonly pilot: InMemoryPilotSettings;
+  readonly invites: InMemoryPilotInvites;
 }
 
 /** Every checkout service wired with in-memory fakes (the composition root, for unit tests). */
@@ -106,6 +110,12 @@ export function orderingWorld(now = new Date("2026-11-02T03:00:00Z")): OrderingW
   const states = new OrderStateMachine();
   const webhooks = new InMemoryWebhookEvents();
   const switches = new InMemorySwitches();
+  const pilot = new InMemoryPilotSettings();
+  const invites = new InMemoryPilotInvites();
+  const access = {
+    canOrder: async (userId: string) =>
+      !(await pilot.current()).inviteOnly || (await invites.hasAccess(userId)),
+  };
   const pricing = new PricingService({
     catalog,
     serviceArea: area,
@@ -127,6 +137,8 @@ export function orderingWorld(now = new Date("2026-11-02T03:00:00Z")): OrderingW
     logger,
     notifier,
     switches,
+    access,
+    pilot,
   });
   const refunds = new RefundService({
     orders: store,
@@ -191,5 +203,7 @@ export function orderingWorld(now = new Date("2026-11-02T03:00:00Z")): OrderingW
     dispatch,
     owner,
     switches,
+    pilot,
+    invites,
   };
 }

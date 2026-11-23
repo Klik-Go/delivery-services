@@ -74,6 +74,10 @@ import {
   SupabaseAccountAuthAdmin,
   UnconfiguredAccountAuthAdmin,
   parseSentryDsn,
+  PrismaKpiRepository,
+  PrismaPilotInviteRepository,
+  PrismaPilotSettings,
+  RandomInviteCodes,
 } from "@klikgo/adapters";
 import {
   AddressService,
@@ -150,6 +154,8 @@ import {
   ErrorReportingService,
   KycRetentionService,
   SystemStatusService,
+  KpiService,
+  PilotInviteService,
   type Result,
 } from "@klikgo/core";
 import { FakeMenuParser, FakePaymentGateway } from "@klikgo/core/testing";
@@ -237,6 +243,9 @@ export interface Container {
   readonly errors: ErrorReportingService;
   readonly analytics: AnalyticsService;
   readonly systemStatus: SystemStatusService;
+  /** Phase 12: the invite-only pilot and the KPI dashboard. */
+  readonly pilotInvites: PilotInviteService;
+  readonly kpis: KpiService;
   /** Services bound to one request's Supabase session (cookies). */
   forRequest(supabase: SupabaseClient): RequestServices;
 }
@@ -280,6 +289,8 @@ export function createContainer(env: ServerEnv): Container {
   // Delivery fee: the zone's distance bands first, otherwise base fee + per-km (OCP: add strategies).
   // Runtime switches (admin settings): cash-only mode and the flat delivery fee (doc §12).
   const switches = new PrismaFeatureSwitches(prisma);
+  // Pilot switches (Phase 12): invite-only, food-only scope, scheduled orders.
+  const pilot = new PrismaPilotSettings(prisma);
   const pricing = new PricingService({
     catalog,
     serviceArea,
@@ -288,7 +299,7 @@ export function createContainer(env: ServerEnv): Container {
     clock,
     switches,
   });
-  const feed = new FeedService({ serviceArea, catalog, pricing, photos, cache, clock });
+  const feed = new FeedService({ serviceArea, catalog, pricing, photos, cache, clock, pilot });
   const menu = new MenuService({
     menus,
     photos,
@@ -337,6 +348,16 @@ export function createContainer(env: ServerEnv): Container {
   });
   const audit = new PrismaAuditLog(prisma);
   const consoleAccess = new ConsoleAccess(authz, audit);
+  const pilotInvites = new PilotInviteService({
+    invites: new PrismaPilotInviteRepository(prisma),
+    settings: pilot,
+    codes: new RandomInviteCodes(),
+    access: consoleAccess,
+    sms,
+    clock,
+    logger,
+    appUrl: env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
+  });
   const hasher = new NodeContentHasher();
   const finance = new PrismaFinanceRepository(prisma);
   const settlement = new SettlementService({
@@ -472,6 +493,8 @@ export function createContainer(env: ServerEnv): Container {
       logger,
       notifier: notifications,
       switches,
+      access: pilotInvites,
+      pilot,
     }),
     paymentWebhooks,
     lifecycle,
@@ -504,7 +527,10 @@ export function createContainer(env: ServerEnv): Container {
     settingsAdmin: new SettingsService({
       access: consoleAccess,
       settings: new PrismaSettings(prisma),
-      onFlagChanged: () => switches.forget(),
+      onFlagChanged: () => {
+        switches.forget();
+        pilot.forget();
+      },
     }),
     staffAdmin: new StaffAdminService({ access: consoleAccess, staff: new PrismaStaff(prisma) }),
     riderOnboarding: new RiderOnboardingService({
@@ -602,6 +628,8 @@ export function createContainer(env: ServerEnv): Container {
       logger,
     }),
     analytics: new AnalyticsService({ analytics: analytics(env, logger), clock, logger }),
+    pilotInvites,
+    kpis: new KpiService({ access: consoleAccess, kpis: new PrismaKpiRepository(prisma), clock }),
     systemStatus: new SystemStatusService({
       access: consoleAccess,
       status: new PrismaSystemStatusRepository(prisma),

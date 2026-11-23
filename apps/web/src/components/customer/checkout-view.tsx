@@ -47,6 +47,7 @@ export function CheckoutView({
 }): JSX.Element {
   const t = useTranslations("Customer.checkout");
   const tFallback = useTranslations("Hardening.fallback");
+  const tPilot = useTranslations("Pilot.checkout");
   const tCart = useTranslations("Customer.cart");
   const locale = useLocale();
   const router = useRouter();
@@ -259,6 +260,17 @@ export function CheckoutView({
 
       <fieldset className="flex flex-col gap-2">
         <legend className="text-ink mb-2 text-lg font-bold">{t("payment")}</legend>
+        {data?.inviteRequired ? (
+          <div
+            role="status"
+            className="bg-accent-100 text-ink mb-2 flex flex-col gap-2 rounded-lg p-3 text-sm font-semibold"
+          >
+            {tPilot("inviteRequired")}
+            <Link href="/join?next=%2Fcheckout" className="text-brand-800 underline">
+              {tPilot("enterCode")}
+            </Link>
+          </div>
+        ) : null}
         {data?.onlinePaymentsPaused ? (
           <p
             role="status"

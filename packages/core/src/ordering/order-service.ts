@@ -1,3 +1,5 @@
+import { INVITE_ONLY_MESSAGE } from "../pilot/invite-service";
+import type { IOrderingAccess, IPilotSettings } from "../pilot/ports";
 import type { IFeatureSwitches } from "../hardening/ports";
 import type {
   CheckoutQuoteRequest,
@@ -50,6 +52,8 @@ export interface CheckoutQuote {
   readonly paymentMethods: readonly PaymentMethod[];
   /** True while an admin has paused online payments (checkout explains why only cash is offered). */
   readonly onlinePaymentsPaused: boolean;
+  /** True while the pilot is invite-only and this customer has not redeemed a code yet. */
+  readonly inviteRequired: boolean;
   /** Today's "Schedule" slots (ISO times), empty when the store cannot take them. */
   readonly slots: readonly string[];
 }
@@ -140,6 +144,9 @@ export class OrderService {
       notifier: IOrderNotifier;
       /** online_payments off = cash on delivery only (gateway down). All on when not wired. */
       switches?: IFeatureSwitches;
+      /** The invite gate (invite_only) and the scheduled_orders switch. Open when not wired. */
+      access?: IOrderingAccess;
+      pilot?: IPilotSettings;
     },
   ) {}
 
@@ -153,6 +160,10 @@ export class OrderService {
     if (!priced.ok) return priced;
     const { quote, store, promo, promoError, tipCentavos, totalCentavos } = priced.value;
     const online = await this.onlinePayments();
+    const [canOrder, scheduled] = await Promise.all([
+      actor ? this.canOrder(actor.id) : Promise.resolve(true),
+      this.scheduledOrders(),
+    ]);
     return ok({
       quote,
       promo: promo
@@ -163,7 +174,10 @@ export class OrderService {
       totalCentavos,
       paymentMethods: this.methodsFor(store, online),
       onlinePaymentsPaused: !online,
-      slots: deliverySlots(store, this.deps.clock.now()).map((slot) => slot.toISOString()),
+      inviteRequired: !canOrder,
+      slots: scheduled
+        ? deliverySlots(store, this.deps.clock.now()).map((slot) => slot.toISOString())
+        : [],
     });
   }
 
@@ -237,6 +251,12 @@ export class OrderService {
   ): Promise<Result<PlacedOrder, AppError>> {
     const { actor, idempotencyKey } = context;
     if (!this.deps.authz.can(actor, { type: "order.place" })) return err(new ForbiddenError());
+    if (!(await this.canOrder(actor.id))) return err(new ForbiddenError(INVITE_ONLY_MESSAGE));
+    if (input.scheduledFor && !(await this.scheduledOrders())) {
+      return err(
+        invalid("scheduledFor", "Ordering for later is off for now. Order for now instead."),
+      );
+    }
     const requestHash = this.deps.hasher.sha256Hex(canonical(input));
 
     const existing = await this.deps.orders.findByIdempotencyKey(actor.id, idempotencyKey);
@@ -463,6 +483,14 @@ export class OrderService {
       const upfront = this.deps.gateways.forMethod(method)?.paysUpfront ?? false;
       return upfront ? online : store.acceptsCod;
     });
+  }
+
+  private canOrder(userId: string): Promise<boolean> {
+    return this.deps.access ? this.deps.access.canOrder(userId) : Promise.resolve(true);
+  }
+
+  private async scheduledOrders(): Promise<boolean> {
+    return this.deps.pilot ? (await this.deps.pilot.current()).scheduledOrders : true;
   }
 
   private async onlinePayments(): Promise<boolean> {

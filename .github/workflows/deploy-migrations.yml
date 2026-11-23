@@ -19,21 +19,41 @@ concurrency:
 
 jobs:
   push:
-    name: supabase db push (hosted project)
+    # Promotion: staging first, then production (docs/LAUNCH.md §2). Staging uses the secrets
+    # STAGING_SUPABASE_ACCESS_TOKEN, STAGING_SUPABASE_DB_PASSWORD and STAGING_SUPABASE_PROJECT_REF;
+    # production the unprefixed ones. A target without its secrets is skipped with a warning, so
+    # until staging exists this behaves as before. A failure on staging stops production.
+    name: supabase db push (${{ matrix.target }})
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    # Lets the owner require an approval before production schema changes (Settings → Environments).
-    environment: production
+    strategy:
+      max-parallel: 1
+      fail-fast: true
+      matrix:
+        # Staging reads STAGING_-prefixed secrets only, so it can never fall back to production's
+        # (repository-level secrets are visible to every environment).
+        include:
+          - target: staging
+            prefix: STAGING_
+          - target: production
+            prefix: ""
+    # Lets the owner require an approval before schema changes (Settings → Environments).
+    environment: ${{ matrix.target }}
+    # Named secrets only (a computed secrets[...] key would expose every secret to the runner).
+    # If a staging secret is empty the expression yields '', never production's value.
     env:
-      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-      SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+      SUPABASE_ACCESS_TOKEN: ${{ matrix.target == 'staging' && secrets.STAGING_SUPABASE_ACCESS_TOKEN || matrix.target == 'production' && secrets.SUPABASE_ACCESS_TOKEN || '' }}
+      SUPABASE_DB_PASSWORD: ${{ matrix.target == 'staging' && secrets.STAGING_SUPABASE_DB_PASSWORD || matrix.target == 'production' && secrets.SUPABASE_DB_PASSWORD || '' }}
+      SUPABASE_PROJECT_REF: ${{ matrix.target == 'staging' && secrets.STAGING_SUPABASE_PROJECT_REF || matrix.target == 'production' && secrets.SUPABASE_PROJECT_REF || '' }}
     steps:
       - name: Check the hosted project secrets
         id: secrets
+        env:
+          MATRIX_PREFIX: ${{ matrix.prefix }}
+          MATRIX_TARGET: ${{ matrix.target }}
         run: |
           if [ -z "$SUPABASE_ACCESS_TOKEN" ] || [ -z "$SUPABASE_DB_PASSWORD" ] || [ -z "$SUPABASE_PROJECT_REF" ]; then
-            echo "::warning::Set SUPABASE_ACCESS_TOKEN, SUPABASE_DB_PASSWORD and SUPABASE_PROJECT_REF to deploy migrations (docs/OPEN_QUESTIONS.md Q13). Skipping."
+            echo "::warning::Set ${MATRIX_PREFIX}SUPABASE_ACCESS_TOKEN, ${MATRIX_PREFIX}SUPABASE_DB_PASSWORD and ${MATRIX_PREFIX}SUPABASE_PROJECT_REF to deploy migrations to ${MATRIX_TARGET} (docs/LAUNCH.md). Skipping ${MATRIX_TARGET}."
             echo "ready=false" >> "$GITHUB_OUTPUT"
           else
             echo "ready=true" >> "$GITHUB_OUTPUT"

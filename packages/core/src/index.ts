@@ -19,3 +19,4 @@ export * from "./shared/csv";
 export * from "./hardening";
 export * from "./shared/pii";
 export * from "./shared/file-type";
+export * from "./pilot";

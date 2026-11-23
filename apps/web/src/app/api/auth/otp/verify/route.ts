@@ -23,8 +23,16 @@ export async function POST(request: Request): Promise<Response> {
       roles,
       aal: "aal1",
     });
-    // New accounts, and everyone after the terms change, agree to the documents first.
-    return jsonOk({ next: await container.consents.landingFor(result.value.userId, next) }, meta);
+    // New accounts, and everyone after the terms change, agree to the documents first; during
+    // the invite-only pilot, customers without a code enter one next.
+    const afterInvite = await container.pilotInvites.landingFor(
+      { id: result.value.userId, roles },
+      next,
+    );
+    return jsonOk(
+      { next: await container.consents.landingFor(result.value.userId, afterInvite) },
+      meta,
+    );
   } catch (error) {
     return jsonError(error, meta, container.logger);
   }

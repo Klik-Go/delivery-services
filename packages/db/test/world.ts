@@ -306,6 +306,11 @@ export async function buildWorld(db: pg.ClientBase, fx: DbFixtures): Promise<Wor
     [customer1, customer2],
   );
   await db.query(
+    `insert into public.pilot_invites (code, batch, redeemed_by, redeemed_at)
+     values ('WORLD001', 'world', $1, now()), ('WORLD002', 'world', $2, now()), ('WORLD003', 'world', null, null)`,
+    [customer1, customer2],
+  );
+  await db.query(
     `insert into public.job_runs (job, finished_at, ok, summary) values ('background', now(), true, '{}')`,
   );
   await db.query(

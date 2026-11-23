@@ -528,47 +528,49 @@ model payouts {
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model profiles {
-  id                                         String                      @id @db.Uuid
-  full_name                                  String?
-  phone                                      String?                     @unique
-  email                                      String?
-  locale                                     String                      @default("en")
-  status                                     profile_status              @default(active)
-  created_at                                 DateTime                    @default(now()) @db.Timestamptz(6)
-  updated_at                                 DateTime                    @default(now()) @db.Timestamptz(6)
-  rating_avg                                 Decimal                     @default(0) @db.Decimal(3, 2)
-  rating_count                               Int                         @default(0)
-  referral_code                              String?                     @unique
-  addresses                                  addresses[]
-  cod_remittances                            cod_remittances[]
-  consents                                   consents[]
-  device_push_subscriptions                  device_push_subscriptions[]
-  feature_flags                              feature_flags[]
-  invites_invites_accepted_byToprofiles      invites[]                   @relation("invites_accepted_byToprofiles")
-  invites_invites_invited_byToprofiles       invites[]                   @relation("invites_invited_byToprofiles")
-  loyalty_stamps                             loyalty_stamps[]
-  merchant_applications                      merchant_applications[]
-  merchants                                  merchants[]
-  notifications                              notifications[]
-  order_support_notes                        order_support_notes[]
-  orders_orders_cancelled_byToprofiles       orders[]                    @relation("orders_cancelled_byToprofiles")
-  orders_orders_customer_idToprofiles        orders[]                    @relation("orders_customer_idToprofiles")
-  payout_accounts                            payout_accounts[]
-  payouts                                    payouts[]
-  users                                      users                       @relation(fields: [id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  promo_redemptions                          promo_redemptions[]
-  promos                                     promos[]
-  ratings                                    ratings[]
-  referrals_referrals_referee_idToprofiles   referrals?                  @relation("referrals_referee_idToprofiles")
-  referrals_referrals_referrer_idToprofiles  referrals[]                 @relation("referrals_referrer_idToprofiles")
-  refunds                                    refunds[]
-  rider_kyc_documents                        rider_kyc_documents[]
-  riders                                     riders?
-  settlement_runs                            settlement_runs[]
-  support_tickets                            support_tickets[]
-  user_roles_user_roles_granted_byToprofiles user_roles[]                @relation("user_roles_granted_byToprofiles")
-  user_roles_user_roles_user_idToprofiles    user_roles[]                @relation("user_roles_user_idToprofiles")
-  zones                                      zones[]
+  id                                                String                      @id @db.Uuid
+  full_name                                         String?
+  phone                                             String?                     @unique
+  email                                             String?
+  locale                                            String                      @default("en")
+  status                                            profile_status              @default(active)
+  created_at                                        DateTime                    @default(now()) @db.Timestamptz(6)
+  updated_at                                        DateTime                    @default(now()) @db.Timestamptz(6)
+  rating_avg                                        Decimal                     @default(0) @db.Decimal(3, 2)
+  rating_count                                      Int                         @default(0)
+  referral_code                                     String?                     @unique
+  addresses                                         addresses[]
+  cod_remittances                                   cod_remittances[]
+  consents                                          consents[]
+  device_push_subscriptions                         device_push_subscriptions[]
+  feature_flags                                     feature_flags[]
+  invites_invites_accepted_byToprofiles             invites[]                   @relation("invites_accepted_byToprofiles")
+  invites_invites_invited_byToprofiles              invites[]                   @relation("invites_invited_byToprofiles")
+  loyalty_stamps                                    loyalty_stamps[]
+  merchant_applications                             merchant_applications[]
+  merchants                                         merchants[]
+  notifications                                     notifications[]
+  order_support_notes                               order_support_notes[]
+  orders_orders_cancelled_byToprofiles              orders[]                    @relation("orders_cancelled_byToprofiles")
+  orders_orders_customer_idToprofiles               orders[]                    @relation("orders_customer_idToprofiles")
+  payout_accounts                                   payout_accounts[]
+  payouts                                           payouts[]
+  pilot_invites_pilot_invites_created_byToprofiles  pilot_invites[]             @relation("pilot_invites_created_byToprofiles")
+  pilot_invites_pilot_invites_redeemed_byToprofiles pilot_invites?              @relation("pilot_invites_redeemed_byToprofiles")
+  users                                             users                       @relation(fields: [id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  promo_redemptions                                 promo_redemptions[]
+  promos                                            promos[]
+  ratings                                           ratings[]
+  referrals_referrals_referee_idToprofiles          referrals?                  @relation("referrals_referee_idToprofiles")
+  referrals_referrals_referrer_idToprofiles         referrals[]                 @relation("referrals_referrer_idToprofiles")
+  refunds                                           refunds[]
+  rider_kyc_documents                               rider_kyc_documents[]
+  riders                                            riders?
+  settlement_runs                                   settlement_runs[]
+  support_tickets                                   support_tickets[]
+  user_roles_user_roles_granted_byToprofiles        user_roles[]                @relation("user_roles_granted_byToprofiles")
+  user_roles_user_roles_user_idToprofiles           user_roles[]                @relation("user_roles_user_idToprofiles")
+  zones                                             zones[]
 
   @@schema("public")
 }
@@ -749,6 +751,7 @@ model riders {
   rider_kyc_documents        rider_kyc_documents[]
   rider_location_breadcrumbs rider_location_breadcrumbs[]
   rider_locations            rider_locations?
+  rider_shifts               rider_shifts[]
   profiles                   profiles                     @relation(fields: [user_id], references: [id], onUpdate: NoAction)
   zones                      zones                        @relation(fields: [zone_id], references: [id], onUpdate: NoAction)
 
@@ -875,14 +878,15 @@ model merchant_closures {
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model waitlist_signups {
-  id         String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name       String
-  phone      String
-  email      String?
-  barangay   String
-  city       String?
-  location   Unsupported("geography")
-  created_at DateTime                 @default(now()) @db.Timestamptz(6)
+  id            String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String
+  phone         String
+  email         String?
+  barangay      String
+  city          String?
+  location      Unsupported("geography")
+  created_at    DateTime                 @default(now()) @db.Timestamptz(6)
+  pilot_invites pilot_invites[]
 
   @@index([created_at], map: "waitlist_signups_created_idx")
   @@index([location], map: "waitlist_signups_location_gix", type: Gist)
@@ -1057,6 +1061,42 @@ model job_runs {
   error       String?
 
   @@index([job, started_at(sort: Desc)], map: "job_runs_job_started_idx")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pilot_invites {
+  id                                           String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code                                         String            @unique
+  batch                                        String
+  waitlist_id                                  String?           @db.Uuid
+  created_by                                   String?           @db.Uuid
+  created_at                                   DateTime          @default(now()) @db.Timestamptz(6)
+  expires_at                                   DateTime?         @db.Timestamptz(6)
+  sent_at                                      DateTime?         @db.Timestamptz(6)
+  redeemed_by                                  String?           @unique @db.Uuid
+  redeemed_at                                  DateTime?         @db.Timestamptz(6)
+  profiles_pilot_invites_created_byToprofiles  profiles?         @relation("pilot_invites_created_byToprofiles", fields: [created_by], references: [id], onUpdate: NoAction)
+  profiles_pilot_invites_redeemed_byToprofiles profiles?         @relation("pilot_invites_redeemed_byToprofiles", fields: [redeemed_by], references: [id], onUpdate: NoAction)
+  waitlist_signups                             waitlist_signups? @relation(fields: [waitlist_id], references: [id], onUpdate: NoAction)
+
+  @@index([batch, created_at], map: "pilot_invites_batch_idx")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model rider_shifts {
+  id         BigInt    @id @default(autoincrement())
+  rider_id   String    @db.Uuid
+  started_at DateTime  @default(now()) @db.Timestamptz(6)
+  ended_at   DateTime? @db.Timestamptz(6)
+  riders     riders    @relation(fields: [rider_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([started_at], map: "rider_shifts_started_idx")
   @@schema("public")
 }
 

@@ -303,6 +303,15 @@ sequenceDiagram
 - **Resilience switches.** `IFeatureSwitches` (feature flags cached 10 s; the settings page clears the cache on its server at once): `online_payments` off → checkout offers cash on delivery only and refuses online orders with a clear message; `flat_delivery_fee` on → `FlatZoneFee` (zone base fee) replaces the distance strategies. When address search fails, `PlaceSearchService` answers with one message telling the customer to drop the pin, and the address screen shows it (the pin and "use my location" never needed the maps API).
 - **Performance.** Lunch-peak load test (`load/`, runbooks/LOAD_TEST.md); a new order now notifies the store team in parallel batches of 10.
 
+## 4m. Pilot launch (Phase 12)
+
+- **Invite gate.** `invite_only` (off by default; rollout `max_customers`). `PilotInviteService` implements `IOrderingAccess`: `OrderService.placeOrder` refuses customers without a redeemed code (403 with a clear message) and the checkout quote returns `inviteRequired` so the page links to `/join`. After sign-in, plain customers (no rider or staff role) without access land on `/join?next=…` (after the consent screen). Codes live in `pilot_invites` (8 characters without look-alikes, named batches, optional expiry); `private.redeem_invite` redeems under an advisory lock so the `max_customers` cap can't be overshot, one code per person and one person per code. Admins create batches and text codes to the oldest uninvited waitlist sign-ups (`/admin/invites`, audited). Flyers link to `/join?code=…`.
+- **Pilot switches.** `IPilotSettings` (feature flags, cached 10 s, cleared on change): `pilot_scope` limits the store categories in the feed and search (off by default; `food` when on); `scheduled_orders` off empties the checkout slots and refuses scheduled orders.
+- **Rider online time.** `rider_shifts`, opened and closed by a trigger on `riders.is_online`, so utilisation and pay per online hour don't depend on the app remembering to log.
+- **KPIs.** `KpiService` (admins) reads `IKpiRepository.figures(from, to)` for today, 7 and 30 Manila days and a 14-day trend, and derives AOV, take rate, contribution per order (platform revenue − promos − gateway fees − refunds per delivered order), completion and platform-cancellation rates, cash share, repeat customers, store confirmation time (placed → accepted), delivery time (accepted → delivered), rider utilisation (job accepted → delivered ÷ online time) and pay per online hour, against the targets of BUSINESS §13. NPS, crash-free sessions and uptime come from the survey, Sentry and the uptime monitor.
+- **Smoke test.** `features/smoke` and `features/health.feature` (`@smoke`) use public API calls only, so `Actions → Smoke test (production)` runs them against the live app daily; placing (and cancelling) a cash order is opt-in.
+- **Promotion.** `Deploy database migrations` runs staging (`STAGING_`-prefixed secrets) then production (approval on the `production` environment). docs/LAUNCH.md holds the environments, checklist, dry runs and go/no-go.
+
 ## 5. Folder map
 
 ```

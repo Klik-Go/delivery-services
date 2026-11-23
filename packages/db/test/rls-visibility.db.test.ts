@@ -245,6 +245,21 @@ describeDb("row-level security: who can see which rows", () => {
     }
   });
 
+  it("invites: each customer sees the code they redeemed; admins see all; rider shifts: the rider and admins", async () => {
+    const q = `select code as id from public.pilot_invites where batch = 'world'`;
+    expect(await seen("customer1", q)).toEqual(["WORLD001"]);
+    expect(await seen("customer2", q)).toEqual(["WORLD002"]);
+    expect(await seen("admin", q)).toEqual(["WORLD001", "WORLD002", "WORLD003"]);
+    for (const viewer of ["coordA", "ownerA", "riderA1"] as const) {
+      expect(await seen(viewer, q), viewer).toEqual([]);
+    }
+    const shifts = `select distinct rider_id as id from public.rider_shifts where rider_id = any($1)`;
+    const riders = [[w.riders.A1, w.riders.B]];
+    expect(await seen("riderA1", shifts, riders)).toEqual([w.riders.A1]);
+    expect(await seen("admin", shifts, riders)).toEqual(sorted(w.riders.A1, w.riders.B));
+    expect(await seen("customer1", shifts, riders)).toEqual([]);
+  });
+
   it("webhook events are server-only: not even admins read them through the API", async () => {
     const q = `select event_id as id from public.webhook_events where event_id = 'evt_test_1'`;
     expect(await seen("admin", q)).toEqual([]);

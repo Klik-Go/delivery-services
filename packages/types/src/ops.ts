@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { KycRetentionRolloutSchema } from "./hardening";
+import {
+  InviteOnlyRolloutSchema,
+  KycRetentionRolloutSchema,
+  PilotScopeRolloutSchema,
+} from "./hardening";
 import { FeeRuleKindSchema, KycDocumentTypeSchema, VehicleTypeSchema } from "./domain";
 
 /** Every console action that changes something carries a short reason for the audit log. */
@@ -192,6 +196,9 @@ export const FLAG_ROLLOUT_SCHEMAS: Readonly<Record<string, z.ZodType>> = {
   kyc_retention: KycRetentionRolloutSchema,
   online_payments: z.object({}).strict(),
   flat_delivery_fee: z.object({}).strict(),
+  invite_only: InviteOnlyRolloutSchema,
+  pilot_scope: PilotScopeRolloutSchema,
+  scheduled_orders: z.object({}).strict(),
 };
 
 /** PUT /api/admin/feature-flags/:key */

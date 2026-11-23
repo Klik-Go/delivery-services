@@ -22,8 +22,8 @@ Phases are defined in `docs/BUILD_PLAN.md` §6. Agents update this file in every
 | 8.1 | Follow-up: demo riders + demo accounts reference | ✅ Done (merged) | [Klik-Go/delivery-services#25](https://github.com/Klik-Go/delivery-services/pull/25) | Owner: run **Load demo riders**, add the test numbers in Supabase (docs/DEMO.md §4.2) |
 | 9 | Ratings, reorder, promos, referrals, loyalty | ✅ Done (merged) | [Klik-Go/delivery-services#26](https://github.com/Klik-Go/delivery-services/pull/26) | Owner: confirm stamp minimum, voucher life and referral guards (Q34) |
 | 10 | Finance: settlements, payouts, reports | ✅ Done (merged) | [Klik-Go/delivery-services#29](https://github.com/Klik-Go/delivery-services/pull/29) | Owner: CPA/lawyer on withholding and payment rules before real payouts (Q35) |
-| 11 | Hardening: security, privacy, observability | 🟡 In progress (PR open) | [Klik-Go/delivery-services#32](https://github.com/Klik-Go/delivery-services/pull/32) | Owner: lawyer review of the legal pages, DPO, Sentry/PostHog keys, uptime monitor, staging restore (Q36, docs/SECURITY.md) |
-| 12 | Pilot launch | ⬜ Not started | | |
+| 11 | Hardening: security, privacy, observability | ✅ Done (merged) | [Klik-Go/delivery-services#32](https://github.com/Klik-Go/delivery-services/pull/32) | Owner: lawyer review of the legal pages, DPO, Sentry/PostHog keys, uptime monitor, staging restore (Q36, docs/SECURITY.md) |
+| 12 | Pilot launch readiness | 🟡 In progress (PR open) | [Klik-Go/delivery-services#33](https://github.com/Klik-Go/delivery-services/pull/33) | Owner: production checklist, dry runs, go/no-go (docs/LAUNCH.md, Q37) |
 
 Status values: ⬜ Not started · 🟡 In progress (PR open) · ✅ Done (merged) · ⛔ Blocked (say why)
 
@@ -296,8 +296,28 @@ Deliverables:
 - [x] Performance: k6 lunch-peak script; store-team notifications in parallel; no missing indexes found (`pg_stat_statements`).
 - [x] Migration `20261123100000_hardening.sql` (`consents`, `job_runs`, `rider_kyc_documents.purged_at`, three settings, `private.erase_account`, `private.kyc_documents_due_for_purge`) with DB tests; Prisma schema + ERD regenerated.
 - [ ] Owner: Q36 (lawyer, DPO, Sentry/PostHog keys and regions), uptime monitor, staging restore, penetration test (SEC-1 … SEC-7).
+- [x] Merged ([Klik-Go/delivery-services#32](https://github.com/Klik-Go/delivery-services/pull/32)).
 
 Next: Phase 12, pilot launch (after review).
+
+### Phase 12 — Pilot launch readiness (branch `phase-12-pilot-launch`)
+Acceptance (docs/BUILD_PLAN.md §6; status tracked in docs/LAUNCH.md):
+- [ ] 3 staged dry-run days with internal orders, food actually delivered (owner; plan and pass criteria in LAUNCH §6).
+- [ ] Every runbook rehearsed once (owner; LAUNCH §6).
+- [x] KPIs visible daily: `/admin/kpis` (today, 7, 30 days, 14-day trend, BUSINESS §13 targets).
+- [ ] Go/no-go per BUSINESS §10.6 Phase 7, zero P0 bugs (owner; LAUNCH §7).
+
+Deliverables:
+- [x] Invite-only gate (first 100 customers), codes in batches, `/join` (flyer QR links), waitlist invites by SMS — `features/pilot/invites.feature`.
+- [x] Pilot switches: food-only scope, scheduled orders on/off (Pabili and surge aren't built).
+- [x] KPI dashboard `/admin/kpis`; rider online time recorded (`rider_shifts`) for utilisation and pay per hour — `features/pilot/kpis.feature`.
+- [x] Production smoke suite (`@smoke`, public API only) and **Smoke test (production)** workflow.
+- [x] Promotion staging → production in **Deploy database migrations**.
+- [x] docs/LAUNCH.md (environments, production checklist, pilot settings, dry runs, go/no-go, status), seven runbooks in docs/runbooks/, docs/COORDINATOR_GUIDE.md.
+- [x] Migration `20261124100000_pilot_launch.sql` (`pilot_invites`, `rider_shifts` + trigger, `private.redeem_invite`, three switches) with DB tests; Prisma schema + ERD regenerated.
+- [ ] Owner: production checklist P1–P18 (LAUNCH §3), Q37.
+
+Next: the pilot itself; later phases (13+) once the pilot shows positive contribution per order (BUILD_PLAN §6).
 
 ## Business validation (parallel, doc §8)
 - [ ] 20–30 customer interviews in the pilot barangay

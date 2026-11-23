@@ -13,3 +13,4 @@ export * from "./ops-fakes";
 export * from "./ops-world";
 export * from "./finance-fakes";
 export * from "./hardening-fakes";
+export * from "./pilot-fakes";

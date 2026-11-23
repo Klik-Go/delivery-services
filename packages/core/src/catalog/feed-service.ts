@@ -1,3 +1,4 @@
+import type { IPilotSettings } from "../pilot/ports";
 import type { MerchantCategory } from "@klikgo/types";
 import type { Clock } from "../ports/clock";
 import type { GeoPoint, IPhotoStorage } from "../merchant/ports";
@@ -47,6 +48,8 @@ export class FeedService {
       photos: IPhotoStorage;
       cache: ICache;
       clock: Clock;
+      /** pilot_scope: only these store categories while it is on. */
+      pilot?: IPilotSettings;
     },
   ) {}
 
@@ -100,8 +103,14 @@ export class FeedService {
       .filter((card): card is StoreCard => card !== null);
   }
 
-  storesInZone(zoneId: string): Promise<StoreSummary[]> {
-    return this.cached(`stores:${zoneId}`, () => this.deps.catalog.storesInZone(zoneId));
+  /** The zone's stores (cached), limited to the pilot's categories while pilot_scope is on. */
+  async storesInZone(zoneId: string): Promise<StoreSummary[]> {
+    const [stores, pilot] = await Promise.all([
+      this.cached(`stores:${zoneId}`, () => this.deps.catalog.storesInZone(zoneId)),
+      this.deps.pilot?.current(),
+    ]);
+    const categories = pilot?.categories;
+    return categories ? stores.filter((store) => categories.includes(store.category)) : stores;
   }
 
   zoneFees(zoneId: string): Promise<ZoneFees> {
