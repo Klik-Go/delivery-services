@@ -14,7 +14,13 @@ import type {
   StatusChangeRequest,
 } from "@klikgo/core";
 import type { PrismaClient } from "@klikgo/db";
-import type { OrderStatus, PaymentMethod, PaymentStatus, RefundStatus } from "@klikgo/types";
+import type {
+  OrderKind,
+  OrderStatus,
+  PaymentMethod,
+  PaymentStatus,
+  RefundStatus,
+} from "@klikgo/types";
 
 export type Tx = Parameters<Parameters<PrismaClient["$transaction"]>[0]>[0];
 
@@ -36,8 +42,11 @@ interface OrderRow {
   id: string;
   code: string;
   customer_id: string;
-  merchant_id: string;
-  merchants: { name: string };
+  kind: OrderKind;
+  rider_id: string | null;
+  merchant_id: string | null;
+  merchants: { name: string } | null;
+  pabili_requests: { store_name: string } | null;
   zone_id: string;
   prep_minutes: number | null;
   reject_reason: string | null;
@@ -77,9 +86,12 @@ const toPayment = (row: PaymentRow): PaymentRecord => ({
 const toOrder = (row: OrderRow): OrderRecord => ({
   id: row.id,
   code: row.code,
+  kind: row.kind,
+  riderId: row.rider_id,
   customerId: row.customer_id,
   merchantId: row.merchant_id,
-  merchantName: row.merchants.name,
+  // A Pabili order has no store: the name is the shop the customer named.
+  merchantName: row.merchants?.name ?? row.pabili_requests?.store_name ?? "",
   zoneId: row.zone_id,
   // The default prep time is copied at checkout; the store's own number counts once it accepts.
   prepMinutes: row.accepted_at ? row.prep_minutes : null,
@@ -108,6 +120,7 @@ const toOrder = (row: OrderRow): OrderRecord => ({
 const ORDER_INCLUDE = {
   payments: true,
   merchants: { select: { name: true } },
+  pabili_requests: { select: { store_name: true } },
   order_delivery_pins: { select: { pin: true } },
 } as const;
 

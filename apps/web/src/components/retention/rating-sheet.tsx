@@ -33,15 +33,18 @@ export function RatingSheet({ orderId }: { readonly orderId: string }): JSX.Elem
   if (sheet.isPending) return <p className="text-ink-muted">{t("loading")}</p>;
   if (sheet.isError) return <FormError message={sheet.error.message} />;
   const s = sheet.data;
+  // A Pabili order has no store to rate (merchant is null): only the rider.
   const merchantEditable =
-    s.open && (!s.merchant.rating || s.merchant.rating.editableUntil !== null);
+    s.merchant !== null &&
+    s.open &&
+    (!s.merchant.rating || s.merchant.rating.editableUntil !== null);
   const riderEditable =
     s.rider !== null && s.open && (!s.rider.rating || s.rider.rating.editableUntil !== null);
-  const merchantDraft = merchant ?? fromView(s.merchant.rating);
+  const merchantDraft = merchant ?? fromView(s.merchant?.rating ?? null);
   const riderDraft = rider ?? fromView(s.rider?.rating ?? null);
 
   if (!merchantEditable && !riderEditable) {
-    const given = [s.merchant.rating, s.rider?.rating ?? null].filter(
+    const given = [s.merchant?.rating ?? null, s.rider?.rating ?? null].filter(
       (r): r is RatingView => r !== null,
     );
     return (
@@ -91,7 +94,7 @@ export function RatingSheet({ orderId }: { readonly orderId: string }): JSX.Elem
 
   const anyScore =
     (merchantEditable && merchantDraft.score > 0) || (riderEditable && riderDraft.score > 0);
-  const editing = s.merchant.rating !== null || s.rider?.rating;
+  const editing = (s.merchant?.rating ?? null) !== null || s.rider?.rating;
   return (
     <section
       className="bg-surface-muted flex flex-col gap-4 rounded-xl p-4"
@@ -101,7 +104,7 @@ export function RatingSheet({ orderId }: { readonly orderId: string }): JSX.Elem
         <h2 className="text-ink text-lg font-bold">{t("title")}</h2>
         <p className="text-ink-muted text-sm">{editing ? t("editNote") : t("lead")}</p>
       </div>
-      {merchantEditable ? (
+      {merchantEditable && s.merchant ? (
         <RatingForm
           target="merchant"
           label={t("store", { name: s.merchant.name })}
