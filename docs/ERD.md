@@ -34,6 +34,8 @@ erDiagram
   zones ||--o{ orders : "zone_id"
   profiles |o--o{ payout_accounts : "updated_by"
   profiles |o--o{ payouts : "paid_by"
+  profiles |o--o{ pilot_invites : "created_by"
+  profiles |o--o| pilot_invites : "redeemed_by"
   auth_users ||--o| profiles : "id"
   profiles ||--o{ promo_redemptions : "user_id"
   profiles |o--o{ promos : "owner_id"
@@ -253,6 +255,7 @@ erDiagram
   orders |o--o{ rider_location_breadcrumbs : "order_id"
   riders ||--o{ rider_location_breadcrumbs : "rider_id"
   riders ||--o| rider_locations : "rider_id"
+  riders ||--o{ rider_shifts : "rider_id"
   profiles ||--o| riders : "user_id"
   zones ||--o{ riders : "zone_id"
   riders {
@@ -297,6 +300,12 @@ erDiagram
     uuid order_id FK
     geography location
     timestamptz recorded_at
+  }
+  rider_shifts {
+    int8 id PK
+    uuid rider_id FK
+    timestamptz started_at
+    timestamptz ended_at
   }
 ```
 
@@ -589,6 +598,9 @@ erDiagram
   promos |o--o{ loyalty_stamps : "voucher_promo_id"
   orders |o--o{ notifications : "order_id"
   profiles ||--o{ notifications : "user_id"
+  profiles |o--o{ pilot_invites : "created_by"
+  profiles |o--o| pilot_invites : "redeemed_by"
+  waitlist_signups |o--o{ pilot_invites : "waitlist_id"
   orders ||--o| promo_redemptions : "order_id"
   promos ||--o{ promo_redemptions : "promo_id"
   profiles ||--o{ promo_redemptions : "user_id"
@@ -756,6 +768,18 @@ erDiagram
     jsonb summary
     text error
   }
+  pilot_invites {
+    uuid id PK
+    text code UK
+    text batch
+    uuid waitlist_id FK
+    uuid created_by FK
+    timestamptz created_at
+    timestamptz expires_at
+    timestamptz sent_at
+    uuid redeemed_by FK, UK
+    timestamptz redeemed_at
+  }
 ```
 
 ## Row-level security policies
@@ -797,6 +821,7 @@ Role helpers live in the `private` schema (`has_role`, `is_admin`, `is_merchant_
 | `payout_accounts` | on | `payout_accounts_select` (select · authenticated) |
 | `payout_lines` | on | `payout_lines_select` (select · authenticated) |
 | `payouts` | on | `payouts_select` (select · authenticated) |
+| `pilot_invites` | on | `pilot_invites_select` (select · authenticated) |
 | `profiles` | on | `profiles_select_own` (select · authenticated)<br>`profiles_select_zone_riders` (select · authenticated)<br>`profiles_update_own` (update · authenticated) |
 | `promo_redemptions` | on | `promo_redemptions_select` (select · authenticated) |
 | `promos` | on | `promos_select_admin` (select · authenticated)<br>`promos_select_owner` (select · authenticated) |
@@ -806,6 +831,7 @@ Role helpers live in the `private` schema (`has_role`, `is_admin`, `is_merchant_
 | `rider_kyc_documents` | on | `rider_kyc_insert_self` (insert · authenticated)<br>`rider_kyc_select_admin` (select · authenticated) |
 | `rider_location_breadcrumbs` | on | `breadcrumbs_insert_self` (insert · authenticated)<br>`breadcrumbs_select` (select · authenticated) |
 | `rider_locations` | on | `rider_locations_insert_self` (insert · authenticated)<br>`rider_locations_select` (select · authenticated)<br>`rider_locations_select_customer_delivery` (select · authenticated)<br>`rider_locations_update_self` (update · authenticated) |
+| `rider_shifts` | on | `rider_shifts_select` (select · authenticated) |
 | `riders` | on | `riders_select` (select · authenticated)<br>`riders_select_customer_delivery` (select · authenticated)<br>`riders_update_self` (update · authenticated) |
 | `settlement_runs` | on | `settlement_runs_select_admin` (select · authenticated) |
 | `support_tickets` | on | `support_tickets_select_ops` (select · authenticated) |

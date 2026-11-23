@@ -356,6 +356,24 @@ describeDb("row-level security: what each role may change", () => {
     }
   });
 
+  it("invites and rider shifts are written by the server only, never by a client", async () => {
+    for (const user of [w.users.customer1, w.users.riderA1, w.users.admin]) {
+      const attempts = [
+        () => db().query(`insert into public.pilot_invites (code, batch) values ('SNEAKY01', 'x')`),
+        () =>
+          db().query(`update public.pilot_invites set redeemed_by = $1, redeemed_at = now()`, [
+            user,
+          ]),
+        () => db().query(`insert into public.rider_shifts (rider_id) values ($1)`, [w.riders.A1]),
+        () => db().query(`update public.rider_shifts set ended_at = now()`),
+      ];
+      for (const attempt of attempts) {
+        const error = await asUser(db(), user, () => failureOf(db(), attempt));
+        expect(error).toMatch(/permission denied/);
+      }
+    }
+  });
+
   it("the waitlist is written by the server only, never directly by a client", async () => {
     for (const actor of [w.users.customer1, w.users.admin, null]) {
       const err = await asUser(db(), actor, () =>

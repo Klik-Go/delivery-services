@@ -24,7 +24,16 @@ const DOMAINS = [
       "modifier_options",
     ],
   ],
-  ["Riders", ["riders", "rider_kyc_documents", "rider_locations", "rider_location_breadcrumbs"]],
+  [
+    "Riders",
+    [
+      "riders",
+      "rider_kyc_documents",
+      "rider_locations",
+      "rider_location_breadcrumbs",
+      "rider_shifts",
+    ],
+  ],
   [
     "Orders and dispatch",
     [
@@ -68,6 +77,7 @@ const DOMAINS = [
       "fee_rules",
       "consents",
       "job_runs",
+      "pilot_invites",
     ],
   ],
 ];

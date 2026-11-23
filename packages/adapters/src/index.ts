@@ -38,3 +38,4 @@ export * from "./repositories/prisma-hardening-repositories";
 export * from "./observability/sentry-error-reporter";
 export * from "./observability/posthog-analytics";
 export * from "./logging/request-context";
+export * from "./repositories/prisma-pilot-repositories";
