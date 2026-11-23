@@ -39,10 +39,12 @@ jobs:
             prefix: ""
     # Lets the owner require an approval before schema changes (Settings → Environments).
     environment: ${{ matrix.target }}
+    # Named secrets only (a computed secrets[...] key would expose every secret to the runner).
+    # If a staging secret is empty the expression yields '', never production's value.
     env:
-      SUPABASE_ACCESS_TOKEN: ${{ secrets[format('{0}SUPABASE_ACCESS_TOKEN', matrix.prefix)] }}
-      SUPABASE_DB_PASSWORD: ${{ secrets[format('{0}SUPABASE_DB_PASSWORD', matrix.prefix)] }}
-      SUPABASE_PROJECT_REF: ${{ secrets[format('{0}SUPABASE_PROJECT_REF', matrix.prefix)] }}
+      SUPABASE_ACCESS_TOKEN: ${{ matrix.target == 'staging' && secrets.STAGING_SUPABASE_ACCESS_TOKEN || matrix.target == 'production' && secrets.SUPABASE_ACCESS_TOKEN || '' }}
+      SUPABASE_DB_PASSWORD: ${{ matrix.target == 'staging' && secrets.STAGING_SUPABASE_DB_PASSWORD || matrix.target == 'production' && secrets.SUPABASE_DB_PASSWORD || '' }}
+      SUPABASE_PROJECT_REF: ${{ matrix.target == 'staging' && secrets.STAGING_SUPABASE_PROJECT_REF || matrix.target == 'production' && secrets.SUPABASE_PROJECT_REF || '' }}
     steps:
       - name: Check the hosted project secrets
         id: secrets
