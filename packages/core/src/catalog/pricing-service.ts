@@ -85,6 +85,12 @@ export class PricingService {
     return 0;
   }
 
+  /** The delivery fee for a trip, honouring the flat-fee switch (Pabili uses this too). */
+  async tripFee(fees: ZoneFees, distanceM: number): Promise<Centavos> {
+    const flat = (await this.deps.switches?.isOn("flat_delivery_fee")) ?? false;
+    return this.deliveryFee(fees, distanceM, flat ? FLAT_FEE : this.deps.delivery);
+  }
+
   async quote(request: CartQuoteRequest): Promise<Result<CartQuote, AppError>> {
     const priced = await this.quoteWithStore(request);
     return priced.ok ? ok(priced.value.quote) : priced;

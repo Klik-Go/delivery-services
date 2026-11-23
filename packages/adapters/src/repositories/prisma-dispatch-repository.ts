@@ -96,7 +96,7 @@ export class PrismaDispatchRepository
                   then o.accepted_at + make_interval(mins => o.prep_minutes) end as ready_by,
              exists (select 1 from public.dispatch_offers d
                       where d.order_id = o.id and d.status = 'offered') as has_open_offer
-        from public.orders o join public.merchants m on m.id = o.merchant_id
+        from public.orders o join private.order_pickups m on m.order_id = o.id
        where o.id = ${orderId}::uuid`;
     if (!row) return null;
     return {
@@ -211,13 +211,13 @@ export class PrismaDispatchRepository
       with flagged as (
         update public.orders o set dispatch_flagged_at = ${now}
          where o.id = ${orderId}::uuid and o.dispatch_flagged_at is null
-        returning o.id, o.code, o.zone_id, o.merchant_id
+        returning o.id, o.code, o.zone_id
       ), queued as (
         insert into public.notifications (user_id, channel, template, payload, order_id)
         select distinct r.user_id, c.channel, 'dispatch_unassigned',
                jsonb_build_object('orderId', f.id, 'code', f.code, 'store', m.name), f.id
           from flagged f
-          join public.merchants m on m.id = f.merchant_id
+          join private.order_pickups m on m.order_id = f.id
           join public.user_roles r on r.role = 'coordinator' and r.zone_id = f.zone_id
           cross join (values ('push'::public.notification_channel),
                              ('in_app'::public.notification_channel)) as c(channel)
@@ -370,7 +370,7 @@ export class PrismaDispatchRepository
              o.payment_method::text as payment_method, o.total_centavos, d.expires_at
         from public.dispatch_offers d
         join public.orders o on o.id = d.order_id
-        join public.merchants m on m.id = o.merchant_id
+        join private.order_pickups m on m.order_id = o.id
        where d.rider_id = ${riderId}::uuid and d.status = 'offered' and d.expires_at > ${now}
        order by d.offered_at desc
        limit 1`;
@@ -421,7 +421,7 @@ export class PrismaDispatchRepository
              o.address_snapshot, o.payment_method::text as payment_method, o.total_centavos,
              o.tip_centavos, o.rider_earnings_centavos,
              exists (select 1 from public.order_delivery_pins p where p.order_id = o.id) as pin_required
-        from public.orders o join public.merchants m on m.id = o.merchant_id
+        from public.orders o join private.order_pickups m on m.order_id = o.id
        where o.rider_id = ${riderId}::uuid
          and o.status in ('accepted', 'preparing', 'ready', 'picked_up')
        order by o.accepted_at
@@ -600,7 +600,7 @@ export class PrismaDispatchRepository
              extensions.st_x(l.location::extensions.geometry) as rider_lng,
              l.updated_at as location_at
         from public.orders o
-        join public.merchants m on m.id = o.merchant_id
+        join private.order_pickups m on m.order_id = o.id
         left join public.riders r on r.id = o.rider_id
         left join public.profiles p on p.id = r.user_id
         left join public.rider_locations l on l.rider_id = o.rider_id

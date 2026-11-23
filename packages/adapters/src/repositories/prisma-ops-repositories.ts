@@ -97,7 +97,7 @@ const ORDER_COLUMNS = Prisma.sql`
 
 const ORDER_JOINS = Prisma.sql`
   from public.orders o
-  join public.merchants m on m.id = o.merchant_id
+  join private.order_pickups m on m.order_id = o.id
   left join public.riders r on r.id = o.rider_id
   left join public.profiles rp on rp.id = r.user_id`;
 

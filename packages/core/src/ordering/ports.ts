@@ -1,4 +1,5 @@
 import type {
+  OrderKind,
   AppRole,
   CheckoutAddress,
   LedgerAccount,
@@ -148,8 +149,13 @@ export interface OrderTimeline {
 export interface OrderRecord {
   readonly id: string;
   readonly code: string;
+  /** A store order, or Pabili (a rider buys a shopping list). */
+  readonly kind: OrderKind;
+  /** The assigned rider, if any. */
+  readonly riderId: string | null;
   readonly customerId: string;
-  readonly merchantId: string;
+  /** The store; null for a Pabili order (no store). */
+  readonly merchantId: string | null;
   /** The store's name, for messages to the customer. */
   readonly merchantName: string;
   readonly zoneId: string;

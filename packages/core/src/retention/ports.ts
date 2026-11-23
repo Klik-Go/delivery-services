@@ -24,7 +24,8 @@ export interface RatableOrder {
   readonly id: string;
   readonly code: string;
   readonly customerId: string;
-  readonly merchantId: string;
+  /** The store; null for a Pabili order (no store). */
+  readonly merchantId: string | null;
   readonly merchantName: string;
   readonly zoneId: string;
   readonly riderId: string | null;
@@ -68,9 +69,11 @@ export interface HistoryOrder {
   readonly id: string;
   readonly code: string;
   readonly status: OrderStatus;
-  readonly merchantId: string;
+  /** The store; null for a Pabili order (no store). */
+  readonly merchantId: string | null;
   readonly merchantName: string;
-  readonly merchantSlug: string;
+  /** Null for a Pabili order, which can't be reordered from a menu. */
+  readonly merchantSlug: string | null;
   readonly totalCentavos: Centavos;
   readonly createdAt: Date;
   readonly deliveredAt: Date | null;

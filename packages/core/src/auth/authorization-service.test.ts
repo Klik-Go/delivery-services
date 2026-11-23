@@ -114,6 +114,20 @@ describe("AuthorizationService", () => {
     expect(authz.can(user([coordinator], "aal2", "u-2"), { ...view, zoneId: "z-9" })).toBe(false);
   });
 
+  it("shows a Pabili order (no store) to no store team and only to its own zone's coordinator", () => {
+    const view = {
+      type: "order.view",
+      customerId: "u-1",
+      merchantId: null,
+      zoneId: "z-1",
+    } as const;
+    expect(authz.can(user([customer]), view)).toBe(true);
+    expect(authz.can(user([owner], "aal2", "u-2"), view)).toBe(false);
+    expect(authz.can(user([coordinator], "aal2", "u-2"), view)).toBe(true);
+    expect(authz.can(user([coordinator], "aal2", "u-2"), { ...view, zoneId: "z-9" })).toBe(false);
+    expect(authz.can(user([admin], "aal2", "u-2"), view)).toBe(true);
+  });
+
   it("only lets admins (with AAL2) invite staff", () => {
     expect(authz.can(user([admin], "aal2"), { type: "staff.invite" })).toBe(true);
     expect(authz.decide(user([admin], "aal1"), { type: "staff.invite" })).toEqual({

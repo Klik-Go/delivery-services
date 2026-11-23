@@ -241,8 +241,9 @@ on conflict (id) do update set
 --   max_item_centavos     the most a customer may budget for items (₱1,500)
 --   service_fee_centavos  the Pabili fee on top of the delivery fee (₱49)
 --   max_items             lines on one shopping list
+--   max_trip_m            the longest shop → drop-off trip (5 km)
 -- ---------------------------------------------------------------------------
 insert into public.feature_flags (key, description, enabled, rollout)
 values ('pabili', 'Pabili: customers send a shopping list and a rider buys it with cash.', false,
-        '{"max_item_centavos": 150000, "service_fee_centavos": 4900, "max_items": 20}')
+        '{"max_item_centavos": 150000, "service_fee_centavos": 4900, "max_items": 20, "max_trip_m": 5000}')
 on conflict (key) do nothing;

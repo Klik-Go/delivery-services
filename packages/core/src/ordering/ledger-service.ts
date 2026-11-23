@@ -31,7 +31,8 @@ function toTxn(orderId: string, postings: readonly Posting[]): LedgerTxn {
 export interface SettlementInput {
   readonly orderId: string;
   readonly customerId: string;
-  readonly merchantId: string;
+  /** The store; null for a Pabili order (no store). */
+  readonly merchantId: string | null;
   readonly riderId: string;
   /** Online orders settle from the customer's deposit; cash orders from the rider's cash. */
   readonly paidOnline: boolean;

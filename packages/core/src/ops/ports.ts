@@ -40,7 +40,8 @@ export interface OpsOrder {
   readonly code: string;
   readonly status: OrderStatus;
   readonly zoneId: string;
-  readonly merchantId: string;
+  /** The store; null for a Pabili order (no store). */
+  readonly merchantId: string | null;
   readonly merchantName: string;
   readonly paymentMethod: PaymentMethod;
   readonly totalCentavos: Centavos;

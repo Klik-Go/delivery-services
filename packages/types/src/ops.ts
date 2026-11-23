@@ -5,6 +5,7 @@ import {
   PilotScopeRolloutSchema,
 } from "./hardening";
 import { FeeRuleKindSchema, KycDocumentTypeSchema, VehicleTypeSchema } from "./domain";
+import { PabiliRolloutSchema } from "./pabili";
 
 /** Every console action that changes something carries a short reason for the audit log. */
 export const OpsReasonSchema = z
@@ -199,6 +200,7 @@ export const FLAG_ROLLOUT_SCHEMAS: Readonly<Record<string, z.ZodType>> = {
   invite_only: InviteOnlyRolloutSchema,
   pilot_scope: PilotScopeRolloutSchema,
   scheduled_orders: z.object({}).strict(),
+  pabili: PabiliRolloutSchema,
 };
 
 /** PUT /api/admin/feature-flags/:key */

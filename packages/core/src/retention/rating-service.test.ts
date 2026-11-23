@@ -53,7 +53,9 @@ describe("RatingService: customers rate the store and the rider", () => {
       },
       rider: { name: "Rico", rating: { score: 4, comment: null } },
     });
-    expect(sheet.ok && sheet.value.merchant.rating?.editableUntil).toBe("2026-11-16T05:00:00.000Z");
+    expect(sheet.ok && sheet.value.merchant?.rating?.editableUntil).toBe(
+      "2026-11-16T05:00:00.000Z",
+    );
     expect(repo.ratingsStore.map((r) => [r.targetType, r.targetId])).toEqual([
       ["merchant", "nena"],
       ["rider", "rider-rico"],
@@ -68,13 +70,13 @@ describe("RatingService: customers rate the store and the rider", () => {
     const changed = await service.rateOrder(carmen, "order-1", {
       merchant: { score: 4, tags: [] },
     });
-    expect(changed.ok && changed.value.merchant.rating?.score).toBe(4);
+    expect(changed.ok && changed.value.merchant?.rating?.score).toBe(4);
     expect(repo.ratingsStore).toHaveLength(1);
     clock.advanceBy(15 * HOUR);
     const late = await service.rateOrder(carmen, "order-1", { merchant: { score: 5, tags: [] } });
     expect(!late.ok && late.error.message).toBe("Your store rating can no longer be changed.");
     const sheet = await service.sheet(carmen, "order-1");
-    expect(sheet.ok && sheet.value.merchant.rating?.editableUntil).toBeNull();
+    expect(sheet.ok && sheet.value.merchant?.rating?.editableUntil).toBeNull();
   });
 
   it("closes ratings 7 days after delivery and refuses orders not yet delivered", async () => {
