@@ -34,7 +34,8 @@ export interface OrderRatingSheet {
   /** True while ratings can be given or changed. */
   readonly open: boolean;
   readonly closesAt: string | null;
-  readonly merchant: { readonly name: string; readonly rating: RatingView | null };
+  /** Null for a Pabili order: there is no store to rate, only the rider. */
+  readonly merchant: { readonly name: string; readonly rating: RatingView | null } | null;
   readonly rider: { readonly name: string | null; readonly rating: RatingView | null } | null;
 }
 
@@ -93,7 +94,7 @@ export class RatingService {
       orderId,
       open: this.isOpen(order),
       closesAt: closes ? closes.toISOString() : null,
-      merchant: { name: order.merchantName, rating: view("merchant") },
+      merchant: order.merchantId ? { name: order.merchantName, rating: view("merchant") } : null,
       rider: order.riderId ? { name: order.riderName, rating: view("rider") } : null,
     });
   }
@@ -114,8 +115,17 @@ export class RatingService {
         ]),
       );
     }
+    if (input.merchant && !order.merchantId) {
+      return err(
+        new ValidationError("This Pabili order had no store to rate. Rate the rider instead.", [
+          { path: "merchant", message: "No store" },
+        ]),
+      );
+    }
     const targets: [RatingTargetKind, string, GivenRating][] = [];
-    if (input.merchant) targets.push(["merchant", order.merchantId, input.merchant]);
+    if (input.merchant && order.merchantId) {
+      targets.push(["merchant", order.merchantId, input.merchant]);
+    }
     if (input.rider && order.riderId) targets.push(["rider", order.riderId, input.rider]);
     const saved = await this.save(order, order.customerId, targets);
     if (!saved.ok) return saved;

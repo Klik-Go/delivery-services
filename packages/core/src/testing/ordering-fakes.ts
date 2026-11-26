@@ -452,6 +452,8 @@ export class InMemoryOrderStore
       deliveryPin: this.pins.get(order.id) ?? null,
       id: order.id,
       code: order.code,
+      kind: "store",
+      riderId: null,
       customerId: order.customerId,
       merchantId: order.merchantId,
       merchantName: this.merchantNames[order.merchantId] ?? order.merchantId,

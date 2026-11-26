@@ -312,6 +312,14 @@ sequenceDiagram
 - **Smoke test.** `features/smoke` and `features/health.feature` (`@smoke`) use public API calls only, so `Actions → Smoke test (production)` runs them against the live app daily; placing (and cancelling) a cash order is opt-in.
 - **Promotion.** `Deploy database migrations` runs staging (`STAGING_`-prefixed secrets) then production (approval on the `production` environment). docs/LAUNCH.md holds the environments, checklist, dry runs and go/no-go.
 
+## 4n. Pabili (Phase 13)
+
+- **Model.** A Pabili order is an ordinary `orders` row with `kind = 'pabili'` and no store (`merchant_id` null; check `orders_kind_merchant`), cash on delivery only (`orders_pabili_cod`). `pabili_requests` (1:1) holds the shop name, notes, pin, the customer's budget and, once bought, the item cost (≤ budget, database check), the receipt path and time; `pabili_items` the list with each line's outcome. `subtotal_centavos` stays 0: the item cost passes from customer to rider and is not platform money; the order total is the delivery fee + the Pabili fee.
+- **Lifecycle.** The statuses are reused with Pabili rules in `OrderStateMachine` (`kind` argument): placed → accepted by the system in the same transaction (no store to confirm), accepted → preparing by the rider ("shopping"), preparing → ready by the rider ("bought", with the receipt). Pickup, delivery and dispatch are unchanged, because dispatch already starts at `accepted`. `escalate_merchant_sla` ignores Pabili orders. The customer may cancel until a rider is assigned (`customerMayCancel`).
+- **Store-less reads.** Server SQL joins `private.order_pickups` (shop or store name, address and point) instead of `merchants`; `order.view` never matches a store-less order to a store grant (a null-to-null match would have exposed it to every coordinator); the broadcast skips the `merchant:` topic; ratings offer the rider only.
+- **Dispatch.** `PabiliFloatStrategy` wraps the nearest-rider strategy and keeps only riders whose `pabili_float_centavos` covers the budget; cash limits still apply to the fees collected.
+- **Service.** `PabiliService` (quote, place with Idempotency-Key, view with a five-minute receipt link, start shopping, record purchase, set float). Settings come from the `pabili` flag (`IPabiliSettings`, cached 10 s and cleared on change). Receipts: `IReceiptStorage` → `SupabaseReceiptStorage` (private bucket `pabili-receipts`, type checked from the bytes).
+
 ## 5. Folder map
 
 ```

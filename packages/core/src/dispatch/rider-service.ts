@@ -221,7 +221,13 @@ export class RiderService {
     if (!job.ok) return job;
     const { rider, current } = job.value;
     if (current.status !== "ready") {
-      return err(new ConflictError("The store hasn't marked this order ready yet."));
+      return err(
+        new ConflictError(
+          current.kind === "pabili"
+            ? "Record what you bought and the receipt first."
+            : "The store hasn't marked this order ready yet.",
+        ),
+      );
     }
     if (!(await this.deps.riders.pickUp(orderId, rider.id, rider.userId))) {
       return err(new ConflictError("This job was just changed. Refresh to see it."));
@@ -345,8 +351,12 @@ export class RiderService {
     return ok(true);
   }
 
-  /** Founding stores pay no commission until their date; otherwise basis points of the subtotal. */
+  /**
+   * Founding stores pay no commission until their date; otherwise basis points of the subtotal.
+   * A Pabili order has no store and no subtotal (the item cost passes from customer to rider).
+   */
   private commission(facts: SettlementFacts): Centavos {
+    if (facts.merchantId === null) return 0;
     const now = this.deps.clock.now();
     if (facts.commissionFreeUntil && facts.commissionFreeUntil > now) return 0;
     return Math.round((facts.subtotalCentavos * facts.commissionBps) / 10_000);
@@ -361,7 +371,9 @@ export class RiderService {
     return {
       ...job,
       contactPhone: maskPhone(job.contactPhone),
-      cashToCollectCentavos: job.paymentMethod === "cod" ? job.totalCentavos : 0,
+      // Pabili: the customer also repays the receipt total, which the rider fronted.
+      cashToCollectCentavos:
+        job.paymentMethod === "cod" ? job.totalCentavos + (job.pabili?.itemCostCentavos ?? 0) : 0,
     };
   }
 

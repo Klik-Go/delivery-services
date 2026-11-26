@@ -51,7 +51,7 @@ const ratableColumns = Prisma.sql`
   o.status::text as status, o.delivered_at`;
 const ratableFrom = Prisma.sql`
     from public.orders o
-    join public.merchants m on m.id = o.merchant_id
+    join private.order_pickups m on m.order_id = o.id
     left join public.riders r on r.id = o.rider_id
     left join public.profiles p on p.id = r.user_id`;
 const ratableSelect = Prisma.sql`select ${ratableColumns} ${ratableFrom}`;
@@ -195,16 +195,21 @@ export class PrismaOrderHistoryRepository implements IOrderHistoryRepository {
       }[]
     >`
       select o.id, o.code, o.status::text as status, o.merchant_id, m.name as merchant_name,
-             m.slug as merchant_slug, o.total_centavos, o.created_at, o.delivered_at,
-             (select coalesce(sum(i.quantity), 0)::int from public.order_items i where i.order_id = o.id) as item_count,
-             (select string_agg(i.quantity || '× ' || i.name_snapshot, ', ' order by i.created_at, i.id)
-                from public.order_items i where i.order_id = o.id) as items_summary,
+             s.slug as merchant_slug, o.kind::text as kind, o.total_centavos, o.created_at, o.delivered_at,
+             (select coalesce(sum(i.quantity), 0)::int from public.order_items i where i.order_id = o.id)
+               + (select coalesce(sum(i.quantity), 0)::int from public.pabili_items i where i.order_id = o.id) as item_count,
+             coalesce(
+               (select string_agg(i.quantity || '× ' || i.name_snapshot, ', ' order by i.created_at, i.id)
+                  from public.order_items i where i.order_id = o.id),
+               (select string_agg(i.quantity || '× ' || i.description, ', ' order by i.position)
+                  from public.pabili_items i where i.order_id = o.id)) as items_summary,
              o.rider_id is not null as has_rider,
              array(select rt.target_type::text from public.ratings rt
                     where rt.order_id = o.id and rt.from_user_id = o.customer_id
                       and rt.target_type in ('merchant', 'rider')) as rated
         from public.orders o
-        join public.merchants m on m.id = o.merchant_id
+        join private.order_pickups m on m.order_id = o.id
+        left join public.merchants s on s.id = o.merchant_id
        where o.customer_id = ${customerId}::uuid
          and (${before}::timestamptz is null or o.created_at < ${before}::timestamptz)
        order by o.created_at desc

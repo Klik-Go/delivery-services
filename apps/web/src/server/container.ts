@@ -77,6 +77,10 @@ import {
   PrismaKpiRepository,
   PrismaPilotInviteRepository,
   PrismaPilotSettings,
+  PrismaPabiliRepository,
+  PrismaPabiliSettings,
+  SupabaseReceiptStorage,
+  UnconfiguredReceiptStorage,
   RandomInviteCodes,
 } from "@klikgo/adapters";
 import {
@@ -135,6 +139,8 @@ import {
   ZoneAdminService,
   DistancePayRule,
   NearestAvailableStrategy,
+  PabiliFloatStrategy,
+  PabiliService,
   NotificationService,
   RiderService,
   TrackingService,
@@ -246,6 +252,7 @@ export interface Container {
   /** Phase 12: the invite-only pilot and the KPI dashboard. */
   readonly pilotInvites: PilotInviteService;
   readonly kpis: KpiService;
+  readonly pabili: PabiliService;
   /** Services bound to one request's Supabase session (cookies). */
   forRequest(supabase: SupabaseClient): RequestServices;
 }
@@ -291,6 +298,8 @@ export function createContainer(env: ServerEnv): Container {
   const switches = new PrismaFeatureSwitches(prisma);
   // Pilot switches (Phase 12): invite-only, food-only scope, scheduled orders.
   const pilot = new PrismaPilotSettings(prisma);
+  // Pabili switch and limits (Phase 13).
+  const pabiliSettings = new PrismaPabiliSettings(prisma);
   const pricing = new PricingService({
     catalog,
     serviceArea,
@@ -339,7 +348,8 @@ export function createContainer(env: ServerEnv): Container {
   const dispatch = new DispatchService({
     repo: dispatchStore,
     settings: dispatchStore,
-    strategy: new NearestAvailableStrategy(),
+    // Pabili jobs only for riders whose float covers the budget (Phase 13).
+    strategy: new PabiliFloatStrategy(new NearestAvailableStrategy()),
     payRule: new DistancePayRule(),
     orders: orderStore,
     messages: notifications,
@@ -530,6 +540,7 @@ export function createContainer(env: ServerEnv): Container {
       onFlagChanged: () => {
         switches.forget();
         pilot.forget();
+        pabiliSettings.forget();
       },
     }),
     staffAdmin: new StaffAdminService({ access: consoleAccess, staff: new PrismaStaff(prisma) }),
@@ -630,6 +641,26 @@ export function createContainer(env: ServerEnv): Container {
     analytics: new AnalyticsService({ analytics: analytics(env, logger), clock, logger }),
     pilotInvites,
     kpis: new KpiService({ access: consoleAccess, kpis: new PrismaKpiRepository(prisma), clock }),
+    pabili: (() => {
+      const store = new PrismaPabiliRepository(prisma);
+      return new PabiliService({
+        settings: pabiliSettings,
+        pabili: store,
+        receipts: admin
+          ? new SupabaseReceiptStorage(admin, logger)
+          : new UnconfiguredReceiptStorage(),
+        serviceArea,
+        pricing,
+        riders: dispatchStore,
+        dispatch,
+        states,
+        authz,
+        hasher,
+        clock,
+        logger,
+        access: pilotInvites,
+      });
+    })(),
     systemStatus: new SystemStatusService({
       access: consoleAccess,
       status: new PrismaSystemStatusRepository(prisma),

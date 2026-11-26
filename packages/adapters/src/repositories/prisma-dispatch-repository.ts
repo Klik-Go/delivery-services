@@ -18,7 +18,7 @@ import {
   type TrackingFacts,
 } from "@klikgo/core";
 import type { PrismaClient } from "@klikgo/db";
-import type { OrderStatus, PaymentMethod, VehicleType } from "@klikgo/types";
+import type { OrderKind, OrderStatus, PaymentMethod, VehicleType } from "@klikgo/types";
 import { postLedger, setActor } from "./prisma-order-repository";
 
 /** Orders a rider can still be found for. */
@@ -43,6 +43,8 @@ const int = (value: bigint | number | null | undefined): number => Number(value 
 interface JobRow {
   id: string;
   code: string;
+  kind: OrderKind;
+  budget_centavos: number | null;
   zone_id: string;
   merchant_name: string;
   status: OrderStatus;
@@ -85,7 +87,9 @@ export class PrismaDispatchRepository
 
   async job(orderId: string): Promise<DispatchJob | null> {
     const [row] = await this.prisma.$queryRaw<JobRow[]>`
-      select o.id, o.code, o.zone_id, m.name as merchant_name, o.status::text as status, o.rider_id,
+      select o.id, o.code, o.kind::text as kind,
+             (select pr.budget_centavos from public.pabili_requests pr where pr.order_id = o.id) as budget_centavos,
+             o.zone_id, m.name as merchant_name, o.status::text as status, o.rider_id,
              o.payment_method::text as payment_method, o.total_centavos,
              extensions.st_y(m.location::extensions.geometry) as pickup_lat,
              extensions.st_x(m.location::extensions.geometry) as pickup_lng,
@@ -96,12 +100,14 @@ export class PrismaDispatchRepository
                   then o.accepted_at + make_interval(mins => o.prep_minutes) end as ready_by,
              exists (select 1 from public.dispatch_offers d
                       where d.order_id = o.id and d.status = 'offered') as has_open_offer
-        from public.orders o join public.merchants m on m.id = o.merchant_id
+        from public.orders o join private.order_pickups m on m.order_id = o.id
        where o.id = ${orderId}::uuid`;
     if (!row) return null;
     return {
       id: row.id,
       code: row.code,
+      kind: row.kind,
+      budgetCentavos: row.budget_centavos ?? 0,
       zoneId: row.zone_id,
       merchantName: row.merchant_name,
       status: row.status,
@@ -124,10 +130,11 @@ export class PrismaDispatchRepository
         user_id: string;
         distance_m: number;
         cash_limit_centavos: number;
+        pabili_float_centavos: number;
         cash_held: bigint | null;
       }[]
     >`
-      select n.rider_id, n.user_id, n.distance_m, r.cash_limit_centavos,
+      select n.rider_id, n.user_id, n.distance_m, r.cash_limit_centavos, r.pabili_float_centavos,
              (select coalesce(sum(le.debit_centavos - le.credit_centavos), 0)
                 from public.ledger_entries le
                where le.account = 'rider_cash_on_hand' and le.party_id = n.rider_id) as cash_held
@@ -147,6 +154,7 @@ export class PrismaDispatchRepository
       distanceM: row.distance_m,
       cashHeldCentavos: int(row.cash_held),
       cashLimitCentavos: row.cash_limit_centavos,
+      pabiliFloatCentavos: row.pabili_float_centavos,
     }));
   }
 
@@ -211,13 +219,13 @@ export class PrismaDispatchRepository
       with flagged as (
         update public.orders o set dispatch_flagged_at = ${now}
          where o.id = ${orderId}::uuid and o.dispatch_flagged_at is null
-        returning o.id, o.code, o.zone_id, o.merchant_id
+        returning o.id, o.code, o.zone_id
       ), queued as (
         insert into public.notifications (user_id, channel, template, payload, order_id)
         select distinct r.user_id, c.channel, 'dispatch_unassigned',
                jsonb_build_object('orderId', f.id, 'code', f.code, 'store', m.name), f.id
           from flagged f
-          join public.merchants m on m.id = f.merchant_id
+          join private.order_pickups m on m.order_id = f.id
           join public.user_roles r on r.role = 'coordinator' and r.zone_id = f.zone_id
           cross join (values ('push'::public.notification_channel),
                              ('in_app'::public.notification_channel)) as c(channel)
@@ -300,6 +308,7 @@ export class PrismaDispatchRepository
       vehicleType: row.vehicle_type,
       plateNo: row.plate_no,
       cashLimitCentavos: row.cash_limit_centavos,
+      pabiliFloatCentavos: row.pabili_float_centavos,
     };
   }
 
@@ -348,6 +357,8 @@ export class PrismaDispatchRepository
         offer_id: string;
         order_id: string;
         code: string;
+        kind: OrderKind;
+        budget_centavos: number | null;
         store_name: string;
         store_address: string | null;
         pickup_lat: number;
@@ -361,7 +372,9 @@ export class PrismaDispatchRepository
         expires_at: Date;
       }[]
     >`
-      select d.id as offer_id, o.id as order_id, o.code, m.name as store_name,
+      select d.id as offer_id, o.id as order_id, o.code, o.kind::text as kind,
+             (select pr.budget_centavos from public.pabili_requests pr where pr.order_id = o.id) as budget_centavos,
+             m.name as store_name,
              m.address_line as store_address,
              extensions.st_y(m.location::extensions.geometry) as pickup_lat,
              extensions.st_x(m.location::extensions.geometry) as pickup_lng,
@@ -370,7 +383,7 @@ export class PrismaDispatchRepository
              o.payment_method::text as payment_method, o.total_centavos, d.expires_at
         from public.dispatch_offers d
         join public.orders o on o.id = d.order_id
-        join public.merchants m on m.id = o.merchant_id
+        join private.order_pickups m on m.order_id = o.id
        where d.rider_id = ${riderId}::uuid and d.status = 'offered' and d.expires_at > ${now}
        order by d.offered_at desc
        limit 1`;
@@ -379,6 +392,8 @@ export class PrismaDispatchRepository
       offerId: row.offer_id,
       orderId: row.order_id,
       code: row.code,
+      kind: row.kind,
+      budgetCentavos: row.budget_centavos ?? 0,
       storeName: row.store_name,
       storeAddress: row.store_address,
       pickup: { lat: row.pickup_lat, lng: row.pickup_lng },
@@ -386,7 +401,9 @@ export class PrismaDispatchRepository
       dropoffArea: area(row.address_snapshot),
       earningsCentavos: row.earnings,
       tipCentavos: row.tip_centavos,
-      cashToCollectCentavos: row.payment_method === "cod" ? row.total_centavos : 0,
+      // Pabili: the fees plus up to the budget (the receipt total) at the door.
+      cashToCollectCentavos:
+        row.payment_method === "cod" ? row.total_centavos + (row.budget_centavos ?? 0) : 0,
       expiresAt: row.expires_at,
     };
   }
@@ -396,6 +413,7 @@ export class PrismaDispatchRepository
       {
         id: string;
         code: string;
+        kind: OrderKind;
         status: OrderStatus;
         arrived_store_at: Date | null;
         store_name: string;
@@ -412,7 +430,8 @@ export class PrismaDispatchRepository
         pin_required: boolean;
       }[]
     >`
-      select o.id, o.code, o.status::text as status, o.arrived_store_at, m.name as store_name,
+      select o.id, o.code, o.kind::text as kind, o.status::text as status, o.arrived_store_at,
+             m.name as store_name,
              m.address_line as store_address,
              extensions.st_y(m.location::extensions.geometry) as store_lat,
              extensions.st_x(m.location::extensions.geometry) as store_lng,
@@ -421,17 +440,30 @@ export class PrismaDispatchRepository
              o.address_snapshot, o.payment_method::text as payment_method, o.total_centavos,
              o.tip_centavos, o.rider_earnings_centavos,
              exists (select 1 from public.order_delivery_pins p where p.order_id = o.id) as pin_required
-        from public.orders o join public.merchants m on m.id = o.merchant_id
+        from public.orders o join private.order_pickups m on m.order_id = o.id
        where o.rider_id = ${riderId}::uuid
          and o.status in ('accepted', 'preparing', 'ready', 'picked_up')
        order by o.accepted_at
        limit 1`;
     if (!row) return null;
-    const items = await this.prisma.order_items.findMany({
-      where: { order_id: row.id },
-      select: { name_snapshot: true, quantity: true },
-      orderBy: { created_at: "asc" },
-    });
+    const [items, pabili] = await Promise.all([
+      this.prisma.order_items.findMany({
+        where: { order_id: row.id },
+        select: { name_snapshot: true, quantity: true },
+        orderBy: { created_at: "asc" },
+      }),
+      row.kind === "pabili"
+        ? this.prisma.pabili_requests.findUnique({
+            where: { order_id: row.id },
+            select: {
+              budget_centavos: true,
+              item_cost_centavos: true,
+              bought_at: true,
+              pabili_items: { orderBy: { position: "asc" } },
+            },
+          })
+        : Promise.resolve(null),
+    ]);
     const snap = row.address_snapshot;
     return {
       orderId: row.id,
@@ -458,6 +490,21 @@ export class PrismaDispatchRepository
       earningsCentavos: row.rider_earnings_centavos ?? 0,
       pinRequired: row.pin_required,
       items: items.map((item) => ({ name: item.name_snapshot, quantity: item.quantity })),
+      kind: row.kind,
+      pabili: pabili
+        ? {
+            budgetCentavos: pabili.budget_centavos,
+            itemCostCentavos: pabili.item_cost_centavos,
+            boughtAt: pabili.bought_at,
+            list: pabili.pabili_items.map((line) => ({
+              position: line.position,
+              description: line.description,
+              quantity: line.quantity,
+              note: line.note,
+              status: line.status,
+            })),
+          }
+        : null,
     };
   }
 
@@ -518,9 +565,11 @@ export class PrismaDispatchRepository
       },
     });
     if (!row) return null;
-    // A scheduled commission change counts once its date has come (Phase 8).
-    const [rate] = await this.prisma.$queryRaw<{ bps: number | null }[]>`
-      select private.commission_bps(${row.merchant_id}::uuid, now()) as bps`;
+    // A scheduled commission change counts once its date has come (Phase 8). Pabili has no store.
+    const [rate] = row.merchant_id
+      ? await this.prisma.$queryRaw<{ bps: number | null }[]>`
+          select private.commission_bps(${row.merchant_id}::uuid, now()) as bps`
+      : [{ bps: 0 }];
     return {
       orderId: row.id,
       customerId: row.customer_id,
@@ -534,8 +583,8 @@ export class PrismaDispatchRepository
       discountCentavos: row.discount_centavos,
       discountFundedBy:
         row.promo_redemptions?.promos.funded_by === "merchant" ? "merchant" : "platform",
-      commissionBps: rate?.bps ?? row.merchants.commission_bps,
-      commissionFreeUntil: row.merchants.founding_commission_until,
+      commissionBps: rate?.bps ?? row.merchants?.commission_bps ?? 0,
+      commissionFreeUntil: row.merchants?.founding_commission_until ?? null,
       riderPayCentavos: row.rider_earnings_centavos ?? 0,
     };
   }
@@ -600,7 +649,7 @@ export class PrismaDispatchRepository
              extensions.st_x(l.location::extensions.geometry) as rider_lng,
              l.updated_at as location_at
         from public.orders o
-        join public.merchants m on m.id = o.merchant_id
+        join private.order_pickups m on m.order_id = o.id
         left join public.riders r on r.id = o.rider_id
         left join public.profiles p on p.id = r.user_id
         left join public.rider_locations l on l.rider_id = o.rider_id

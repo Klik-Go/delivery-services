@@ -43,6 +43,17 @@ type Extra = Pick<
   "prepMinutes" | "rejectReason" | "cancelReason" | "releasePromo" | "meta"
 >;
 
+/**
+ * The customer may cancel a store order until the store accepts it, and a Pabili order until a
+ * rider takes the job.
+ */
+export function customerMayCancel(
+  order: Pick<OrderRecord, "kind" | "status" | "riderId">,
+): boolean {
+  if (order.status === "awaiting_payment" || order.status === "placed") return true;
+  return order.kind === "pabili" && order.status === "accepted" && order.riderId === null;
+}
+
 /** Does this grant give its holder a say over this particular order? */
 function grantCovers(user: SessionUser, grant: RoleGrant, order: OrderRecord): boolean {
   const staffWithTotp = user.aal === "aal2";
@@ -51,7 +62,7 @@ function grantCovers(user: SessionUser, grant: RoleGrant, order: OrderRecord): b
       return order.customerId === user.id;
     case "merchant_owner":
     case "merchant_staff":
-      return staffWithTotp && grant.merchantId === order.merchantId;
+      return staffWithTotp && order.merchantId !== null && grant.merchantId === order.merchantId;
     case "coordinator":
       return staffWithTotp && grant.zoneId === order.zoneId;
     case "admin":
@@ -135,10 +146,12 @@ export class OrderLifecycleService {
   ): Promise<Result<StatusResult, AppError>> {
     if (!user) return err(new UnauthorizedError());
     const order = await this.deps.orders.findById(orderId);
-    if (order?.customerId === user.id && !["awaiting_payment", "placed"].includes(order.status)) {
+    if (order?.customerId === user.id && !customerMayCancel(order)) {
       return err(
         new ConflictError(
-          "The store has already accepted your order. Please contact support to cancel it.",
+          order.kind === "pabili"
+            ? "A rider is already on your Pabili order. Please contact support to cancel it."
+            : "The store has already accepted your order. Please contact support to cancel it.",
         ),
       );
     }
@@ -256,7 +269,7 @@ export class OrderLifecycleService {
       return pair;
     });
     for (const { from: a, to: b } of pairs) {
-      if (this.deps.states.actorsFor(a, b).length === 0) {
+      if (this.deps.states.actorsFor(a, b, order.kind).length === 0) {
         return err(
           new ConflictError(
             `An order that is ${a.replace("_", " ")} cannot become ${b.replace("_", " ")}.`,
@@ -267,7 +280,7 @@ export class OrderLifecycleService {
     const grant = user.roles.find(
       (g) =>
         grantCovers(user, g, order) &&
-        pairs.every(({ from: a, to: b }) => this.deps.states.check(a, b, g.role).ok),
+        pairs.every(({ from: a, to: b }) => this.deps.states.check(a, b, g.role, order.kind).ok),
     );
     if (!grant) return err(new ForbiddenError("You can't make that change to this order."));
     return ok(grant.role);

@@ -159,6 +159,16 @@ export const REFUND_STATUSES = ["pending", "succeeded", "failed"] as const;
 export const RefundStatusSchema = z.enum(REFUND_STATUSES);
 export type RefundStatus = z.infer<typeof RefundStatusSchema>;
 
+/** Store order, or Pabili: a rider buys a free-text shopping list with cash (Phase 13). */
+export const ORDER_KINDS = ["store", "pabili"] as const;
+export const OrderKindSchema = z.enum(ORDER_KINDS);
+export type OrderKind = z.infer<typeof OrderKindSchema>;
+
+/** A line on a Pabili shopping list, as the rider marks it at the store. */
+export const PABILI_ITEM_STATUSES = ["pending", "bought", "unavailable"] as const;
+export const PabiliItemStatusSchema = z.enum(PABILI_ITEM_STATUSES);
+export type PabiliItemStatus = z.infer<typeof PabiliItemStatusSchema>;
+
 /** Every enum above, keyed by its Postgres type name (used by the DB parity test). */
 export const POSTGRES_ENUMS: Readonly<Record<string, readonly string[]>> = {
   app_role: APP_ROLES,
@@ -184,6 +194,8 @@ export const POSTGRES_ENUMS: Readonly<Record<string, readonly string[]>> = {
   fee_rule_kind: FEE_RULE_KINDS,
   merchant_application_status: MERCHANT_APPLICATION_STATUSES,
   refund_status: REFUND_STATUSES,
+  order_kind: ORDER_KINDS,
+  pabili_item_status: PABILI_ITEM_STATUSES,
 };
 
 /**

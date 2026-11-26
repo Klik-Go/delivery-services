@@ -21,7 +21,8 @@ export type Action =
   | {
       readonly type: "order.view";
       readonly customerId: string;
-      readonly merchantId: string;
+      /** Null for a Pabili order: no store team may see it. */
+      readonly merchantId: string | null;
       readonly zoneId: string;
     };
 
@@ -101,7 +102,8 @@ export class AuthorizationService {
           (role, merchantId, zoneId) =>
             role === "admin" ||
             (role === "coordinator" && zoneId === action.zoneId) ||
-            merchantId === action.merchantId,
+            // Grants without a store (coordinators) carry merchantId null; never match on that.
+            (action.merchantId !== null && merchantId === action.merchantId),
         );
     }
   }

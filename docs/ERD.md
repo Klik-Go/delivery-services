@@ -140,7 +140,7 @@ erDiagram
   menu_items ||--o{ modifier_groups : "menu_item_id"
   modifier_groups ||--o{ modifier_options : "modifier_group_id"
   menu_items |o--o{ order_items : "menu_item_id"
-  merchants ||--o{ orders : "merchant_id"
+  merchants |o--o{ orders : "merchant_id"
   merchants |o--o{ promos : "merchant_id"
   merchants |o--o{ user_roles : "merchant_id"
   merchant_applications {
@@ -273,6 +273,7 @@ erDiagram
     timestamptz updated_at
     text status_reason
     text payout_account_name
+    int4 pabili_float_centavos
   }
   rider_kyc_documents {
     uuid id PK
@@ -327,9 +328,11 @@ erDiagram
   orders ||--o{ order_support_notes : "order_id"
   profiles |o--o{ orders : "cancelled_by"
   profiles ||--o{ orders : "customer_id"
-  merchants ||--o{ orders : "merchant_id"
+  merchants |o--o{ orders : "merchant_id"
   riders |o--o{ orders : "rider_id"
   zones ||--o{ orders : "zone_id"
+  pabili_requests ||--o{ pabili_items : "order_id"
+  orders ||--o| pabili_requests : "order_id"
   orders ||--o| payments : "order_id"
   orders |o--o{ payout_lines : "order_id"
   orders ||--o| promo_redemptions : "order_id"
@@ -389,6 +392,7 @@ erDiagram
     timestamptz arrived_store_at
     text delivery_proof_path
     timestamptz rewards_processed_at
+    order_kind kind
   }
   order_items {
     uuid id PK
@@ -401,6 +405,27 @@ erDiagram
     jsonb modifiers_snapshot
     text note
     int4 line_total_centavos
+    timestamptz created_at
+  }
+  pabili_requests {
+    uuid order_id PK, FK
+    text store_name
+    text store_notes
+    geography pickup
+    int4 budget_centavos
+    int4 item_cost_centavos
+    text receipt_path
+    timestamptz bought_at
+    timestamptz created_at
+  }
+  pabili_items {
+    uuid id PK
+    uuid order_id FK, UK
+    int2 position UK
+    text description
+    int4 quantity
+    text note
+    pabili_item_status status
     timestamptz created_at
   }
   order_events {
@@ -817,6 +842,8 @@ Role helpers live in the `private` schema (`has_role`, `is_admin`, `is_merchant_
 | `order_status_transitions` | on | `order_status_transitions_read` (select · anon, authenticated) |
 | `order_support_notes` | on | `order_support_notes_select_ops` (select · authenticated) |
 | `orders` | on | `orders_select` (select · authenticated) |
+| `pabili_items` | on | `pabili_items_select` (select · authenticated) |
+| `pabili_requests` | on | `pabili_requests_select` (select · authenticated) |
 | `payments` | on | `payments_select` (select · authenticated) |
 | `payout_accounts` | on | `payout_accounts_select` (select · authenticated) |
 | `payout_lines` | on | `payout_lines_select` (select · authenticated) |

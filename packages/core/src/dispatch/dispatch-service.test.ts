@@ -3,6 +3,7 @@ import { DEFAULT_DISPATCH_SETTINGS } from "./ports";
 import { parseDispatchSettings } from "./dispatch-settings";
 import { DistancePayRule } from "./distance-pay-rule";
 import { NearestAvailableStrategy } from "./nearest-available-strategy";
+import { PabiliFloatStrategy } from "./pabili-float-strategy";
 import { dispatchWorld, RICO_AT, ROSA_AT } from "../testing";
 
 function world() {
@@ -163,6 +164,8 @@ describe("NearestAvailableStrategy", () => {
     const job = {
       id: "o",
       code: "KG",
+      kind: "store" as const,
+      budgetCentavos: 0,
       zoneId: "z",
       merchantName: "S",
       status: "preparing" as const,
@@ -176,12 +179,18 @@ describe("NearestAvailableStrategy", () => {
       readyBy: null,
       hasOpenOffer: false,
     };
-    const rider = (riderId: string, distanceM: number, cashHeldCentavos = 0) => ({
+    const rider = (
+      riderId: string,
+      distanceM: number,
+      cashHeldCentavos = 0,
+      floatCentavos = 0,
+    ) => ({
       riderId,
       userId: riderId,
       distanceM,
       cashHeldCentavos,
       cashLimitCentavos: 300_000,
+      pabiliFloatCentavos: floatCentavos,
     });
     const strategy = new NearestAvailableStrategy();
     expect(strategy.choose(job, [rider("far", 900), rider("near", 100)])?.riderId).toBe("near");
@@ -189,6 +198,14 @@ describe("NearestAvailableStrategy", () => {
       "far",
     );
     expect(strategy.choose(job, [])).toBeNull();
+
+    // Pabili: only riders whose float covers the budget; store orders are unaffected.
+    const pabili = new PabiliFloatStrategy(strategy);
+    const shopping = { ...job, kind: "pabili" as const, budgetCentavos: 50_000 };
+    const riders = [rider("near", 100, 0, 20_000), rider("far", 900, 0, 50_000)];
+    expect(pabili.choose(shopping, riders)?.riderId).toBe("far");
+    expect(pabili.choose(job, riders)?.riderId).toBe("near");
+    expect(pabili.choose(shopping, [rider("near", 100)])).toBeNull();
   });
 });
 

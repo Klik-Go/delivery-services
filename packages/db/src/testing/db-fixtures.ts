@@ -166,6 +166,50 @@ export class DbFixtures {
     return id;
   }
 
+  /**
+   * A Pabili order (no store, cash on delivery) with its request and a two-line shopping list,
+   * taken by Klik Go (accepted) unless `placedOnly`.
+   */
+  async pabiliOrder(options: {
+    customerId: string;
+    zoneId: string;
+    pickup: LatLng;
+    dropoff: LatLng;
+    budgetCentavos?: number;
+    placedOnly?: boolean;
+  }): Promise<string> {
+    const { rows } = await this.db.query<{ id: string }>(
+      `insert into public.orders (code, customer_id, kind, zone_id, status, payment_method,
+         subtotal_centavos, delivery_fee_centavos, service_fee_centavos, total_centavos, address_snapshot, dropoff)
+       values ($1, $2, 'pabili', $3, 'placed', 'cod', 0, 3900, 4900, 8800, $4, $5::extensions.geography)
+       returning id`,
+      [
+        `KG-${randomUUID().slice(0, 6).toUpperCase()}`,
+        options.customerId,
+        options.zoneId,
+        JSON.stringify({
+          label: "Home",
+          landmark: "Near the chapel",
+          contact_phone: "+639170000000",
+        }),
+        pointEwkt(options.dropoff),
+      ],
+    );
+    const id = firstId(rows);
+    await this.db.query(
+      `insert into public.pabili_requests (order_id, store_name, store_notes, pickup, budget_centavos)
+       values ($1, 'Aling Nena Sari-sari', 'Beside the chapel', $2::extensions.geography, $3)`,
+      [id, pointEwkt(options.pickup), options.budgetCentavos ?? 50000],
+    );
+    await this.db.query(
+      `insert into public.pabili_items (order_id, position, description, quantity, note)
+       values ($1, 1, 'Eggs (medium)', 12, null), ($1, 2, 'Pandesal', 10, 'Fresh if possible')`,
+      [id],
+    );
+    if (!options.placedOnly) await this.setStatus(id, "accepted");
+    return id;
+  }
+
   /** Changes an order's status as `actorRole` (the database validates the transition). */
   async setStatus(
     orderId: string,

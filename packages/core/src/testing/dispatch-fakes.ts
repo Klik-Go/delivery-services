@@ -1,4 +1,4 @@
-import type { OrderStatus, PaymentMethod, VehicleType } from "@klikgo/types";
+import type { OrderKind, OrderStatus, PaymentMethod, VehicleType } from "@klikgo/types";
 import { roadMeters, haversineMeters } from "../catalog/geo";
 import type { INotifiableOrders, IMessageSender } from "../dispatch/dispatch-service";
 import {
@@ -11,6 +11,7 @@ import {
   type IRiderRepository,
   type ITrackingRepository,
   type OfferAnswer,
+  type PabiliJob,
   type RiderCandidate,
   type RiderJob,
   type RiderOffer,
@@ -38,15 +39,29 @@ export interface FakeRider {
   cashLimitCentavos: Centavos;
   /** COD cash collected before this test (remittances are Phase 10). */
   cashHeldCentavos: Centavos;
+  pabiliFloatCentavos: Centavos;
   location: GeoPoint | null;
   locationAt: Date | null;
+}
+
+/** The Pabili part of a fake order (see InMemoryPabili). */
+export interface FakePabili {
+  storeNotes: string | null;
+  budgetCentavos: Centavos;
+  itemCostCentavos: Centavos | null;
+  receiptPath: string | null;
+  boughtAt: Date | null;
+  idempotencyKey: string | null;
+  requestHash: string | null;
+  list: PabiliJob["list"][number][];
 }
 
 export interface FakeDeliveryOrder {
   id: string;
   code: string;
+  kind: OrderKind;
   customerId: string;
-  merchantId: string;
+  merchantId: string | null;
   merchantName: string;
   storeAddress: string | null;
   zoneId: string;
@@ -77,6 +92,10 @@ export interface FakeDeliveryOrder {
   pin: string | null;
   proofPath: string | null;
   deliveredAt: Date | null;
+  createdAt: Date;
+  /** Status changes as [to, actor role] (order_events). */
+  events: [OrderStatus, string][];
+  pabili: FakePabili | null;
 }
 
 export interface FakeOffer {
@@ -131,6 +150,7 @@ export class InMemoryDispatch
       plateNo: "ABC 1234",
       cashLimitCentavos: 300_000,
       cashHeldCentavos: 0,
+      pabiliFloatCentavos: 0,
       location: null,
       locationAt: null,
       ...rider,
@@ -143,6 +163,7 @@ export class InMemoryDispatch
   addOrder(order: Partial<FakeDeliveryOrder> & Pick<FakeDeliveryOrder, "id">): FakeDeliveryOrder {
     const row: FakeDeliveryOrder = {
       code: `KG-${order.id}`,
+      kind: "store",
       customerId: "customer-1",
       merchantId: "kape",
       merchantName: "Kape't Tinapay",
@@ -175,6 +196,9 @@ export class InMemoryDispatch
       pin: null,
       proofPath: null,
       deliveredAt: null,
+      createdAt: this.now(),
+      events: [],
+      pabili: null,
       ...order,
     };
     this.orders.push(row);
@@ -223,6 +247,8 @@ export class InMemoryDispatch
     return Promise.resolve({
       id: o.id,
       code: o.code,
+      kind: o.kind,
+      budgetCentavos: o.pabili?.budgetCentavos ?? 0,
       zoneId: o.zoneId,
       merchantName: o.merchantName,
       status: o.status,
@@ -260,6 +286,7 @@ export class InMemoryDispatch
         distanceM: haversineMeters(r.location ?? job.pickup, job.pickup),
         cashHeldCentavos: this.cashHeldSync(r.id),
         cashLimitCentavos: r.cashLimitCentavos,
+        pabiliFloatCentavos: r.pabiliFloatCentavos,
       }))
       .filter((c) => c.distanceM <= maxDistanceM)
       .sort((a, b) => a.distanceM - b.distanceM);
@@ -347,6 +374,7 @@ export class InMemoryDispatch
             vehicleType: r.vehicleType,
             plateNo: r.plateNo,
             cashLimitCentavos: r.cashLimitCentavos,
+            pabiliFloatCentavos: r.pabiliFloatCentavos,
           }
         : null,
     );
@@ -387,6 +415,8 @@ export class InMemoryDispatch
       offerId: f.id,
       orderId: o.id,
       code: o.code,
+      kind: o.kind,
+      budgetCentavos: o.pabili?.budgetCentavos ?? 0,
       storeName: o.merchantName,
       storeAddress: o.storeAddress,
       pickup: o.pickup,
@@ -422,7 +452,16 @@ export class InMemoryDispatch
       tipCentavos: o.tipCentavos,
       earningsCentavos: o.earningsCentavos ?? 0,
       pinRequired: o.pin !== null,
-      items: [{ name: "Kapeng Barako", quantity: 2 }],
+      items: o.pabili ? [] : [{ name: "Kapeng Barako", quantity: 2 }],
+      kind: o.kind,
+      pabili: o.pabili
+        ? {
+            budgetCentavos: o.pabili.budgetCentavos,
+            itemCostCentavos: o.pabili.itemCostCentavos,
+            boughtAt: o.pabili.boughtAt,
+            list: o.pabili.list.map((line) => ({ ...line })),
+          }
+        : null,
     });
   }
 
@@ -437,6 +476,7 @@ export class InMemoryDispatch
     const o = this.order(orderId);
     if (o.riderId !== riderId || o.status !== "ready") return Promise.resolve(false);
     o.status = "picked_up";
+    o.events.push(["picked_up", "rider"]);
     return Promise.resolve(true);
   }
 
@@ -449,6 +489,7 @@ export class InMemoryDispatch
     const o = this.order(input.orderId);
     if (o.riderId !== input.riderId || o.status !== "picked_up") return Promise.resolve(false);
     o.status = "delivered";
+    o.events.push(["delivered", "rider"]);
     o.proofPath = input.proofPath;
     o.deliveredAt = this.now();
     this.ledger.push(input.ledger);

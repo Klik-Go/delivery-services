@@ -35,6 +35,7 @@ import type {
   OrderTimeline,
 } from "./ports";
 import type { AppliedPromo, PromoService } from "./promo-service";
+import { customerMayCancel } from "./order-lifecycle-service";
 import { deliverySlots } from "./schedule";
 
 /** What checkout shows before the customer places the order (all numbers from the server). */
@@ -73,6 +74,8 @@ export interface PlacedOrder {
 export interface OrderView {
   readonly id: string;
   readonly code: string;
+  /** A store order, or Pabili (details from /api/pabili/orders/:id). */
+  readonly kind: OrderRecord["kind"];
   readonly status: OrderStatus;
   readonly paymentMethod: PaymentMethod;
   readonly paymentStatus: OrderRecord["paymentStatus"];
@@ -89,7 +92,7 @@ export interface OrderView {
   readonly cancelReason: string | null;
   /** When each step happened (ISO times, null until it does): the tracking stepper. */
   readonly timeline: Readonly<Record<keyof OrderTimeline, string | null>>;
-  /** True while the customer can still cancel (before the store accepts). */
+  /** True while the customer can still cancel (before the store accepts; Pabili: before a rider). */
   readonly canCancel: boolean;
   /** The PIN to tell the rider at the door: the customer only, until delivery. */
   readonly deliveryPin: string | null;
@@ -202,6 +205,7 @@ export class OrderService {
     return ok({
       id: order.id,
       code: order.code,
+      kind: order.kind,
       status: order.status,
       paymentMethod: order.paymentMethod,
       paymentStatus: order.paymentStatus,
@@ -228,9 +232,7 @@ export class OrderService {
         rejectedAt: iso(order.timeline.rejectedAt),
         cancelledAt: iso(order.timeline.cancelledAt),
       },
-      canCancel:
-        order.customerId === actor.id &&
-        (order.status === "awaiting_payment" || order.status === "placed"),
+      canCancel: order.customerId === actor.id && customerMayCancel(order),
       deliveryPin:
         order.customerId === actor.id && LIVE_FOR_PIN.includes(order.status)
           ? order.deliveryPin

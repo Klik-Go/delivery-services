@@ -94,7 +94,7 @@ export class PrismaAccountDataRepository implements IAccountDataRepository {
                  coalesce((select jsonb_agg(jsonb_build_object('name', i.name_snapshot, 'quantity', i.quantity,
                             'line_total_centavos', i.line_total_centavos) order by i.created_at)
                              from public.order_items i where i.order_id = o.id), '[]'::jsonb) as items
-            from public.orders o join public.merchants m on m.id = o.merchant_id
+            from public.orders o join private.order_pickups m on m.order_id = o.id
            where o.customer_id = ${userId}::uuid order by o.created_at`,
         this.prisma.ratings.findMany({
           where: { from_user_id: userId },
@@ -357,7 +357,7 @@ export class PrismaSystemStatusRepository implements ISystemStatusRepository {
     >`
       select o.id, o.code, o.zone_id, m.name as merchant_name, b.kind, b.at
         from public.orders o
-        join public.merchants m on m.id = o.merchant_id
+        join private.order_pickups m on m.order_id = o.id
         cross join lateral (values ('store_late', o.sla_flagged_at), ('no_rider', o.dispatch_flagged_at)) as b(kind, at)
        where b.at is not null and b.at >= ${since}
        order by b.at desc

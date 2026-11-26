@@ -1,4 +1,10 @@
-import type { OrderStatus, PaymentMethod, VehicleType } from "@klikgo/types";
+import type {
+  OrderKind,
+  OrderStatus,
+  PabiliItemStatus,
+  PaymentMethod,
+  VehicleType,
+} from "@klikgo/types";
 import type { GeoPoint } from "../merchant/ports";
 import type { LedgerTxn } from "../ordering/ports";
 import type { AppError } from "../shared/errors";
@@ -47,6 +53,9 @@ export interface IDispatchSettingsSource {
 export interface DispatchJob {
   readonly id: string;
   readonly code: string;
+  readonly kind: OrderKind;
+  /** Pabili: the most the rider may have to spend on items (their float must cover it); 0 otherwise. */
+  readonly budgetCentavos: Centavos;
   readonly zoneId: string;
   readonly merchantName: string;
   readonly status: OrderStatus;
@@ -69,6 +78,8 @@ export interface RiderCandidate {
   readonly distanceM: number;
   readonly cashHeldCentavos: Centavos;
   readonly cashLimitCentavos: Centavos;
+  /** The most cash this rider can spend up front on Pabili items (0 = no Pabili jobs). */
+  readonly pabiliFloatCentavos: Centavos;
 }
 
 export type OfferAnswer = "accepted" | "declined";
@@ -129,6 +140,7 @@ export interface RiderProfile {
   readonly vehicleType: VehicleType;
   readonly plateNo: string | null;
   readonly cashLimitCentavos: Centavos;
+  readonly pabiliFloatCentavos: Centavos;
 }
 
 /** An offer as the rider sees it: where, how far and the pay; the address comes after accepting. */
@@ -136,6 +148,9 @@ export interface RiderOffer {
   readonly offerId: string;
   readonly orderId: string;
   readonly code: string;
+  readonly kind: OrderKind;
+  /** Pabili: the most the rider spends on items first (repaid by the customer at the door). */
+  readonly budgetCentavos: Centavos;
   readonly storeName: string;
   readonly storeAddress: string | null;
   readonly pickup: GeoPoint;
@@ -174,13 +189,32 @@ export interface RiderJob {
   readonly earningsCentavos: Centavos;
   readonly pinRequired: boolean;
   readonly items: readonly { readonly name: string; readonly quantity: number }[];
+  readonly kind: OrderKind;
+  /** The shopping list and money for a Pabili job; null for a store order. */
+  readonly pabili: PabiliJob | null;
+}
+
+/** A Pabili job as the rider works it at the shop. */
+export interface PabiliJob {
+  readonly budgetCentavos: Centavos;
+  /** The receipt total once bought; the customer repays it on top of the order total. */
+  readonly itemCostCentavos: Centavos | null;
+  readonly boughtAt: Date | null;
+  readonly list: readonly {
+    readonly position: number;
+    readonly description: string;
+    readonly quantity: number;
+    readonly note: string | null;
+    readonly status: PabiliItemStatus;
+  }[];
 }
 
 /** Money facts for settling a delivered order. */
 export interface SettlementFacts {
   readonly orderId: string;
   readonly customerId: string;
-  readonly merchantId: string;
+  /** The store; null for a Pabili order (no store). */
+  readonly merchantId: string | null;
   readonly paidOnline: boolean;
   readonly subtotalCentavos: Centavos;
   readonly deliveryFeeCentavos: Centavos;
@@ -250,7 +284,8 @@ export interface IDeliveryProofStorage {
 export interface TrackingFacts {
   readonly orderId: string;
   readonly customerId: string;
-  readonly merchantId: string;
+  /** The store; null for a Pabili order (no store). */
+  readonly merchantId: string | null;
   readonly zoneId: string;
   readonly status: OrderStatus;
   readonly store: GeoPoint;

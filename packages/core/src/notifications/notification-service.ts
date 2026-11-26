@@ -44,7 +44,8 @@ export interface NotifiableOrder {
   readonly id: string;
   readonly code: string;
   readonly customerId: string;
-  readonly merchantId: string;
+  /** The store; null for a Pabili order (no store). */
+  readonly merchantId: string | null;
   readonly merchantName: string;
   readonly totalCentavos: Centavos;
 }
@@ -119,7 +120,9 @@ export class NotificationService implements IOrderNotifier {
         userIds =
           audience === "customer"
             ? [order.customerId]
-            : await this.deps.recipients.merchantTeam(order.merchantId);
+            : order.merchantId
+              ? await this.deps.recipients.merchantTeam(order.merchantId)
+              : []; // A Pabili order has no store team.
       } catch (error) {
         // One audience failing must not stop the other, nor fail the order change.
         this.deps.logger.error("notification.recipients_failed", {

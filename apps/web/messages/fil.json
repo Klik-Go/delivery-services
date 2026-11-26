@@ -1357,5 +1357,103 @@
       "day": "Araw",
       "external": "Ang NPS (survey), crash-free sessions (Sentry) at API uptime (uptime monitor) ay sinusubaybayan sa labas ng app; tingnan ang docs/LAUNCH.md."
     }
+  },
+  "Pabili": {
+    "home": {
+      "title": "Pabili",
+      "lead": "Wala rito? Bibilhin ito ng rider para sa iyo sa kahit anong tindahan."
+    },
+    "form": {
+      "title": "Pabili",
+      "back": "Bumalik",
+      "lead": "Sabihin kung saan bibili at ano ang kailangan mo. Bibilhin ito ng rider gamit ang cash, at babayaran mo ang total sa resibo at ang fees pagdating sa iyo.",
+      "off": "Hindi available ang Pabili ngayon. Umorder muna sa isang tindahan.",
+      "needAddress": "I-set muna ang address mo",
+      "where": "Saan bibili",
+      "storeName": "Pangalan ng tindahan",
+      "storeNameHint": "hal. sari-sari ni Aling Nena, Puregold, palengke",
+      "storeNotes": "Paano ito hanapin (opsyonal)",
+      "storeNotesHint": "hal. katabi ng kapilya",
+      "pinHint": "Igalaw ang mapa para nasa tindahan ang pin.",
+      "mapLabel": "Mapa: igalaw para nasa tindahan ang pin",
+      "list": "Ang listahan mo",
+      "count": "{count} sa {max} item",
+      "item": "Item {n}",
+      "itemHint": "hal. Itlog (medium)",
+      "quantity": "Ilan",
+      "note": "Paalala (opsyonal)",
+      "noteHint": "hal. kahit anong brand, malaking pack",
+      "remove": "Alisin ang item {n}",
+      "removeShort": "Alisin",
+      "add": "Magdagdag ng item",
+      "budgetTitle": "Limit ng gastos",
+      "budget": "Pinakamalaki na puwedeng gastusin ng rider sa items (₱)",
+      "budgetHint": "Hanggang {max}. Ang nasa resibo lang ang babayaran mo.",
+      "summary": "Babayaran mo",
+      "deliveryFee": "Delivery fee",
+      "serviceFee": "Pabili fee",
+      "items": "Items",
+      "upTo": "hanggang {amount}",
+      "maxToPay": "Pinakamalaking babayaran",
+      "fillIn": "Ilagay ang tindahan, isang item at ang limit para makita ang fees.",
+      "cashOnly": "Cash sa pinto: ang total sa resibo at ang fees.",
+      "pricing": "Kinukuwenta ang fees…",
+      "failed": "Hindi namin naipadala ang Pabili order mo. Subukan ulit.",
+      "place": "Ipadala sa rider · fees {amount}",
+      "placeIdle": "Ipadala sa rider",
+      "placing": "Ipinapadala…"
+    },
+    "order": {
+      "title": "Pabili mula sa {store}",
+      "loading": "Kinukuha ang listahan mo…",
+      "failed": "Hindi makuha ang listahan mo.",
+      "budget": "Limit ng gastos",
+      "fees": "Delivery at Pabili fees",
+      "itemCost": "Items (resibo)",
+      "toPay": "Babayaran sa pinto",
+      "payLater": "Makikita mo ang total kapag nabili na ng rider ang items mo.",
+      "receipt": "Tingnan ang litrato ng resibo",
+      "bought": "nabili",
+      "unavailable": "wala",
+      "status": {
+        "placed": "Naipadala sa Klik Go",
+        "accepted": "Naghahanap ng rider na bibili",
+        "preparing": "Namimili na ang rider mo",
+        "ready": "Nabili na. Paalis na ang rider mo"
+      },
+      "step": {
+        "placed": "Naipadala",
+        "accepted": "Tinanggap ng Klik Go",
+        "preparing": "Namimili",
+        "ready": "Nabili na"
+      }
+    },
+    "rider": {
+      "floatTitle": "Pabili float",
+      "floatLead": "Sa Pabili, ikaw muna ang magbabayad ng items gamit ang sarili mong cash; babayaran ka ng customer sa pinto. Ilagay ang pinakamalaking kaya mong gastusin.",
+      "floatNow": "Tumatanggap ka ng Pabili hanggang {amount}.",
+      "floatOff": "Hindi ka tumatanggap ng Pabili.",
+      "floatLabel": "Float mo (₱, 0 = walang Pabili)",
+      "floatSave": "I-save",
+      "floatSaved": "Na-save.",
+      "failed": "Hindi gumana. Subukan ulit.",
+      "offer": "Pabili: ikaw muna ang bibili ng items hanggang {amount}; babayaran ka ng customer.",
+      "budget": "Gumastos ng hanggang {amount} lang sa items.",
+      "startShopping": "I-slide: nasa tindahan na ako",
+      "listTitle": "Listahan",
+      "bought": "I-slide: nabili na, ipadala ang resibo",
+      "unavailable": "Wala",
+      "cost": "Total sa resibo (₱)",
+      "costHint": "Eksakto kung ano ang nasa resibo.",
+      "overBudget": "Lampas iyan sa limit ng customer na {amount}. Tawagan ang customer at bawasan.",
+      "receipt": "Litrato ng resibo",
+      "recorded": "Naitala ang resibo: {amount}.",
+      "step": {
+        "toShop": "Pumunta sa tindahan",
+        "shopping": "Namimili",
+        "bought": "Nabili na: kunin at umalis"
+      },
+      "boughtOutcome": "Nabili"
+    }
   }
 }
