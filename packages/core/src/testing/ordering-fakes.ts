@@ -204,8 +204,15 @@ export class InMemoryOrderStore
   }
 
   attachPayment(orderId: string, payment: NewPayment): Promise<void> {
-    if (this.payments.some((p) => p.orderId === orderId)) {
-      throw new Error("payments_one_per_order");
+    // Match the Prisma adapter: a racing second attach is a no-op.
+    if (
+      this.payments.some(
+        (p) =>
+          p.orderId === orderId ||
+          (p.gateway === payment.gateway && p.intentId === payment.intentId),
+      )
+    ) {
+      return Promise.resolve();
     }
     this.payments.push({
       ...payment,

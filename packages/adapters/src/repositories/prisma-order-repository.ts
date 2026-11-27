@@ -264,16 +264,27 @@ export class PrismaOrderRepository
   }
 
   async attachPayment(orderId: string, payment: NewPayment): Promise<void> {
-    await this.prisma.payments.create({
-      data: {
-        order_id: orderId,
-        gateway: payment.gateway,
-        intent_id: payment.intentId,
-        method: payment.method,
-        amount_centavos: payment.amountCentavos,
-        checkout_url: payment.checkoutUrl,
-      },
-    });
+    try {
+      await this.prisma.payments.create({
+        data: {
+          order_id: orderId,
+          gateway: payment.gateway,
+          intent_id: payment.intentId,
+          method: payment.method,
+          amount_centavos: payment.amountCentavos,
+          checkout_url: payment.checkoutUrl,
+        },
+      });
+    } catch (error) {
+      // Parallel Idempotency-Key taps: the first attach wins; the second must not 500.
+      if (
+        isUniqueViolation(error, "payments_gateway_intent_id_key") ||
+        isUniqueViolation(error, "payments_one_per_order")
+      ) {
+        return;
+      }
+      throw error;
+    }
   }
 
   async findByIntent(
