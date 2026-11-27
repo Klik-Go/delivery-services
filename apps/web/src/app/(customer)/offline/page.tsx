@@ -1,4 +1,4 @@
-import { BrandLogo, Button, EmptyState } from "@klikgo/ui";
+import { BrandLogo, EmptyState } from "@klikgo/ui";
 import { WifiOff } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import type { JSX } from "react";
@@ -16,11 +16,14 @@ export default async function OfflinePage(): Promise<JSX.Element> {
         action={
           <>
             <WifiOff aria-hidden className="text-ink-muted mx-auto mb-2 size-8" />
-            {/* A full reload (not client navigation) is the point: it retries the network. */}
-            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-            <Button asChild>
-              <a href="/">{t("retry")}</a>
-            </Button>
+            {/* Full document navigation retries the network; client Link would stay offline. */}
+            {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- intentional hard navigation */}
+            <a
+              href="/"
+              className="bg-action text-action-fg inline-flex h-11 min-w-11 items-center justify-center rounded-md px-4 text-sm font-medium"
+            >
+              {t("retry")}
+            </a>
           </>
         }
       />
