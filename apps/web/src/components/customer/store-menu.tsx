@@ -358,10 +358,10 @@ export function CartBar(): JSX.Element | null {
   const count = itemCount(lines);
   if (!mounted || count === 0) return null;
   return (
-    <div className="fixed inset-x-0 bottom-0 z-20 px-4 pb-4">
+    <div className="fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-20 px-4 pb-3">
       <Link
         href="/cart"
-        className="bg-brand-800 mx-auto flex min-h-14 max-w-screen-sm items-center justify-between rounded-full px-5 font-semibold text-white shadow-lg"
+        className="bg-action shadow-panel min-h-tap rounded-panel mx-auto flex max-w-screen-sm items-center justify-between px-5 font-semibold text-white"
       >
         <span className="inline-flex items-center gap-2">
           <ShoppingBag aria-hidden className="size-5" />

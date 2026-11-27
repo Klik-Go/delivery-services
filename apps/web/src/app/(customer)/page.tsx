@@ -53,7 +53,7 @@ export default async function HomePage(): Promise<JSX.Element> {
           <Sheet>
             <SheetSection first className="bg-action text-white">
               <h1 className="text-document">{t("welcomeTitle")}</h1>
-              <p className="text-body mt-2 text-white/90">{t("welcomeLead")}</p>
+              <p className="text-body mt-2 text-white">{t("welcomeLead")}</p>
               <Button asChild variant="secondary" className="mt-4 border-0">
                 <Link href="/address">
                   <MapPin aria-hidden className="size-5" />

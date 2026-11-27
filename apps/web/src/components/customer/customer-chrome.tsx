@@ -70,6 +70,7 @@ export function CustomerChrome({
 
   const hideChrome =
     pathname.startsWith("/checkout") ||
+    pathname.startsWith("/pabili") ||
     pathname.startsWith("/auth") ||
     pathname.startsWith("/join") ||
     pathname.startsWith("/consent");
