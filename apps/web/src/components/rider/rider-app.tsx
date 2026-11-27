@@ -106,7 +106,7 @@ export function RiderApp(): JSX.Element {
             {online ? t("online") : t("offline")}
           </p>
           {live === "live" && online ? (
-            <span className="bg-brand-50 text-brand-800 rounded-full px-2 py-1 text-xs font-semibold">
+            <span className="bg-action-wash text-action rounded-control text-label px-2 py-1 font-semibold">
               {t("live")}
             </span>
           ) : null}
@@ -177,7 +177,7 @@ function CashBanner({ amount }: { readonly amount: number }): JSX.Element | null
   if (amount <= 0) return null;
   return (
     <p
-      className="bg-accent-400 text-ink flex items-center gap-2 rounded-xl p-3 text-lg font-bold"
+      className="bg-accent text-ink rounded-panel text-title flex items-center gap-2 p-3 font-semibold"
       data-testid="cod-banner"
     >
       <Banknote className="size-6 shrink-0" aria-hidden />
@@ -217,7 +217,10 @@ function OfferCard({
           {t("seconds", { seconds: left })}
         </span>
       </div>
-      <p className="text-brand-800 text-3xl font-bold" data-testid="offer-pay">
+      <p
+        className="text-action text-document font-mono font-semibold tabular-nums"
+        data-testid="offer-pay"
+      >
         {t("earn", { amount: formatPeso(offer.earningsCentavos) })}
       </p>
       {offer.tipCentavos > 0 ? (
@@ -225,7 +228,7 @@ function OfferCard({
       ) : null}
       {offer.kind === "pabili" ? (
         <p
-          className="bg-brand-50 text-brand-800 rounded-xl p-3 font-semibold"
+          className="bg-action-wash text-action rounded-panel p-3 font-semibold"
           data-testid="offer-pabili"
         >
           {tPabili("offer", { amount: formatPeso(offer.budgetCentavos) })}
@@ -445,13 +448,16 @@ function EarningsCard({ earnings }: { readonly earnings: RiderEarnings }): JSX.E
       <dl className="grid grid-cols-2 gap-2">
         <div>
           <dt className="text-ink-muted text-sm">{t("today", { jobs: earnings.today.jobs })}</dt>
-          <dd className="text-ink text-xl font-bold" data-testid="earnings-today">
+          <dd
+            className="text-ink text-title font-mono font-semibold tabular-nums"
+            data-testid="earnings-today"
+          >
             {formatPeso(earnings.today.payCentavos + earnings.today.tipCentavos)}
           </dd>
         </div>
         <div>
           <dt className="text-ink-muted text-sm">{t("week", { jobs: earnings.week.jobs })}</dt>
-          <dd className="text-ink text-xl font-bold">
+          <dd className="text-ink text-title font-mono font-semibold tabular-nums">
             {formatPeso(earnings.week.payCentavos + earnings.week.tipCentavos)}
           </dd>
         </div>

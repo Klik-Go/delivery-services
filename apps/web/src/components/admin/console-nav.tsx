@@ -1,53 +1,52 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { DeskShell, type DeskNavGroup } from "@/components/ops/desk-shell";
 import { useTranslations } from "next-intl";
-import type { JSX } from "react";
+import type { JSX, ReactNode } from "react";
 
-const SECTIONS = [
-  { href: "/admin", key: "live", adminOnly: false },
-  { href: "/admin/riders", key: "riders", adminOnly: false },
-  { href: "/admin/tickets", key: "tickets", adminOnly: false },
-  { href: "/admin/finance", key: "finance", adminOnly: false },
-  { href: "/admin/zones", key: "zones", adminOnly: false },
-  { href: "/admin/stores", key: "stores", adminOnly: false },
-  { href: "/admin/merchants", key: "applications", adminOnly: false },
-  { href: "/admin/promos", key: "promos", adminOnly: true },
-  { href: "/admin/settings", key: "settings", adminOnly: true },
-  { href: "/admin/staff", key: "staff", adminOnly: true },
-  { href: "/admin/kpis", key: "kpis", adminOnly: true },
-  { href: "/admin/invites", key: "invites", adminOnly: true },
-  { href: "/admin/system", key: "system", adminOnly: true },
-] as const;
-
-/** The console's sections; promos, settings and staff are for admins only. */
-export function ConsoleNav({ isAdmin }: { readonly isAdmin: boolean }): JSX.Element {
+/** Desk chrome: ink masthead + grouped index rail (disclosure below lg). */
+export function ConsoleNav({
+  isAdmin,
+  title,
+  signOutLabel,
+  children,
+}: {
+  readonly isAdmin: boolean;
+  readonly title: string;
+  readonly signOutLabel: string;
+  readonly children: ReactNode;
+}): JSX.Element {
   const t = useTranslations("Ops.nav");
-  const pathname = usePathname();
+  const groups: DeskNavGroup[] = [
+    {
+      heading: t("label"),
+      entries: [
+        { href: "/admin", label: t("live") },
+        { href: "/admin/riders", label: t("riders") },
+        { href: "/admin/tickets", label: t("tickets") },
+        { href: "/admin/finance", label: t("finance") },
+        { href: "/admin/zones", label: t("zones") },
+        { href: "/admin/stores", label: t("stores") },
+        { href: "/admin/merchants", label: t("applications") },
+      ],
+    },
+  ];
+  if (isAdmin) {
+    groups.push({
+      heading: "Admin",
+      entries: [
+        { href: "/admin/promos", label: t("promos") },
+        { href: "/admin/settings", label: t("settings") },
+        { href: "/admin/staff", label: t("staff") },
+        { href: "/admin/kpis", label: t("kpis") },
+        { href: "/admin/invites", label: t("invites") },
+        { href: "/admin/system", label: t("system") },
+      ],
+    });
+  }
   return (
-    <nav aria-label={t("label")} className="-mx-4 overflow-x-auto px-4">
-      <ul className="flex gap-2">
-        {SECTIONS.filter((section) => isAdmin || !section.adminOnly).map((section) => {
-          const current =
-            section.href === "/admin"
-              ? pathname === "/admin" || pathname.startsWith("/admin/orders")
-              : pathname.startsWith(section.href);
-          return (
-            <li key={section.href}>
-              <Link
-                href={section.href}
-                aria-current={current ? "page" : undefined}
-                className={`min-h-tap inline-flex items-center rounded-full px-4 text-sm font-semibold whitespace-nowrap ${
-                  current ? "bg-brand-800 text-white" : "bg-surface-muted text-ink"
-                }`}
-              >
-                {t(section.key)}
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
-    </nav>
+    <DeskShell title={title} groups={groups} signOutLabel={signOutLabel}>
+      {children}
+    </DeskShell>
   );
 }

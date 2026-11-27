@@ -207,8 +207,10 @@ Then("they land on the merchant dashboard", async function (this: KlikWorld) {
   const page = await this.page();
   await agreeIfAsked(page);
   await page.waitForURL((url) => url.pathname === "/merchant");
-  // The store name is the page heading; "Merchant dashboard" labels it.
-  await expect(page.getByText("Merchant dashboard", { exact: true })).toBeVisible();
+  // The store name is the page heading; "Merchant dashboard" is the eyebrow in #main.
+  await expect(
+    page.locator("#main").getByText("Merchant dashboard", { exact: true }),
+  ).toBeVisible();
 });
 
 Given("a customer signed in with a phone code", async function (this: KlikWorld) {

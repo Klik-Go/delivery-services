@@ -100,7 +100,7 @@ export function OrderBoard({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <span
-            className={`rounded-full px-2 py-1 text-xs font-semibold ${live === "live" ? "bg-brand-50 text-brand-800" : "bg-surface-muted text-ink-muted"}`}
+            className={`rounded-control text-label px-2 py-1 font-semibold ${live === "live" ? "bg-action-wash text-action" : "bg-sheet-alt text-ink-muted"}`}
             data-testid="live-state"
           >
             {live === "live" ? t("live") : t("polling")}
@@ -272,7 +272,7 @@ function OrderCard({
         ))}
       </ul>
       {order.notes ? (
-        <p className="bg-surface-muted text-ink rounded-lg p-2 text-sm">{order.notes}</p>
+        <p className="bg-sheet-alt text-ink rounded-lg p-2 text-sm">{order.notes}</p>
       ) : null}
       <p className="text-ink text-sm">
         {formatPeso(order.totalCentavos)} · {tMethod(order.paymentMethod)}
