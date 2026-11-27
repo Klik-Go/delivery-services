@@ -36,21 +36,21 @@
     "@klikgo/core": "workspace:*",
     "@klikgo/db": "workspace:*",
     "@klikgo/types": "workspace:*",
-    "@playwright/test": "1.65.0",
+    "@playwright/test": "1.65.1",
     "@supabase/supabase-js": "2.119.0",
     "@types/node": "26.6.6",
     "@types/pg": "8.23.1",
-    "@vitest/coverage-v8": "5.1.0",
-    "eslint": "10.14.0",
+    "@vitest/coverage-v8": "5.1.1",
+    "eslint": "10.15.0",
     "lighthouse": "13.6.0",
     "otpauth": "9.6.0",
     "pg": "8.23.1",
-    "prettier": "3.9.10",
+    "prettier": "3.10.1",
     "prettier-plugin-tailwindcss": "0.8.1",
-    "supabase": "3.0.0",
+    "supabase": "3.2.0",
     "tsx": "4.23.15",
-    "turbo": "2.11.10",
+    "turbo": "2.11.13",
     "typescript": "6.0.3",
-    "vitest": "5.1.0"
+    "vitest": "5.1.1"
   }
 }
