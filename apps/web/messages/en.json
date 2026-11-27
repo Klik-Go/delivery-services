@@ -593,6 +593,14 @@
       "missing": "This checkout session doesn't exist.",
       "done": "This order is already {status}.",
       "failed": "The test payment didn't go through."
+    },
+    "tabs": {
+      "home": "Home",
+      "search": "Search",
+      "orders": "Orders",
+      "account": "Account",
+      "cart": "Cart, {count} items",
+      "skip": "Skip to content"
     }
   },
   "Push": {

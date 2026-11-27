@@ -44,7 +44,7 @@ export default async function StorePage({ params }: Params): Promise<JSX.Element
       <FunnelStep name="store_viewed" storeId={store.merchantId} />
       <Link
         href="/"
-        className="text-brand-800 min-h-tap inline-flex items-center gap-1 self-start font-semibold"
+        className="text-action min-h-tap inline-flex items-center gap-1 self-start font-semibold"
       >
         <ChevronLeft aria-hidden className="size-5" />
         Klik Go

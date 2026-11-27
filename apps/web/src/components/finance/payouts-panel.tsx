@@ -123,7 +123,7 @@ function Statement(props: {
         </button>
         <a
           href={`${props.base}/${props.payoutId}/export`}
-          className="text-brand-800 min-h-tap inline-flex items-center font-semibold underline"
+          className="text-action min-h-tap inline-flex items-center font-semibold"
         >
           {t("csv")}
         </a>

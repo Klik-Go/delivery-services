@@ -166,7 +166,7 @@ export function RewardsView(): JSX.Element {
               {voucher.used ? null : (
                 <Link
                   href={`/checkout?promo=${voucher.code}`}
-                  className="text-brand-800 min-h-tap inline-flex items-center font-semibold underline"
+                  className="text-action min-h-tap inline-flex items-center font-semibold"
                 >
                   {t("use")}
                 </Link>

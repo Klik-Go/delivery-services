@@ -18,10 +18,7 @@ export async function LegalDocument({
   const sections = t.raw(`${document}.sections`) as Section[];
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-screen-md flex-col gap-4 px-4 py-6">
-      <Link
-        href="/"
-        className="text-brand-800 min-h-tap inline-flex items-center font-semibold underline"
-      >
+      <Link href="/" className="text-action min-h-tap inline-flex items-center font-semibold">
         {t("back")}
       </Link>
       <h1 className="font-display text-ink text-3xl">{t(`${document}.title`)}</h1>

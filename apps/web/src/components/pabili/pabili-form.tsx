@@ -116,7 +116,7 @@ export function PabiliForm({
 
   if (!dropoff) {
     return (
-      <Link href="/address" className="text-brand-800 font-semibold underline">
+      <Link href="/address" className="text-action font-semibold">
         {t("needAddress")}
       </Link>
     );
@@ -288,7 +288,7 @@ export function PabiliForm({
           </h2>
           <Link
             href="/address"
-            className="text-brand-800 min-h-tap inline-flex items-center font-semibold underline"
+            className="text-action min-h-tap inline-flex items-center font-semibold"
           >
             {tCheckout("changePin")}
           </Link>
@@ -360,7 +360,7 @@ export function PabiliForm({
         {data?.inviteRequired ? (
           <p className="text-ink text-sm">
             {tPilot("inviteRequired")}{" "}
-            <Link href="/join?next=/pabili" className="text-brand-800 font-semibold underline">
+            <Link href="/join?next=/pabili" className="text-action font-semibold">
               {tPilot("enterCode")}
             </Link>
           </p>

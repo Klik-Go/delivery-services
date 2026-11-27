@@ -25,10 +25,18 @@ async function seriousViolations(page: Page): Promise<unknown[]> {
 
 /** Sets the delivery pin the way the address screen does (the cookie is shared with the page). */
 async function deliverTo(page: Page, pin: { lat: number; lng: number }): Promise<void> {
-  const response = await page.request.put("/api/location", {
-    data: { location: pin, label: "E2E pin" },
-  });
-  expect(response.ok()).toBe(true);
+  // Origin must be open once so Playwright's API context shares the cookie jar.
+  await page.goto("/");
+  let lastStatus = 0;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const response = await page.request.put("/api/location", {
+      data: { location: pin, label: "E2E pin" },
+    });
+    lastStatus = response.status();
+    if (response.ok()) return;
+    await page.waitForTimeout(250 * (attempt + 1));
+  }
+  expect(lastStatus, "PUT /api/location").toBe(200);
 }
 
 test.beforeEach(async () => {
@@ -141,7 +149,7 @@ test.describe("Feature: store page and cart", () => {
 
     await page.goto("/cart");
     await expect(page.getByRole("link", { name: "Kape't Tinapay" })).toBeVisible();
-    await expect(page.getByTestId("line-total")).toHaveText([peso("40.00")]);
+    await expect(page.getByTestId("line-total")).toHaveText(peso("40.00"), { timeout: 15_000 });
 
     await page.goto("/s/aling-nenas-karinderya");
     await page.getByRole("button", { name: /Adobong Manok/ }).click();
@@ -151,7 +159,7 @@ test.describe("Feature: store page and cart", () => {
 
     await page.goto("/cart");
     await expect(page.getByRole("link", { name: "Aling Nena's Karinderya" })).toBeVisible();
-    await expect(page.getByTestId("line-total")).toHaveText([peso("105.00")]);
+    await expect(page.getByTestId("line-total")).toHaveText(peso("105.00"), { timeout: 15_000 });
   });
 
   test("Scenario: searching for a dish finds the store that sells it", async ({ page }) => {

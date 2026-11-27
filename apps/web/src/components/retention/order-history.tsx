@@ -43,7 +43,7 @@ export function OrderHistory(): JSX.Element {
     return (
       <div className="flex flex-col items-start gap-3">
         <p className="text-ink-muted">{t("empty")}</p>
-        <Link href="/" className="text-brand-800 font-semibold underline">
+        <Link href="/" className="text-action font-semibold">
           {t("browse")}
         </Link>
       </div>
@@ -77,7 +77,7 @@ export function OrderHistory(): JSX.Element {
               <div className="flex flex-wrap items-center gap-3">
                 <Link
                   href={`/orders/${order.id}`}
-                  className="text-brand-800 min-h-tap inline-flex items-center font-semibold underline"
+                  className="text-action min-h-tap inline-flex items-center font-semibold"
                 >
                   {toRate ? t("rate") : t("details")}
                 </Link>

@@ -17,11 +17,10 @@ test.describe("Klik Go brand", () => {
 
   test("shows the wordmark in Lilita One, the logo typeface", async ({ page }) => {
     await page.goto("/");
+    // Compact masthead: Lilita wordmark (h1 lockup) on turmeric over ink.
     const wordmark = page.getByRole("heading", { level: 1, name: "Klik Go" });
-    // next/font names the self-hosted family after the export (`lilitaOne`).
     await expect(wordmark).toHaveCSS("font-family", /lilita/i);
-    // Home is now the feed on white, so the wordmark uses brand-800 (yellow only on brand-800).
-    await expect(wordmark).toHaveCSS("color", "rgb(25, 113, 194)"); // #1971c2
+    await expect(wordmark).toHaveCSS("color", "rgb(255, 212, 59)"); // #ffd43b
     await page.evaluate(() => document.fonts.ready);
     const loaded = await page.evaluate(() =>
       [...document.fonts].some((font) => /lilita/i.test(font.family) && font.status === "loaded"),

@@ -22,7 +22,7 @@ export default async function MenuPage({
       <div className="flex flex-wrap gap-4">
         <Link
           href={`/merchant${storeId ? `?store=${storeId}` : ""}`}
-          className="text-brand-800 font-semibold underline"
+          className="text-action font-semibold"
         >
           ← {tMerchant("back")}
         </Link>

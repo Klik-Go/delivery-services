@@ -36,7 +36,7 @@ export function ConsentForm({ next }: { readonly next: string }): JSX.Element {
   const link =
     (href: string) =>
     (chunks: ReactNode): JSX.Element => (
-      <Link href={href} target="_blank" className="text-brand-800 font-semibold underline">
+      <Link href={href} target="_blank" className="text-action font-semibold">
         {chunks}
       </Link>
     );

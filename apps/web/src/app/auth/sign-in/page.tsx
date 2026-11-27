@@ -1,3 +1,4 @@
+import { Button } from "@klikgo/ui";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import type { JSX } from "react";
@@ -16,18 +17,15 @@ export default async function SignInPage({
   return (
     <>
       <header className="flex flex-col gap-1">
-        <h1 className="text-ink text-2xl font-bold">{t("signInTitle")}</h1>
-        <p className="text-ink-muted">
+        <h1 className="text-document text-ink">{t("signInTitle")}</h1>
+        <p className="text-body text-ink-muted">
           {getContainer().placeholderOtp ? t("signInLeadPlaceholder") : t("signInLead")}
         </p>
       </header>
       <PhoneSignInForm next={next ? safeNextPath(next) : null} />
-      <Link
-        href="/auth/staff"
-        className="text-brand-800 min-h-tap inline-flex items-center text-sm font-semibold underline"
-      >
-        {t("staffLink")}
-      </Link>
+      <Button asChild variant="ghost" className="self-start px-0">
+        <Link href="/auth/staff">{t("staffLink")}</Link>
+      </Button>
     </>
   );
 }

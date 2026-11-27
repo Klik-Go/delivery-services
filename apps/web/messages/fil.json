@@ -593,6 +593,14 @@
       "missing": "Walang ganitong checkout session.",
       "done": "Ang order na ito ay {status} na.",
       "failed": "Hindi natuloy ang test na bayad."
+    },
+    "tabs": {
+      "home": "Home",
+      "search": "Hanap",
+      "orders": "Orders",
+      "account": "Account",
+      "cart": "Cart, {count} item",
+      "skip": "Laktawan papunta sa nilalaman"
     }
   },
   "Push": {
