@@ -25,8 +25,8 @@ Phases are defined in `docs/BUILD_PLAN.md` §6. Agents update this file in every
 | 11 | Hardening: security, privacy, observability | ✅ Done (merged) | [Klik-Go/delivery-services#32](https://github.com/Klik-Go/delivery-services/pull/32) | Owner: lawyer review of the legal pages, DPO, Sentry/PostHog keys, uptime monitor, staging restore (Q36, docs/SECURITY.md) |
 | 12 | Pilot launch readiness | ✅ Done (merged) | [Klik-Go/delivery-services#33](https://github.com/Klik-Go/delivery-services/pull/33) | Owner: production checklist, dry runs, go/no-go (docs/LAUNCH.md, Q37) |
 | 13 | Pabili mode (buy for me) | ✅ Done (merged) | [Klik-Go/delivery-services#34](https://github.com/Klik-Go/delivery-services/pull/34) | Off by default; owner: confirm the rules (Q38) |
-| R0 | Visual redesign — design system | 🟡 In progress (PR open) | — | Tokens, Inter + JetBrains Mono, CVA primitives, `/dev/ui`; surfaces follow in R1–R5 |
-| R1 | Visual redesign — customer + public | ⬜ Not started | — | Home through checkout, auth, partners, join, become-a-rider |
+| R0 | Visual redesign — design system | 🟡 In progress (PR open) | [#35](https://github.com/Klik-Go/delivery-services/pull/35) | Tokens, Inter + JetBrains Mono, CVA primitives, `/dev/ui`; surfaces follow in R1–R5 |
+| R1 | Visual redesign — customer + public | 🟡 In progress (PR open) | — | Masthead + bottom nav, photo cards, auth/public sheets |
 | R2 | Visual redesign — rider | ⬜ Not started | — | Offers, swipe, job, earnings |
 | R3 | Visual redesign — merchant | ⬜ Not started | — | Board, menu, payouts; kitchen phone + desk rail |
 | R4 | Visual redesign — coordinator/admin | ⬜ Not started | — | Masthead + index rail, denser tables |

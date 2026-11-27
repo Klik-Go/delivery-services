@@ -208,10 +208,10 @@ export function OrderStatusView({
       ) : null}
       {cancelError ? <FormError message={cancelError} /> : null}
       <div className="flex flex-wrap gap-4">
-        <Link href="/" className="text-brand-800 font-semibold underline">
+        <Link href="/" className="text-action font-semibold">
           {t("home")}
         </Link>
-        <Link href="/orders" className="text-brand-800 font-semibold underline">
+        <Link href="/orders" className="text-action font-semibold">
           {t("allOrders")}
         </Link>
       </div>

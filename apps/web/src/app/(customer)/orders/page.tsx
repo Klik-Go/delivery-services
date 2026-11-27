@@ -1,3 +1,4 @@
+import { Button } from "@klikgo/ui";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -18,15 +19,12 @@ export default async function OrdersPage(): Promise<JSX.Element> {
   if (!user) redirect("/auth/sign-in?next=/orders");
   const t = await getTranslations("Retention.history");
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-screen-sm flex-col gap-4 px-4 py-4">
+    <main className="mx-auto flex w-full max-w-screen-sm flex-col gap-4 px-4 py-4">
       <div className="flex items-center justify-between gap-2">
-        <h1 className="text-ink text-2xl font-bold">{t("title")}</h1>
-        <Link
-          href="/rewards"
-          className="text-brand-800 min-h-tap inline-flex items-center font-semibold underline"
-        >
-          {t("rewards")}
-        </Link>
+        <h1 className="text-document text-ink">{t("title")}</h1>
+        <Button asChild variant="ghost">
+          <Link href="/rewards">{t("rewards")}</Link>
+        </Button>
       </div>
       <OrderHistory />
     </main>

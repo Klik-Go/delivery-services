@@ -2,7 +2,7 @@
 
 import { formatPeso, type SearchGroup } from "@klikgo/core";
 import { MERCHANT_CATEGORIES } from "@klikgo/types";
-import { Button } from "@klikgo/ui";
+import { Button, EmptyState, TextInput } from "@klikgo/ui";
 import { useQuery } from "@tanstack/react-query";
 import { Search as SearchIcon, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
@@ -92,28 +92,33 @@ export function SearchView({
 
   if (!hasLocation)
     return (
-      <Link href="/address" className="text-brand-800 font-semibold underline">
-        {t("needAddress")}
-      </Link>
+      <EmptyState
+        title={t("needAddress")}
+        action={
+          <Button asChild>
+            <Link href="/address">{t("needAddress")}</Link>
+          </Button>
+        }
+      />
     );
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-end gap-2">
-        <label className="text-ink flex flex-1 flex-col gap-1 text-sm font-semibold">
+        <label className="text-ink text-record flex flex-1 flex-col gap-1 font-medium">
           <span className="sr-only">{t("label")}</span>
           <span className="relative">
             <SearchIcon
               aria-hidden
-              className="text-ink-muted absolute top-1/2 left-3 size-5 -translate-y-1/2"
+              className="text-ink-muted absolute top-1/2 left-3 z-10 size-5 -translate-y-1/2"
             />
-            <input
+            <TextInput
               type="search"
               autoFocus
               value={text}
               placeholder={t("label")}
               onChange={(event) => setText(event.target.value)}
-              className="border-ink-muted/40 focus:border-brand-800 text-ink min-h-tap w-full rounded-full border-2 pr-3 pl-10"
+              className="pr-3 pl-10"
             />
           </span>
         </label>
@@ -149,7 +154,7 @@ export function SearchView({
                 <button
                   type="button"
                   onClick={() => setText(r)}
-                  className="bg-surface-muted text-ink min-h-tap rounded-full px-4 text-sm"
+                  className="bg-sheet-alt text-ink border-rule min-h-tap rounded-control text-body inline-flex border px-3"
                 >
                   {r}
                 </button>
@@ -166,7 +171,7 @@ export function SearchView({
         </p>
       ) : null}
       {results.data && results.data.length === 0 ? (
-        <p className="text-ink-muted">{t("noResults", { q })}</p>
+        <EmptyState title={t("noResults", { q })} />
       ) : null}
       <ul className="flex flex-col gap-4">
         {results.data?.map((group) => (

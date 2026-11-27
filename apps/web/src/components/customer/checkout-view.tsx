@@ -101,7 +101,7 @@ export function CheckoutView({
     return (
       <div className="flex flex-col items-start gap-3">
         <p className="text-ink-muted">{tCart("empty")}</p>
-        <Link href="/" className="text-brand-800 font-semibold underline">
+        <Link href="/" className="text-action font-semibold">
           {tCart("browse")}
         </Link>
       </div>
@@ -109,7 +109,7 @@ export function CheckoutView({
   }
   if (!dropoff) {
     return (
-      <Link href="/address" className="text-brand-800 font-semibold underline">
+      <Link href="/address" className="text-action font-semibold">
         {tCart("needAddress")}
       </Link>
     );
@@ -167,7 +167,7 @@ export function CheckoutView({
   };
 
   const chip = (active: boolean): string =>
-    `min-h-tap rounded-full px-4 text-sm font-semibold ${active ? "bg-brand-800 text-white" : "bg-surface-muted text-ink"}`;
+    `min-h-tap rounded-control px-3 text-body font-semibold ${active ? "bg-action text-white" : "bg-sheet-alt text-ink border border-rule"}`;
 
   return (
     <form
@@ -182,7 +182,7 @@ export function CheckoutView({
           </h2>
           <Link
             href="/address"
-            className="text-brand-800 min-h-tap inline-flex items-center font-semibold underline"
+            className="text-action min-h-tap inline-flex items-center font-semibold"
           >
             {t("changePin")}
           </Link>
@@ -266,7 +266,7 @@ export function CheckoutView({
             className="bg-accent-100 text-ink mb-2 flex flex-col gap-2 rounded-lg p-3 text-sm font-semibold"
           >
             {tPilot("inviteRequired")}
-            <Link href="/join?next=%2Fcheckout" className="text-brand-800 underline">
+            <Link href="/join?next=%2Fcheckout" className="text-action">
               {tPilot("enterCode")}
             </Link>
           </div>

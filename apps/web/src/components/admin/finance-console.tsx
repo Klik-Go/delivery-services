@@ -145,7 +145,7 @@ function PayoutsTab({ week }: { readonly week: string }): JSX.Element {
         {due.length > 0 ? (
           <a
             href={weekUrl("payouts/export", week)}
-            className="text-brand-800 min-h-tap inline-flex items-center font-semibold underline"
+            className="text-action min-h-tap inline-flex items-center font-semibold"
           >
             {t("export")}
           </a>
@@ -368,13 +368,13 @@ function ReportsTab({ week }: { readonly week: string }): JSX.Element {
       <div className="flex flex-wrap gap-4">
         <a
           href={weekUrl("report/export", week)}
-          className="text-brand-800 min-h-tap inline-flex items-center font-semibold underline"
+          className="text-action min-h-tap inline-flex items-center font-semibold"
         >
           {t("exportReport")}
         </a>
         <a
           href={weekUrl("ledger/export", week)}
-          className="text-brand-800 min-h-tap inline-flex items-center font-semibold underline"
+          className="text-action min-h-tap inline-flex items-center font-semibold"
         >
           {t("exportLedger")}
         </a>

@@ -23,7 +23,7 @@ export default async function RewardsPage(): Promise<JSX.Element> {
         <h1 className="text-ink text-2xl font-bold">{t("title")}</h1>
         <Link
           href="/orders"
-          className="text-brand-800 min-h-tap inline-flex items-center font-semibold underline"
+          className="text-action min-h-tap inline-flex items-center font-semibold"
         >
           {t("orders")}
         </Link>

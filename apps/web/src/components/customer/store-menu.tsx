@@ -85,7 +85,7 @@ export function StoreMenu({
     <>
       <nav
         aria-label={t("menu")}
-        className="border-brand-100 sticky top-0 z-10 -mx-4 border-b bg-white/95 px-4 backdrop-blur"
+        className="border-rule bg-sheet sticky top-0 z-10 -mx-4 border-b px-4"
       >
         <div ref={tabs} className="flex gap-2 overflow-x-auto py-2">
           {categories.map((category) => (
@@ -94,7 +94,7 @@ export function StoreMenu({
               data-tab={category.id}
               href={`#c-${category.id}`}
               aria-current={active === category.id ? "true" : undefined}
-              className={`min-h-tap inline-flex shrink-0 items-center rounded-full px-4 text-sm font-semibold ${active === category.id ? "bg-brand-800 text-white" : "bg-surface-muted text-ink"}`}
+              className={`text-body min-h-tap rounded-control inline-flex shrink-0 items-center px-3 font-semibold ${active === category.id ? "bg-action text-white" : "bg-sheet-alt text-ink border-rule border"}`}
             >
               {category.name}
             </a>
@@ -114,7 +114,7 @@ export function StoreMenu({
             }}
             className="flex scroll-mt-16 flex-col gap-2"
           >
-            <h2 id={`h-${category.id}`} className="text-ink text-xl font-bold">
+            <h2 id={`h-${category.id}`} className="text-title text-ink">
               {category.name}
             </h2>
             <ul className="flex flex-col gap-2">
@@ -124,20 +124,20 @@ export function StoreMenu({
                     type="button"
                     disabled={!item.isAvailable}
                     onClick={() => setPicked(item)}
-                    className="rounded-card border-brand-100 flex w-full items-center gap-3 border-2 p-3 text-left disabled:opacity-60"
+                    className="rounded-panel border-rule bg-sheet shadow-panel min-h-tap flex w-full items-center gap-3 border p-3 text-left disabled:opacity-60"
                   >
                     <span className="flex min-w-0 flex-1 flex-col">
-                      <span className="text-ink font-semibold">{item.name}</span>
+                      <span className="text-body text-ink font-semibold">{item.name}</span>
                       {item.description ? (
-                        <span className="text-ink-muted line-clamp-2 text-sm">
+                        <span className="text-record text-ink-muted line-clamp-2">
                           {item.description}
                         </span>
                       ) : null}
-                      <span className="text-ink mt-1 font-semibold">
+                      <span className="text-body text-ink mt-1 font-mono font-semibold tabular-nums">
                         {formatPeso(item.priceCentavos)}
                       </span>
                       {!item.isAvailable ? (
-                        <span className="bg-accent-400 text-ink mt-1 self-start rounded-full px-2 text-xs font-bold">
+                        <span className="bg-accent text-ink rounded-control text-label mt-1 self-start px-2 font-semibold">
                           {t("soldOut")}
                         </span>
                       ) : null}
@@ -148,7 +148,7 @@ export function StoreMenu({
                         alt=""
                         width={72}
                         height={72}
-                        className="size-18 shrink-0 rounded-lg object-cover"
+                        className="rounded-control size-18 shrink-0 object-cover"
                       />
                     ) : null}
                   </button>

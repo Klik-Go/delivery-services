@@ -88,7 +88,7 @@ function TicketCard({ ticket }: { readonly ticket: Wire<SupportTicket> }): JSX.E
       <p className="text-ink font-semibold">{ticket.summary}</p>
       <p className="text-ink-muted text-sm">
         {when} ·{" "}
-        <Link href={`/admin/orders/${ticket.orderId}`} className="text-brand-800 underline">
+        <Link href={`/admin/orders/${ticket.orderId}`} className="text-action">
           {ticket.orderCode}
         </Link>
       </p>

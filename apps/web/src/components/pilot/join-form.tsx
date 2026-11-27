@@ -60,7 +60,7 @@ export function JoinForm({
       </form>
       <p className="text-ink-muted text-sm">
         {t("noCode")}{" "}
-        <Link href="/address" className="text-brand-800 font-semibold underline">
+        <Link href="/address" className="text-action font-semibold">
           {t("waitlist")}
         </Link>
       </p>

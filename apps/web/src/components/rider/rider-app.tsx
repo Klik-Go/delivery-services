@@ -115,7 +115,7 @@ export function RiderApp(): JSX.Element {
           <div className="flex flex-col gap-2">
             <p className="text-ink">{t("pendingApproval")}</p>
             {rider.status === "pending_kyc" ? (
-              <Link href="/become-a-rider" className="text-brand-800 font-semibold underline">
+              <Link href="/become-a-rider" className="text-action font-semibold">
                 {t("applyLink")}
               </Link>
             ) : null}
@@ -162,7 +162,7 @@ export function RiderApp(): JSX.Element {
       ) : null}
       <Link
         href="/rider/payouts"
-        className="text-brand-800 min-h-tap inline-flex items-center font-semibold underline"
+        className="text-action min-h-tap inline-flex items-center font-semibold"
       >
         {t("payouts")}
       </Link>

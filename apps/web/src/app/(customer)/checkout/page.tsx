@@ -49,7 +49,7 @@ export default async function CheckoutPage({
         <Link
           href="/cart"
           aria-label={t("back")}
-          className="text-brand-800 min-h-tap min-w-tap grid place-items-center"
+          className="text-action min-h-tap min-w-tap grid place-items-center"
         >
           <ChevronLeft aria-hidden className="size-6" />
         </Link>

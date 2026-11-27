@@ -81,12 +81,12 @@ export function AccountPanel(): JSX.Element {
       <p className="text-ink-muted text-sm">
         {t.rich("documents", {
           privacy: (chunks) => (
-            <Link href="/legal/privacy" className="text-brand-800 underline">
+            <Link href="/legal/privacy" className="text-action">
               {chunks}
             </Link>
           ),
           terms: (chunks) => (
-            <Link href="/legal/terms" className="text-brand-800 underline">
+            <Link href="/legal/terms" className="text-action">
               {chunks}
             </Link>
           ),

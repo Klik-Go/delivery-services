@@ -1,4 +1,5 @@
 import { safeNext } from "@klikgo/core";
+import { Sheet, SheetSection } from "@klikgo/ui";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -29,10 +30,14 @@ export default async function JoinPage({
   }
   const t = await getTranslations("Pilot.join");
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-screen-sm flex-col gap-4 px-4 py-6">
-      <h1 className="font-display text-ink text-3xl">{t("title")}</h1>
-      <p className="text-ink">{t("lead")}</p>
-      <JoinForm initialCode={code} next={next} />
+    <main className="bg-canvas mx-auto flex min-h-dvh w-full max-w-screen-sm flex-col gap-4 px-4 py-6">
+      <Sheet>
+        <SheetSection first className="flex flex-col gap-3">
+          <h1 className="text-document text-ink">{t("title")}</h1>
+          <p className="text-lede text-ink-muted">{t("lead")}</p>
+          <JoinForm initialCode={code} next={next} />
+        </SheetSection>
+      </Sheet>
     </main>
   );
 }

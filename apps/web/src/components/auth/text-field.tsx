@@ -1,3 +1,4 @@
+import { TextInput } from "@klikgo/ui";
 import type { InputHTMLAttributes, JSX } from "react";
 
 /** Props for {@link TextField}. */
@@ -6,24 +7,24 @@ export interface TextFieldProps extends InputHTMLAttributes<HTMLInputElement> {
   readonly error?: string | undefined;
 }
 
-/** Labelled input with a 44px tap target and an inline error. */
-export function TextField({ label, error, id, ...props }: TextFieldProps): JSX.Element {
+/** Labelled input with a 44px tap target, rule-strong border, and an inline error. */
+export function TextField({ label, error, id, className, ...props }: TextFieldProps): JSX.Element {
   const inputId = id ?? props.name;
   const errorId = error ? `${inputId}-error` : undefined;
   return (
-    <div className="flex min-w-0 flex-col gap-1">
-      <label htmlFor={inputId} className="text-ink text-sm font-semibold">
+    <div className="flex min-w-0 flex-col gap-1.5">
+      <label htmlFor={inputId} className="text-record text-ink font-medium">
         {label}
       </label>
-      <input
+      <TextInput
         id={inputId}
-        aria-invalid={error ? true : undefined}
+        invalid={Boolean(error)}
         aria-describedby={errorId}
-        className="border-ink-muted/40 focus:border-brand-800 focus:outline-brand-600 text-ink min-h-tap w-full min-w-0 rounded-xl border-2 px-3 text-base"
+        className={className}
         {...props}
       />
       {error ? (
-        <span id={errorId} className="text-danger-900 text-sm">
+        <span id={errorId} className="text-label text-seal">
           {error}
         </span>
       ) : null}

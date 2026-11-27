@@ -1,10 +1,9 @@
 import { formatPeso, type FeaturedPromo } from "@klikgo/core";
-import { BrandLogo } from "@klikgo/ui";
+import { Button, EmptyState, Sheet, SheetSection } from "@klikgo/ui";
 import { MapPin, Search, ShoppingBag, Ticket } from "lucide-react";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import type { JSX } from "react";
-import { SignOutButton } from "@/components/auth/sign-out-button";
 import { StoreCard } from "@/components/customer/store-card";
 import { getSessionUser } from "@/server/auth/session";
 import { getContainer } from "@/server/container";
@@ -12,10 +11,11 @@ import { LegalFooter } from "@/components/hardening/legal-footer";
 import { FunnelStep } from "@/components/hardening/telemetry";
 import { readDeliveryLocation } from "@/server/customer/location";
 
-/** Customer home: "Deliver to", search, categories, featured promos and store rails. */
+/** Customer home: address chip, search, categories, featured promos and store rails. */
 export default async function HomePage(): Promise<JSX.Element> {
-  const [t, tHome, tPabili, user, location, pabili] = await Promise.all([
+  const [t, tCart, tHome, tPabili, user, location, pabili] = await Promise.all([
     getTranslations("Customer"),
+    getTranslations("Customer.cart"),
     getTranslations("Home"),
     getTranslations("Pabili.home"),
     getSessionUser(),
@@ -27,182 +27,150 @@ export default async function HomePage(): Promise<JSX.Element> {
     : null;
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-screen-md flex-col gap-5 px-4 pt-4 pb-10">
+    <div className="mx-auto flex w-full max-w-screen-lg flex-col gap-5 px-4 pt-4 pb-6 lg:grid lg:grid-cols-[1fr_20rem] lg:items-start lg:gap-6">
       <FunnelStep name="home_viewed" />
-      <header className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <BrandLogo size={40} />
-          <h1 className="font-display text-brand-800 text-3xl leading-none tracking-wide">
-            {tHome("brand")}
-          </h1>
-        </div>
-        <nav aria-label="Account" className="flex items-center gap-2">
-          {user ? (
+      <div className="flex flex-col gap-5">
+        <p className="text-body text-ink-muted">{tHome("tagline")}</p>
+        <Link
+          href="/address"
+          className="border-rule bg-sheet text-body hover:bg-sheet-alt min-h-tap rounded-control shadow-panel flex items-center gap-2 self-start border px-3"
+        >
+          <MapPin aria-hidden className="text-action size-4" />
+          {location ? (
             <>
-              <Link
-                href="/orders"
-                className="text-brand-800 min-h-tap inline-flex items-center px-2 font-semibold underline"
-              >
-                {tHome("orders")}
-              </Link>
-              <Link
-                href="/rewards"
-                className="text-brand-800 min-h-tap inline-flex items-center px-2 font-semibold underline"
-              >
-                {tHome("rewards")}
-              </Link>
-              <SignOutButton label={tHome("signOut")} />
+              <span className="text-ink-muted">{t("deliverTo")}</span>
+              <span className="text-ink max-w-48 truncate font-semibold">
+                {location.label ?? t("currentLocation")}
+              </span>
+              <span className="text-action font-semibold">{t("changeAddress")}</span>
             </>
           ) : (
-            <Link
-              href="/auth/sign-in"
-              className="text-brand-800 min-h-tap inline-flex items-center px-2 font-semibold underline"
-            >
-              {tHome("signIn")}
-            </Link>
+            <span className="text-action font-semibold">{t("setAddress")}</span>
           )}
-        </nav>
-      </header>
-      <p className="text-ink-muted -mt-3 text-sm">{tHome("tagline")}</p>
-      {user ? (
-        <p className="text-ink-muted -mt-3 truncate text-sm">
-          {tHome("signedInAs", { who: user.phone ?? user.email ?? "" })}
-        </p>
-      ) : null}
+        </Link>
 
-      <Link
-        href="/address"
-        className="bg-surface-muted min-h-tap flex items-center gap-2 self-start rounded-full px-4 text-sm"
-      >
-        <MapPin aria-hidden className="text-brand-800 size-4" />
-        {location ? (
-          <>
-            <span className="text-ink-muted">{t("deliverTo")}</span>
-            <span className="text-ink max-w-48 truncate font-semibold">
-              {location.label ?? t("currentLocation")}
-            </span>
-            <span className="text-brand-800 font-semibold">{t("changeAddress")}</span>
-          </>
-        ) : (
-          <span className="text-brand-800 font-semibold">{t("setAddress")}</span>
-        )}
-      </Link>
-
-      {!location ? (
-        <section className="bg-brand-800 rounded-card flex flex-col items-start gap-3 p-6 text-white">
-          <h2 className="text-2xl font-bold">{t("welcomeTitle")}</h2>
-          <p>{t("welcomeLead")}</p>
-          <Link
-            href="/address"
-            className="bg-accent-400 text-ink min-h-tap inline-flex items-center gap-2 rounded-full px-5 font-semibold"
-          >
-            <MapPin aria-hidden className="size-5" />
-            {t("setAddress")}
-          </Link>
-        </section>
-      ) : !feed?.zone ? (
-        <section className="bg-surface-muted rounded-card flex flex-col items-start gap-3 p-6">
-          <p className="text-ink text-lg font-bold">{t("notInArea")}</p>
-          <Link
-            href="/address?waitlist=1"
-            className="bg-brand-800 min-h-tap inline-flex items-center rounded-full px-5 font-semibold text-white"
-          >
-            {t("joinWaitlist")}
-          </Link>
-        </section>
-      ) : (
-        <>
-          <Link
-            href="/search"
-            className="border-ink-muted/40 text-ink-muted min-h-tap flex items-center gap-2 rounded-full border-2 px-4"
-          >
-            <Search aria-hidden className="size-5" />
-            {t("searchPlaceholder")}
-          </Link>
-          {pabili.enabled ? (
-            <Link
-              href="/pabili"
-              className="bg-accent-400 text-ink rounded-card flex items-center gap-3 p-4"
-              data-testid="pabili-entry"
-            >
-              <ShoppingBag aria-hidden className="size-8 shrink-0" />
-              <span className="flex flex-col">
-                <span className="text-lg font-bold">{tPabili("title")}</span>
-                <span className="text-sm">{tPabili("lead")}</span>
-              </span>
-            </Link>
-          ) : null}
-          {feed.categories.length > 1 ? (
-            <nav
-              aria-label={t("search.category")}
-              className="-mx-4 flex gap-2 overflow-x-auto px-4"
-            >
-              {feed.categories.map((category) => (
-                <Link
-                  key={category}
-                  href={`/search?category=${category}`}
-                  className="bg-surface-muted text-ink min-h-tap inline-flex shrink-0 items-center rounded-full px-4 text-sm font-semibold"
-                >
-                  {t(`categories.${category}`)}
+        {!location ? (
+          <Sheet>
+            <SheetSection first className="bg-action text-white">
+              <h1 className="text-document">{t("welcomeTitle")}</h1>
+              <p className="text-body mt-2 text-white/90">{t("welcomeLead")}</p>
+              <Button asChild variant="secondary" className="mt-4 border-0">
+                <Link href="/address">
+                  <MapPin aria-hidden className="size-5" />
+                  {t("setAddress")}
                 </Link>
-              ))}
-            </nav>
-          ) : null}
-          {feed.promos.length > 0 ? (
-            <section aria-labelledby="promos-heading" className="flex flex-col gap-2">
-              <h2 id="promos-heading" className="text-ink text-xl font-bold">
-                {t("promos")}
-              </h2>
-              {/* Promo cards hold no links, so the scroller itself takes focus for arrow keys. */}
-              <ul
-                tabIndex={0}
-                aria-labelledby="promos-heading"
-                className="focus-visible:outline-brand-600 -mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-1"
-              >
-                {feed.promos.map((promo) => (
-                  <li
-                    key={promo.code}
-                    className="bg-accent-400 text-ink rounded-card flex w-64 shrink-0 snap-start flex-col gap-1 p-4"
-                  >
-                    <span className="flex items-center gap-2 text-lg font-bold">
-                      <Ticket aria-hidden className="size-5" />
-                      {promoTitle(promo, t)}
-                    </span>
-                    {promo.minSubtotalCentavos > 0 ? (
-                      <span className="text-sm">
-                        {t("promoMin", { amount: formatPeso(promo.minSubtotalCentavos) })}
-                      </span>
-                    ) : null}
-                    <span className="text-sm font-semibold">
-                      {t("useCode", { code: promo.code })}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ) : null}
-          {feed.rails.length === 0 ? <p className="text-ink-muted">{t("noStores")}</p> : null}
-          {feed.rails.map((rail) => (
-            <section
-              key={rail.key}
-              aria-labelledby={`rail-${rail.key}`}
-              className="flex flex-col gap-2"
+              </Button>
+            </SheetSection>
+          </Sheet>
+        ) : !feed?.zone ? (
+          <EmptyState
+            title={t("notInArea")}
+            action={
+              <Button asChild>
+                <Link href="/address?waitlist=1">{t("joinWaitlist")}</Link>
+              </Button>
+            }
+          />
+        ) : (
+          <>
+            <Link
+              href="/search"
+              className="border-rule-strong bg-sheet text-ink-muted min-h-tap rounded-control flex items-center gap-2 border px-3 shadow-sm"
             >
-              <h2 id={`rail-${rail.key}`} className="text-ink text-xl font-bold">
-                {t(`rails.${rail.key}`)}
-              </h2>
-              <ul className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-1">
-                {rail.stores.map((store) => (
-                  <li key={store.merchantId} className="snap-start">
-                    <StoreCard store={store} compact />
-                  </li>
+              <Search aria-hidden className="size-5" />
+              {t("searchPlaceholder")}
+            </Link>
+            {pabili.enabled ? (
+              <Link
+                href="/pabili"
+                className="bg-accent text-ink rounded-panel min-h-tap shadow-panel flex items-center gap-3 px-4 py-3"
+                data-testid="pabili-entry"
+              >
+                <ShoppingBag aria-hidden className="size-7 shrink-0" />
+                <span className="flex flex-col">
+                  <span className="text-title">{tPabili("title")}</span>
+                  <span className="text-record">{tPabili("lead")}</span>
+                </span>
+              </Link>
+            ) : null}
+            {feed.categories.length > 1 ? (
+              <nav
+                aria-label={t("search.category")}
+                className="-mx-4 flex gap-2 overflow-x-auto px-4"
+              >
+                {feed.categories.map((category) => (
+                  <Link
+                    key={category}
+                    href={`/search?category=${category}`}
+                    className="bg-sheet text-ink border-rule min-h-tap rounded-control text-body shadow-panel inline-flex shrink-0 items-center border px-3 font-medium"
+                  >
+                    {t(`categories.${category}`)}
+                  </Link>
                 ))}
-              </ul>
-            </section>
-          ))}
-        </>
-      )}
-      <LegalFooter signedIn={user !== null} />
+              </nav>
+            ) : null}
+            {feed.promos.length > 0 ? (
+              <section aria-labelledby="promos-heading" className="flex flex-col gap-2">
+                <h2 id="promos-heading" className="text-title text-ink">
+                  {t("promos")}
+                </h2>
+                <ul
+                  tabIndex={0}
+                  aria-labelledby="promos-heading"
+                  className="focus-visible:outline-action -mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-1"
+                >
+                  {feed.promos.map((promo) => (
+                    <li
+                      key={promo.code}
+                      className="bg-accent text-ink rounded-panel shadow-panel flex w-64 shrink-0 snap-start flex-col gap-1 p-4"
+                    >
+                      <span className="text-title flex items-center gap-2">
+                        <Ticket aria-hidden className="size-5" />
+                        {promoTitle(promo, t)}
+                      </span>
+                      {promo.minSubtotalCentavos > 0 ? (
+                        <span className="text-record">
+                          {t("promoMin", { amount: formatPeso(promo.minSubtotalCentavos) })}
+                        </span>
+                      ) : null}
+                      <span className="text-record font-semibold">
+                        {t("useCode", { code: promo.code })}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ) : null}
+            {feed.rails.length === 0 ? <EmptyState title={t("noStores")} /> : null}
+            {feed.rails.map((rail) => (
+              <section
+                key={rail.key}
+                aria-labelledby={`rail-${rail.key}`}
+                className="flex flex-col gap-2"
+              >
+                <h2 id={`rail-${rail.key}`} className="text-title text-ink">
+                  {t(`rails.${rail.key}`)}
+                </h2>
+                <ul className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-1 lg:grid lg:grid-cols-2 lg:overflow-visible lg:px-0">
+                  {rail.stores.map((store) => (
+                    <li key={store.merchantId} className="snap-start lg:snap-none">
+                      <StoreCard store={store} compact />
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ))}
+          </>
+        )}
+        <LegalFooter signedIn={user !== null} />
+      </div>
+      <aside className="border-rule bg-sheet rounded-panel shadow-panel sticky top-4 hidden border p-4 lg:block">
+        <p className="text-title text-ink">{tCart("title")}</p>
+        <p className="text-record text-ink-muted mt-1">{tCart("empty")}</p>
+        <Button asChild variant="secondary" className="mt-4 w-full">
+          <Link href="/cart">{tCart("browse")}</Link>
+        </Button>
+      </aside>
     </div>
   );
 }

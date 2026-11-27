@@ -254,10 +254,7 @@ export function AddressSetup({
       ) : (
         <p className="text-ink-muted text-sm">
           {t("guestNote")}{" "}
-          <a
-            href="/auth/sign-in?next=%2Faddress"
-            className="text-brand-800 font-semibold underline"
-          >
+          <a href="/auth/sign-in?next=%2Faddress" className="text-action font-semibold">
             {t("signIn")}
           </a>
         </p>

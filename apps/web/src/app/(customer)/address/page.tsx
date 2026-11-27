@@ -30,7 +30,7 @@ export default async function AddressPage({
     <main className="mx-auto flex min-h-dvh w-full max-w-screen-sm flex-col gap-4 px-4 py-4">
       <Link
         href="/"
-        className="text-brand-800 min-h-tap inline-flex items-center gap-1 self-start font-semibold"
+        className="text-action min-h-tap inline-flex items-center gap-1 self-start font-semibold"
       >
         <ChevronLeft aria-hidden className="size-5" />
         Klik Go

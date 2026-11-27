@@ -30,10 +30,7 @@ export default function PageError({
       <p className="text-ink">{t("lead")}</p>
       <div className="flex flex-wrap gap-3">
         <Button onClick={reset}>{t("retry")}</Button>
-        <Link
-          href="/"
-          className="text-brand-800 min-h-tap inline-flex items-center font-semibold underline"
-        >
+        <Link href="/" className="text-action min-h-tap inline-flex items-center font-semibold">
           {t("home")}
         </Link>
       </div>
