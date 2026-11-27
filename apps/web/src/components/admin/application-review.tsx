@@ -63,7 +63,7 @@ export function ApplicationReview({
   return (
     <article
       aria-labelledby={heading}
-      className="bg-surface-muted rounded-card flex flex-col gap-3 p-4"
+      className="bg-sheet-alt rounded-card flex flex-col gap-3 p-4"
     >
       <header className="flex flex-col gap-1">
         <h2 id={heading} className="text-ink text-xl font-bold">

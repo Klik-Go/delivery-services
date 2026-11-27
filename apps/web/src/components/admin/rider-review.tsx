@@ -35,7 +35,7 @@ export function RiderReviewQueue(): JSX.Element {
             type="button"
             aria-selected={tab === key}
             onClick={() => setTab(key)}
-            className={`min-h-tap rounded-full px-4 text-sm font-semibold ${tab === key ? "bg-brand-800 text-white" : "bg-surface-muted text-ink"}`}
+            className={`min-h-tap rounded-control px-4 text-sm font-semibold ${tab === key ? "bg-action text-white" : "bg-sheet-alt text-ink"}`}
           >
             {t(`tabs.${key}`)}
           </button>
@@ -108,7 +108,7 @@ function RiderCard({ rider }: { readonly rider: Wire<RiderReview> }): JSX.Elemen
           {rider.checklist.map((item) => (
             <li
               key={item.type}
-              className="bg-surface-muted flex flex-col gap-2 rounded-lg p-2 sm:flex-row sm:items-center"
+              className="bg-sheet-alt flex flex-col gap-2 rounded-lg p-2 sm:flex-row sm:items-center"
               data-doc={item.type}
             >
               <div className="flex flex-1 items-center justify-between gap-2">

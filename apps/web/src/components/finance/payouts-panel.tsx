@@ -49,7 +49,7 @@ export function PayoutsPanel({
       </section>
 
       <section
-        className="bg-surface-muted flex flex-col gap-1 rounded-xl p-4"
+        className="bg-sheet-alt flex flex-col gap-1 rounded-xl p-4"
         data-testid="open-balance"
       >
         <p className="text-ink">{t("open", { amount: formatPeso(p.openCentavos) })}</p>
@@ -115,7 +115,7 @@ function Statement(props: {
       <div className="flex flex-wrap gap-4">
         <button
           type="button"
-          className="text-brand-800 min-h-tap font-semibold underline"
+          className="text-action min-h-tap font-semibold underline"
           aria-expanded={open}
           onClick={() => setOpen(!open)}
         >

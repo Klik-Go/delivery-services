@@ -46,7 +46,7 @@ export function RiderApplication({
         </p>
         <Link
           href="/rider"
-          className="bg-brand-800 min-h-tap inline-flex items-center self-start rounded-full px-5 font-semibold text-white"
+          className="bg-action min-h-tap rounded-control inline-flex items-center self-start px-5 font-semibold text-white"
         >
           {t("openApp")}
         </Link>
@@ -106,7 +106,7 @@ function ApplyForm({
       <label className="text-ink flex flex-col gap-1 font-semibold">
         {t("zone")}
         <select
-          className={`${field} bg-surface`}
+          className={`${field} bg-sheet`}
           value={zoneId}
           onChange={(e) => setZoneId(e.target.value)}
         >
@@ -120,7 +120,7 @@ function ApplyForm({
       <label className="text-ink flex flex-col gap-1 font-semibold">
         {t("vehicle")}
         <select
-          className={`${field} bg-surface`}
+          className={`${field} bg-sheet`}
           value={vehicleType}
           onChange={(e) => setVehicleType(e.target.value as VehicleType)}
         >
@@ -207,7 +207,7 @@ function DocumentRow({
   };
 
   return (
-    <li className="bg-surface-muted flex flex-col gap-2 rounded-lg p-3" data-doc={item.type}>
+    <li className="bg-sheet-alt flex flex-col gap-2 rounded-lg p-3" data-doc={item.type}>
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-ink flex-1 font-semibold">{t(`doc.${item.type}`)}</span>
         <span className="text-ink-muted text-sm" data-state={item.state}>
@@ -220,7 +220,7 @@ function DocumentRow({
         </p>
       ) : null}
       {canUpload ? (
-        <label className="text-brand-800 text-sm font-semibold">
+        <label className="text-action text-sm font-semibold">
           {item.state === "rejected" ? t("replace") : t("upload")}
           <input
             type="file"

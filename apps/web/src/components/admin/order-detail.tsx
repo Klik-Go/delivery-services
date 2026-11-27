@@ -42,14 +42,14 @@ export function OrderDetail({ orderId }: { readonly orderId: string }): JSX.Elem
 
   return (
     <div className="flex flex-col gap-5" data-testid="ops-order">
-      <Link href="/admin" className="text-brand-800 self-start font-semibold underline">
+      <Link href="/admin" className="text-action self-start font-semibold underline">
         {t("back")}
       </Link>
       <div className="flex flex-wrap items-center gap-3">
         <h2 className="text-ink text-2xl font-bold">{t("title", { code: o.code })}</h2>
         {o.sla ? <SlaBadge state={o.sla.state} /> : null}
       </div>
-      <dl className="bg-surface-muted grid grid-cols-2 gap-2 rounded-xl p-4 text-sm">
+      <dl className="bg-sheet-alt grid grid-cols-2 gap-2 rounded-xl p-4 text-sm">
         <dt className="text-ink-muted">{t("status")}</dt>
         <dd className="text-ink font-semibold" data-testid="ops-order-status">
           {tStatus(o.status)}
@@ -191,7 +191,7 @@ function AssignRider({
         <select
           value={riderId}
           onChange={(event) => setRiderId(event.target.value)}
-          className="border-border bg-surface min-h-tap rounded-lg border px-3 font-normal"
+          className="border-border bg-sheet min-h-tap rounded-lg border px-3 font-normal"
         >
           <option value="">—</option>
           {choices.map((r) => (
@@ -314,7 +314,7 @@ function Notes({
       {notes.length === 0 ? <p className="text-ink-muted text-sm">{t("noNotes")}</p> : null}
       <ul className="flex flex-col gap-2" data-testid="ops-notes">
         {notes.map((note) => (
-          <li key={note.id} className="bg-surface-muted rounded-lg p-3 text-sm">
+          <li key={note.id} className="bg-sheet-alt rounded-lg p-3 text-sm">
             <p className="text-ink">{note.body}</p>
             <p className="text-ink-muted">
               {note.authorName ?? note.authorRole} · {manilaTime(note.at, locale)}

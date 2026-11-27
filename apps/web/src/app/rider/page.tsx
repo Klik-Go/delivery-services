@@ -9,7 +9,12 @@ export default async function RiderPage(): Promise<JSX.Element> {
   const user = await requireSurface("rider", "/rider");
   const t = await getTranslations("Surfaces");
   return (
-    <SurfaceShell title={t("riderTitle")} lead={t("riderLead")} who={user.phone ?? user.id}>
+    <SurfaceShell
+      title={t("riderTitle")}
+      lead={t("riderLead")}
+      who={user.phone ?? user.id}
+      riderNav
+    >
       <RiderApp />
     </SurfaceShell>
   );

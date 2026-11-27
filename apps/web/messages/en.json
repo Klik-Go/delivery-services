@@ -671,7 +671,12 @@
       "cash": "Cash on hand: {held} of your {limit} limit"
     },
     "applyLink": "See your application",
-    "payouts": "Your payouts"
+    "payouts": "Your payouts",
+    "tabs": {
+      "home": "Home",
+      "earnings": "Earnings",
+      "skip": "Skip to content"
+    }
   },
   "Ops": {
     "nav": {

@@ -95,7 +95,7 @@ function FlagForm({ flag }: { readonly flag: Wire<FeatureFlagView> }): JSX.Eleme
       ) : null}
       {error ? <FormError message={error} /> : null}
       {saved ? (
-        <p role="status" className="text-brand-800 font-semibold">
+        <p role="status" className="text-action font-semibold">
           {tOps("saved")}
         </p>
       ) : null}

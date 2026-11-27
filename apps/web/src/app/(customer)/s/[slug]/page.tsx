@@ -1,4 +1,5 @@
 import { formatPeso } from "@klikgo/core";
+import { PhotoFallback } from "@klikgo/ui";
 import { Banknote, ChevronLeft, Clock, MapPin, Star } from "lucide-react";
 import type { Metadata } from "next";
 import Image from "next/image";
@@ -49,7 +50,7 @@ export default async function StorePage({ params }: Params): Promise<JSX.Element
         <ChevronLeft aria-hidden className="size-5" />
         Klik Go
       </Link>
-      <div className="rounded-card bg-brand-800 relative aspect-[16/7] w-full overflow-hidden">
+      <div className="rounded-panel bg-canvas relative aspect-[16/7] w-full overflow-hidden">
         {card?.coverUrl ? (
           <Image
             src={card.coverUrl}
@@ -60,16 +61,11 @@ export default async function StorePage({ params }: Params): Promise<JSX.Element
             className="object-cover"
           />
         ) : (
-          <span
-            aria-hidden
-            className="font-display text-accent-400 absolute inset-0 grid place-items-center text-6xl"
-          >
-            {store.name.slice(0, 1)}
-          </span>
+          <PhotoFallback name={store.name} className="absolute inset-0 text-5xl" />
         )}
       </div>
       <header className="flex flex-col gap-2">
-        <h1 className="text-ink text-3xl font-bold">{store.name}</h1>
+        <h1 className="text-document text-ink">{store.name}</h1>
         {store.description ? <p className="text-ink-muted">{store.description}</p> : null}
         <ul className="text-ink flex flex-wrap gap-x-4 gap-y-1 text-sm" aria-label="Store info">
           {card ? (

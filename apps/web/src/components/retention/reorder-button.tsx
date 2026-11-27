@@ -72,7 +72,7 @@ export function ReorderButton({
       {error ? <FormError message={error} /> : null}
       {missing && missing.length > 0 ? (
         <div
-          className="bg-surface-muted flex flex-col gap-2 rounded-xl p-3"
+          className="bg-sheet-alt flex flex-col gap-2 rounded-xl p-3"
           role="status"
           data-testid="reorder-missing"
         >

@@ -32,7 +32,7 @@ export function PabiliOrderPanel({
   return (
     <section
       aria-labelledby="pabili-panel-title"
-      className="bg-surface-muted flex flex-col gap-3 rounded-xl p-4"
+      className="bg-sheet-alt flex flex-col gap-3 rounded-xl p-4"
       data-testid="pabili-panel"
     >
       <h2 id="pabili-panel-title" className="text-ink text-lg font-bold">
@@ -43,7 +43,7 @@ export function PabiliOrderPanel({
         {p.lines.map((line) => (
           <li key={line.position} className="text-ink flex items-start gap-2">
             {line.status === "bought" ? (
-              <Check aria-hidden className="text-brand-800 mt-0.5 size-5 shrink-0" />
+              <Check aria-hidden className="text-action mt-0.5 size-5 shrink-0" />
             ) : line.status === "unavailable" ? (
               <X aria-hidden className="text-danger-900 mt-0.5 size-5 shrink-0" />
             ) : (
@@ -92,7 +92,7 @@ export function PabiliOrderPanel({
           href={p.receiptUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-brand-800 min-h-tap inline-flex items-center gap-2 font-semibold underline"
+          className="text-action min-h-tap inline-flex items-center gap-2 font-semibold underline"
           data-testid="pabili-receipt"
         >
           <Receipt aria-hidden className="size-5" /> {t("receipt")}

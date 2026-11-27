@@ -51,7 +51,7 @@ export function StaffAdmin(): JSX.Element {
         {staff.data.map((grant) => (
           <li
             key={grant.id}
-            className="bg-surface-muted flex flex-wrap items-center gap-2 rounded-lg p-3"
+            className="bg-sheet-alt flex flex-wrap items-center gap-2 rounded-lg p-3"
             data-grant={grant.email ?? grant.id}
           >
             <div className="flex-1">

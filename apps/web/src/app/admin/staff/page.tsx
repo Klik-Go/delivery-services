@@ -22,7 +22,7 @@ export default async function AdminStaffPage(): Promise<JSX.Element> {
           <>
             <section
               aria-labelledby="invite-heading"
-              className="bg-surface-muted rounded-card flex flex-col gap-3 p-4"
+              className="bg-sheet-alt rounded-card flex flex-col gap-3 p-4"
             >
               <h2 id="invite-heading" className="text-ink text-xl font-bold">
                 {tAdmin("inviteTitle")}

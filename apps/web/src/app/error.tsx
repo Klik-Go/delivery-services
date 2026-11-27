@@ -26,7 +26,7 @@ export default function PageError({
   }, [error]);
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-screen-sm flex-col justify-center gap-4 px-4 py-6">
-      <h1 className="font-display text-ink text-3xl">{t("title")}</h1>
+      <h1 className="text-document text-ink">{t("title")}</h1>
       <p className="text-ink">{t("lead")}</p>
       <div className="flex flex-wrap gap-3">
         <Button onClick={reset}>{t("retry")}</Button>

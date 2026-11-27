@@ -299,7 +299,7 @@ export function WaitlistForm({
   return (
     <section
       aria-labelledby="waitlist-heading"
-      className="bg-surface-muted rounded-card flex flex-col gap-3 p-4"
+      className="bg-sheet-alt rounded-card flex flex-col gap-3 p-4"
     >
       <p role="status" className="bg-accent-100 text-ink rounded-xl p-3 font-semibold">
         {message}

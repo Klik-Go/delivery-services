@@ -142,6 +142,7 @@ export function CustomerChrome({
           <Link
             href={item.href}
             className={className}
+            title={item.label}
             aria-current={item.current ? "page" : undefined}
           >
             <span aria-hidden>{item.icon}</span>

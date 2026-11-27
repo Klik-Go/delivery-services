@@ -74,7 +74,7 @@ export function PinMap({
       <div ref={container} role="application" aria-label={label} className="h-full w-full" />
       <MapPin
         aria-hidden
-        className="text-brand-800 pointer-events-none absolute top-1/2 left-1/2 z-[1000] size-10 -translate-x-1/2 -translate-y-full drop-shadow"
+        className="text-action pointer-events-none absolute top-1/2 left-1/2 z-[1000] size-10 -translate-x-1/2 -translate-y-full drop-shadow"
         fill="currentColor"
         stroke="white"
       />

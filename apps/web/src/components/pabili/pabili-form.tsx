@@ -205,7 +205,7 @@ export function PabiliForm({
           {lines.fields.map((field, index) => (
             <li
               key={field.id}
-              className="bg-surface-muted flex flex-col gap-2 rounded-xl p-3"
+              className="bg-sheet-alt flex flex-col gap-2 rounded-xl p-3"
               data-testid="pabili-item"
             >
               <div className="grid grid-cols-[1fr_5rem] gap-2">
@@ -325,7 +325,7 @@ export function PabiliForm({
 
       <section
         aria-labelledby="pabili-summary"
-        className="bg-surface-muted flex flex-col gap-2 rounded-xl p-4"
+        className="bg-sheet-alt flex flex-col gap-2 rounded-xl p-4"
         data-testid="pabili-summary"
       >
         <h2 id="pabili-summary" className="text-ink text-lg font-bold">
@@ -368,7 +368,7 @@ export function PabiliForm({
       </section>
 
       {error ? <FormError message={error} /> : null}
-      <div className="bg-surface fixed inset-x-0 bottom-0 border-t p-4">
+      <div className="bg-sheet fixed inset-x-0 bottom-0 border-t p-4">
         <div className="mx-auto max-w-screen-sm">
           <Button
             type="submit"

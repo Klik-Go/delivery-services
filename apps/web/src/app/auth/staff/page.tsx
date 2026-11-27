@@ -23,7 +23,7 @@ export default async function StaffSignInPage({
       <StaffSignInForm next={next ? safeNextPath(next) : null} />
       <Link
         href="/auth/sign-in"
-        className="text-brand-800 min-h-tap inline-flex items-center text-sm font-semibold underline"
+        className="text-action min-h-tap inline-flex items-center text-sm font-semibold underline"
       >
         {t("customerLink")}
       </Link>

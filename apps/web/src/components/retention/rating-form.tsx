@@ -50,7 +50,7 @@ export function RatingForm({
             aria-checked={draft.score === score}
             aria-label={t("starLabel", { count: score })}
             onClick={() => onChange({ ...draft, score })}
-            className="min-h-tap min-w-tap grid place-items-center rounded-full"
+            className="min-h-tap min-w-tap rounded-control grid place-items-center"
           >
             <Star
               aria-hidden
@@ -68,7 +68,7 @@ export function RatingForm({
               type="button"
               aria-pressed={on}
               onClick={() => toggle(tag)}
-              className={`min-h-tap rounded-full px-3 text-sm font-semibold ${on ? "bg-brand-800 text-white" : "bg-surface-muted text-ink"}`}
+              className={`min-h-tap rounded-control px-3 text-sm font-semibold ${on ? "bg-action text-white" : "bg-sheet-alt text-ink"}`}
             >
               {t(`tag.${tag}`)}
             </button>

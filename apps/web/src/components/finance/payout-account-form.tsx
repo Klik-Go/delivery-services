@@ -74,7 +74,7 @@ export function PayoutAccountForm({
         {(["gcash", "maya", "bank"] as const).map((m) => (
           <label
             key={m}
-            className="bg-surface-muted text-ink min-h-tap flex items-center gap-2 rounded-full px-4"
+            className="bg-sheet-alt text-ink min-h-tap rounded-control flex items-center gap-2 px-4"
           >
             <input
               type="radio"
