@@ -82,7 +82,9 @@
     "adminLead": "Patakbuhin ang mga live na order, rider, zone at tindahan.",
     "forbiddenTitle": "Hindi mo mabubuksan ang page na ito",
     "forbiddenLead": "Walang access dito ang iyong account. Kung sa tingin mo ay dapat mayroon, magtanong sa iyong Klik Go admin.",
-    "goHome": "Pumunta sa Home"
+    "goHome": "Pumunta sa Home",
+    "notFoundTitle": "Walang ganyang pahina",
+    "notFoundLead": "Walang laman ang link na iyon. Bumalik sa Home at subukan ulit."
   },
   "Admin": {
     "inviteTitle": "Mag-imbita ng staff",

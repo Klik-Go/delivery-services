@@ -24,7 +24,13 @@ Phases are defined in `docs/BUILD_PLAN.md` §6. Agents update this file in every
 | 10 | Finance: settlements, payouts, reports | ✅ Done (merged) | [Klik-Go/delivery-services#29](https://github.com/Klik-Go/delivery-services/pull/29) | Owner: CPA/lawyer on withholding and payment rules before real payouts (Q35) |
 | 11 | Hardening: security, privacy, observability | ✅ Done (merged) | [Klik-Go/delivery-services#32](https://github.com/Klik-Go/delivery-services/pull/32) | Owner: lawyer review of the legal pages, DPO, Sentry/PostHog keys, uptime monitor, staging restore (Q36, docs/SECURITY.md) |
 | 12 | Pilot launch readiness | ✅ Done (merged) | [Klik-Go/delivery-services#33](https://github.com/Klik-Go/delivery-services/pull/33) | Owner: production checklist, dry runs, go/no-go (docs/LAUNCH.md, Q37) |
-| 13 | Pabili mode (buy for me) | 🟡 In progress (PR open) | [Klik-Go/delivery-services#34](https://github.com/Klik-Go/delivery-services/pull/34) | Off by default; owner: confirm the rules (Q38) |
+| 13 | Pabili mode (buy for me) | ✅ Done (merged) | [Klik-Go/delivery-services#34](https://github.com/Klik-Go/delivery-services/pull/34) | Off by default; owner: confirm the rules (Q38) |
+| R0 | Visual redesign — design system | 🟡 In progress (PR open) | — | Tokens, Inter + JetBrains Mono, CVA primitives, `/dev/ui`; surfaces follow in R1–R5 |
+| R1 | Visual redesign — customer + public | ⬜ Not started | — | Home through checkout, auth, partners, join, become-a-rider |
+| R2 | Visual redesign — rider | ⬜ Not started | — | Offers, swipe, job, earnings |
+| R3 | Visual redesign — merchant | ⬜ Not started | — | Board, menu, payouts; kitchen phone + desk rail |
+| R4 | Visual redesign — coordinator/admin | ⬜ Not started | — | Masthead + index rail, denser tables |
+| R5 | Visual redesign — polish | ⬜ Not started | — | Filipino overflow, visual regression, Lighthouse |
 
 Status values: ⬜ Not started · 🟡 In progress (PR open) · ✅ Done (merged) · ⛔ Blocked (say why)
 
@@ -333,6 +339,24 @@ Deliverables (docs/BUILD_PLAN.md §4 and §6 "Later phases"; rules in OPEN_QUEST
 - [ ] Owner: confirm the rules (Q38) and switch `pabili` on in Settings when wanted.
 
 Next: wait for review; later phases (14+) per BUILD_PLAN §6.
+
+### R0 — Visual redesign: design system (branch `cursor/visual-redesign-tokens-f981`)
+Owner-approved plan (operations-room structure, Klik Go colours). Defaults chosen for open decisions:
+- Ship full redesign (R0–R5) before pilot, not only customer.
+- Define `.dark` role tokens now; ship light-only.
+- Keep PWA `theme-color` as logo blue `#228be6`.
+- Customer desktop: two-column workspace (R1).
+- Merchant desktop: masthead + index rail (R3).
+- Tabular mono: JetBrains Mono (self-hosted).
+- Success green: `#16734A` / `#EAF8F0`.
+- Photos: designed fallbacks (`PhotoFallback`) for pilot.
+
+Deliverables:
+- [x] Role tokens in `packages/config` (`ink`, `canvas`, `sheet`, `action`, masthead, status, radii, shadows, type ranks) + contrast tests.
+- [x] Inter + JetBrains Mono + Lilita One (wordmark only) via `next/font` / `@fontsource`.
+- [x] CVA primitives in `packages/ui`: Button, Field, Sheet, DataTable, StatusMark, Masthead, IndexRail, BottomNav, Price, Badge, EmptyState, Skeleton, Tabs, ListRow, PhotoFallback, OrderProgress.
+- [x] `docs/BRAND.md` updated; `/dev/ui` story page; global `not-found.tsx`.
+- [ ] CI green + before/after screenshots at 390px and 1440px.
 
 ## Business validation (parallel, doc §8)
 - [ ] 20–30 customer interviews in the pilot barangay
