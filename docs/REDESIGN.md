@@ -2,16 +2,18 @@
 
 Owner-approved operations-room redesign across every Klik Go surface, using Klik Go brand colours. Patterns are recreated in `packages/config` / `packages/ui` (not copied from any private reference).
 
+**Status (2026-11-27):** all four stacked PRs are open with CI green (lint, typecheck, unit, db, bdd, Playwright, CodeQL, secret scan, dependency audit, Vercel preview).
+
 ## PRs
 
-| PR | Branch | Scope |
-|---|---|---|
-| [#35](https://github.com/Klik-Go/delivery-services/pull/35) | `cursor/visual-redesign-tokens-f981` | R0 design system: role tokens, Inter + JetBrains Mono, CVA primitives, `/dev/ui`, `not-found` |
-| [#36](https://github.com/Klik-Go/delivery-services/pull/36) | `cursor/visual-redesign-customer-f981` | R1 customer PWA + auth/public (masthead, bottom tabs, photo cards, sheets) |
-| [#38](https://github.com/Klik-Go/delivery-services/pull/38) | `cursor/visual-redesign-ops-f981` | R2–R4 rider/merchant SurfaceShell + admin DeskShell (index rail), SLA StatusMarks, mono rider figures |
-| [#39](https://github.com/Klik-Go/delivery-services/pull/39) | `cursor/visual-redesign-polish-f981` | R5 polish: Filipino short labels, rider bottom tabs, legal/consent sheets, role-token sweep, photo fallbacks |
+| PR | Branch | Base | Scope | CI |
+|---|---|---|---|---|
+| [#35](https://github.com/Klik-Go/delivery-services/pull/35) | `cursor/visual-redesign-tokens-f981` | `main` | R0 design system: role tokens, Inter + JetBrains Mono, CVA primitives, `/dev/ui`, `not-found` | Green |
+| [#36](https://github.com/Klik-Go/delivery-services/pull/36) | `cursor/visual-redesign-customer-f981` | tokens | R1 customer PWA + auth/public (masthead, bottom tabs, photo cards, sheets) | Green |
+| [#38](https://github.com/Klik-Go/delivery-services/pull/38) | `cursor/visual-redesign-ops-f981` | customer | R2–R4 rider/merchant SurfaceShell + admin DeskShell (index rail), SLA StatusMarks, mono rider figures | Green |
+| [#39](https://github.com/Klik-Go/delivery-services/pull/39) | `cursor/visual-redesign-polish-f981` | ops | R5 polish: Filipino short labels, rider bottom tabs, legal/consent sheets, role-token sweep, photo fallbacks | Green |
 
-Stack order: #35 → #36 → #38 → #39.
+Stack order: #35 → #36 → #38 → #39. Merge bottom-up.
 
 ## Defaults chosen (open decisions)
 

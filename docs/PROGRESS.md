@@ -25,10 +25,10 @@ Phases are defined in `docs/BUILD_PLAN.md` §6. Agents update this file in every
 | 11 | Hardening: security, privacy, observability | ✅ Done (merged) | [Klik-Go/delivery-services#32](https://github.com/Klik-Go/delivery-services/pull/32) | Owner: lawyer review of the legal pages, DPO, Sentry/PostHog keys, uptime monitor, staging restore (Q36, docs/SECURITY.md) |
 | 12 | Pilot launch readiness | ✅ Done (merged) | [Klik-Go/delivery-services#33](https://github.com/Klik-Go/delivery-services/pull/33) | Owner: production checklist, dry runs, go/no-go (docs/LAUNCH.md, Q37) |
 | 13 | Pabili mode (buy for me) | ✅ Done (merged) | [Klik-Go/delivery-services#34](https://github.com/Klik-Go/delivery-services/pull/34) | Off by default; owner: confirm the rules (Q38) |
-| R0 | Visual redesign — design system | 🟡 In progress (PR open) | [#35](https://github.com/Klik-Go/delivery-services/pull/35) | Tokens, Inter + JetBrains Mono, CVA primitives, `/dev/ui`; surfaces follow in R1–R5 |
-| R1 | Visual redesign — customer + public | 🟡 In progress (PR open) | [#36](https://github.com/Klik-Go/delivery-services/pull/36) | Masthead + bottom nav, photo cards, auth/public sheets |
-| R2–R4 | Visual redesign — rider, merchant, admin desk | 🟡 In progress (PR open) | [#38](https://github.com/Klik-Go/delivery-services/pull/38) | SurfaceShell, DeskShell index rail, SLA status marks, mono earnings |
-| R5 | Visual redesign — polish | 🟡 In progress (PR open) | [#39](https://github.com/Klik-Go/delivery-services/pull/39) | Filipino short labels, rider tabs, legal/consent, role-token sweep; see `docs/REDESIGN.md` |
+| R0 | Visual redesign — design system | 🟡 Ready for review (CI green) | [#35](https://github.com/Klik-Go/delivery-services/pull/35) | Tokens, Inter + JetBrains Mono, CVA primitives, `/dev/ui`; surfaces follow in R1–R5 |
+| R1 | Visual redesign — customer + public | 🟡 Ready for review (CI green) | [#36](https://github.com/Klik-Go/delivery-services/pull/36) | Masthead + bottom nav, photo cards, auth/public sheets |
+| R2–R4 | Visual redesign — rider, merchant, admin desk | 🟡 Ready for review (CI green) | [#38](https://github.com/Klik-Go/delivery-services/pull/38) | SurfaceShell, DeskShell index rail, SLA status marks, mono earnings |
+| R5 | Visual redesign — polish | 🟡 Ready for review (CI green) | [#39](https://github.com/Klik-Go/delivery-services/pull/39) | Filipino short labels, rider tabs, legal/consent, role-token sweep; see `docs/REDESIGN.md` |
 
 Status values: ⬜ Not started · 🟡 In progress (PR open) · ✅ Done (merged) · ⛔ Blocked (say why)
 
@@ -354,7 +354,7 @@ Deliverables:
 - [x] Inter + JetBrains Mono + Lilita One (wordmark only) via `next/font` / `@fontsource`.
 - [x] CVA primitives in `packages/ui`: Button, Field, Sheet, DataTable, StatusMark, Masthead, IndexRail, BottomNav, Price, Badge, EmptyState, Skeleton, Tabs, ListRow, PhotoFallback, OrderProgress.
 - [x] `docs/BRAND.md` updated; `/dev/ui` story page; global `not-found.tsx`.
-- [ ] CI green + before/after screenshots at 390px and 1440px.
+- [x] CI green on stack #35 → #36 → #38 → #39; screenshots in `docs/screenshots/redesign-r{0,1,5}/`; final report `docs/REDESIGN.md`.
 
 ## Business validation (parallel, doc §8)
 - [ ] 20–30 customer interviews in the pilot barangay
