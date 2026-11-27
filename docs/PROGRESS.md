@@ -27,7 +27,7 @@ Phases are defined in `docs/BUILD_PLAN.md` §6. Agents update this file in every
 | 13 | Pabili mode (buy for me) | ✅ Done (merged) | [Klik-Go/delivery-services#34](https://github.com/Klik-Go/delivery-services/pull/34) | Off by default; owner: confirm the rules (Q38) |
 | R0 | Visual redesign — design system | ✅ Done (merged) | [#35](https://github.com/Klik-Go/delivery-services/pull/35) | Tokens, Inter + JetBrains Mono, CVA primitives, `/dev/ui`; merged to `main` |
 | R1 | Visual redesign — customer + public | ✅ Done (merged) | [#36](https://github.com/Klik-Go/delivery-services/pull/36) | Masthead + bottom nav, photo cards, auth/public sheets; merged to `main` |
-| R2–R4 | Visual redesign — rider, merchant, admin desk | 🟡 Ready for review (CI green) | [#38](https://github.com/Klik-Go/delivery-services/pull/38) | SurfaceShell, DeskShell index rail, SLA status marks, mono earnings |
+| R2–R4 | Visual redesign — rider, merchant, admin desk | ✅ Done (merged) | [#38](https://github.com/Klik-Go/delivery-services/pull/38) | SurfaceShell, DeskShell index rail, SLA status marks, mono earnings; merged to `main` |
 | R5 | Visual redesign — polish | 🟡 Ready for review (CI green) | [#39](https://github.com/Klik-Go/delivery-services/pull/39) | Filipino short labels, rider tabs, legal/consent, role-token sweep; see `docs/REDESIGN.md` |
 
 Status values: ⬜ Not started · 🟡 In progress (PR open) · ✅ Done (merged) · ⛔ Blocked (say why)
