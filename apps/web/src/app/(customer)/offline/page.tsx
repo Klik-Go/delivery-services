@@ -20,7 +20,7 @@ export default async function OfflinePage(): Promise<JSX.Element> {
             {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- intentional hard navigation */}
             <a
               href="/"
-              className="bg-action hover:bg-action-hover inline-flex h-11 min-w-11 items-center justify-center rounded-md px-4 text-sm font-medium text-white shadow-panel"
+              className="bg-action hover:bg-action-hover shadow-panel inline-flex h-11 min-w-11 items-center justify-center rounded-md px-4 text-sm font-medium text-white"
             >
               {t("retry")}
             </a>
