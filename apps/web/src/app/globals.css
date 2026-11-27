@@ -11,7 +11,32 @@
   }
 
   body {
-    @apply bg-surface text-ink font-sans antialiased;
+    @apply bg-canvas text-ink text-body font-sans antialiased;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-action);
+    outline-offset: 2px;
+  }
+
+  /* Tabular figures on every mono run (prices, refs, counts, times). */
+  .font-mono {
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media print {
+    body {
+      @apply bg-sheet text-ink;
+    }
+
+    .print\:hidden {
+      display: none !important;
+    }
+
+    .shadow-panel,
+    .shadow-overlay {
+      box-shadow: none !important;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -22,5 +47,74 @@
       transition-duration: 0.01ms !important;
       scroll-behavior: auto !important;
     }
+  }
+}
+
+@layer utilities {
+  .text-issue {
+    font-size: var(--text-issue);
+    line-height: var(--text-issue--line-height);
+    font-weight: 600;
+    letter-spacing: -0.03em;
+  }
+
+  .text-document {
+    font-size: var(--text-document);
+    line-height: var(--text-document--line-height);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  .text-title {
+    font-size: var(--text-title);
+    line-height: var(--text-title--line-height);
+    font-weight: 600;
+  }
+
+  .text-lede {
+    font-size: var(--text-lede);
+    line-height: var(--text-lede--line-height);
+    font-weight: 400;
+  }
+
+  .text-body {
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    font-weight: 400;
+  }
+
+  .text-record {
+    font-size: var(--text-record);
+    line-height: var(--text-record--line-height);
+    font-weight: 400;
+  }
+
+  .text-label {
+    font-size: var(--text-label);
+    line-height: var(--text-label--line-height);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+
+  .text-mark {
+    font-size: var(--text-mark);
+    line-height: var(--text-mark--line-height);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+  }
+
+  .animate-mark-settle {
+    animation: mark-settle 240ms ease-out 1;
+  }
+}
+
+@keyframes mark-settle {
+  from {
+    opacity: 0.4;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }

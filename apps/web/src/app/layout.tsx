@@ -4,7 +4,7 @@ import { connection } from "next/server";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
 import type { JSX, ReactNode } from "react";
-import { lilitaOne } from "./fonts";
+import { inter, jetbrainsMono, lilitaOne } from "./fonts";
 import { ClientErrorReporter } from "@/components/hardening/telemetry";
 import "./globals.css";
 
@@ -35,7 +35,10 @@ export default async function RootLayout({
   await connection();
   const locale = await getLocale();
   return (
-    <html lang={locale} className={lilitaOne.variable}>
+    <html
+      lang={locale}
+      className={`${inter.variable} ${jetbrainsMono.variable} ${lilitaOne.variable}`}
+    >
       <body className="min-h-dvh">
         <NextIntlClientProvider>
           <ClientErrorReporter />

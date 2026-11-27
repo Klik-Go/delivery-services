@@ -82,7 +82,9 @@
     "adminLead": "Run live orders, riders, zones and stores.",
     "forbiddenTitle": "You can't open this page",
     "forbiddenLead": "Your account doesn't have access here. If you think it should, ask your Klik Go admin.",
-    "goHome": "Go to Home"
+    "goHome": "Go to Home",
+    "notFoundTitle": "Page not found",
+    "notFoundLead": "That link doesn't go anywhere. Head home and try again."
   },
   "Admin": {
     "inviteTitle": "Invite staff",

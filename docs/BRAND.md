@@ -2,6 +2,8 @@
 
 The brand is the **KGo** logo: yellow Lilita One lettering on a hand-drawn blue tile. It was supplied by the owner on 2026-11-05 (docs/OPEN_QUESTIONS.md Q7) and replaces the Phase 0 placeholder teal pin. It implements docs/BUSINESS.md §4.1 ("bold primary colour, clean typography, friendly and local").
 
+The product UI uses an **operations-room** structure across every surface: cool canvas floor, white panels, ink masthead, one action blue, Inter plus mono figures, hairline rules, and status as a glyph plus a word. Colours stay Klik Go's; patterns live in `packages/config` and `packages/ui`.
+
 <img src="brand/klik-go-logo.svg" width="120" alt="Klik Go logo">
 
 ## Logo files
@@ -25,39 +27,88 @@ Don't recolour the tile or the lettering, add effects or outlines, stretch it, o
 
 ## Colours
 
-Both logo colours come from [Open Color](https://yeun.github.io/open-color/) (the palette Excalidraw uses), so the full scales below are Open Color **blue** and **yellow**.
+Both logo colours come from [Open Color](https://yeun.github.io/open-color/) (the palette Excalidraw uses), so the full blue and yellow scales stay in the theme for charts and rare tints. **UI code should reach for role tokens** (`bg-action`, `text-ink`, `border-rule`) rather than `brand-800`.
+
+### Role tokens
+
+| Role | Hex | Job |
+|---|---|---|
+| `ink` | `#0B1F33` | Primary text; double rule on a total row |
+| `ink-muted` | `#4A5A6A` | Descriptions, table heads, term labels |
+| `ink-faint` | `#647186` | Not-yet-reached steps only |
+| `canvas` | `#F1F5F9` | Page floor behind panels |
+| `sheet` | `#FFFFFF` | Panels, controls, table bodies |
+| `sheet-alt` | `#F7F9FC` | Table heads, totals, insets, disabled fills |
+| `rule` | `#D5DEE8` | Panel borders, row separators (not input borders) |
+| `rule-strong` | `#6B8499` | Operable strokes (inputs, secondary borders) |
+| `masthead` | `#0B1F33` | Institutional band and desk index rail |
+| `masthead-ink` | `#FFFFFF` | Title and current rail entry text |
+| `masthead-muted` | `#A8C4DC` | Group headings and inactive rail labels |
+| `action` | `#1971C2` | Primary buttons, links, refs, live counts |
+| `action-hover` | `#1864AB` | Primary hover |
+| `action-wash` | `#E7F5FF` | Ghost hover, tinted chips, selection |
+| `seal` | `#C92A2A` | Destructive, errors, required marks |
+| `seal-wash` | `#FFF5F5` | Error and destructive hover fill |
+| `certified` | `#16734A` | Delivered, paid, approved |
+| `certified-wash` | `#EAF8F0` | Success mark ground |
+| `awaiting` | `#8A5A00` | Held, pending, preparing |
+| `awaiting-wash` | `#FFF9DB` | Pending mark ground |
+| `accent` (turmeric) | `#FFD43B` | Logo and badges only, with ink text |
+
+### Logo / ramp tokens (keep for charts and the lockup)
 
 | Token (Tailwind) | Hex | Role |
 |---|---|---|
-| `brand-600` | `#228be6` | **Logo blue.** Logo tile, large brand surfaces, icons, focus rings, browser `theme-color`. |
-| `brand-800` | `#1971c2` | **Action blue.** Primary buttons, links, hero backgrounds with white text. |
-| `brand-900` | `#1864ab` | Hover/pressed state of actions. |
-| `brand-50`–`brand-500`, `brand-700` | Open Color blue 0–5, 7 | Tints for backgrounds, selected states, charts. |
-| `accent-400` | `#ffd43b` | **Logo yellow.** Lettering, badges, highlights, icon chips (always with `ink` text). |
-| `accent-50`–`accent-900` | Open Color yellow 0–9 | Warning surfaces (`accent-100`), promo badges. |
-| `ink` | `#0b1f33` | Body text and headings on light surfaces. |
-| `ink-muted` | `#4a5a6a` | Secondary text. |
-| `surface` / `surface-muted` | `#ffffff` / `#f1f5f9` | Page and card backgrounds. |
+| `brand-600` | `#228be6` | **Logo blue.** Logo tile, large brand surfaces, icons, browser `theme-color`. Never buttons. |
+| `brand-800` / `action` | `#1971c2` | **Action blue.** Primary buttons, links. |
+| `brand-900` / `action-hover` | `#1864ab` | Hover/pressed state of actions. |
+| `brand-50`–`brand-500`, `brand-700` | Open Color blue 0–5, 7 | Tints for charts. |
+| `accent-400` / `accent` | `#ffd43b` | **Logo yellow / turmeric.** Lettering, badges (always with `ink` text). |
+| `accent-50`–`accent-900` | Open Color yellow 0–9 | Warning surfaces, promo badges. |
 
-Source of truth: `packages/config/tailwind/tokens.css` (Tailwind) and `packages/config/src/tokens.ts` (TypeScript: `LOGO_BLUE`, `LOGO_YELLOW`, `ACTION_COLOR`, `THEME_COLOR`). `src/tokens.test.ts` keeps them identical and enforces the contrast rules below.
+Source of truth: `packages/config/tailwind/tokens.css` and `packages/config/src/tokens.ts`. `src/tokens.test.ts` keeps them identical and enforces the contrast rules below. Legacy aliases `surface` / `surface-muted` map to `sheet` / `canvas` during migration.
 
-### Contrast rules (WCAG 2.1 AA)
+A `.dark` role restatement exists in tokens.css for a later ship; light mode is the only shipped theme at pilot.
+
+### Contrast rules (WCAG 2.2 AA)
 
 | Pairing | Ratio | Allowed for |
 |---|---|---|
-| White on `brand-800` | 5.0 : 1 | Any text, buttons |
-| `ink` on `accent-400` (yellow) | 11.7 : 1 | Any text (badges, chips) |
-| `accent-400` on `brand-800` | 3.5 : 1 | **Large display text only** (≥ 24 px, or ≥ 18.7 px bold), e.g. the hero wordmark |
-| White on `brand-600` (logo blue) | 3.6 : 1 | Large text and icons only; never body text or buttons |
-| `brand-600` on white | 3.6 : 1 | Icons, focus rings, borders; not small text |
-| `accent-400` on white | 1.4 : 1 | **Never** for text or meaningful icons |
+| White on `action` (`#1971C2`) | 5.0 : 1 | Any text, buttons |
+| White on `action-hover` | 6.1 : 1 | Primary hover labels |
+| White on `masthead` | 16.7 : 1 | Masthead and rail text |
+| `ink` on sheet or canvas | ≥ 15 : 1 | Body text |
+| `ink-muted` on sheet / canvas | ≥ 4.5 : 1 | Secondary text |
+| `action` on sheet / canvas / wash | ≥ 4.5 : 1 | Links and ghost labels |
+| `seal` on sheet / seal-wash | ≥ 4.5 : 1 | Error and destructive text |
+| `certified` on white / wash | ≥ 4.5 : 1 | Success mark text |
+| `awaiting` on white / wash | ≥ 4.5 : 1 | Pending mark text |
+| `ink` on turmeric (`#FFD43B`) | 11.7 : 1 | Badge and wordmark type |
+| White on logo blue (`#228BE6`) | 3.6 : 1 | Large text and icons only; **never** body text or buttons |
+| Turmeric text on white | 1.4 : 1 | **Never** |
+| `rule-strong` on canvas / sheet | ≥ 3 : 1 | Input and secondary borders (WCAG 1.4.11) |
 
-That is why primary buttons are `brand-800`, not the logo blue: the logo blue is too light for white button text.
+That is why primary buttons are `action` / `brand-800`, not the logo blue: the logo blue is too light for white button text. If a second thing on the screen is action blue, one of them is wrong.
 
 ## Typography
 
-- **Display: Lilita One** (the logo typeface; SIL Open Font License, bundled from `@fontsource/lilita-one` and self-hosted with `next/font`). Tailwind class `font-display`. Use it for the wordmark and large headings (≥ 24 px) only, never for body text or long Taglish copy.
-- **Body: system UI stack** (`font-sans`). Fast on budget Android phones, no download.
+- **UI: Inter** (`font-sans`), self-hosted via `next/font` + `@fontsource/inter`. Default body is 14px (`text-body`) on the PWA so Filipino strings fit.
+- **Figures: JetBrains Mono** (`font-mono`) with `font-variant-numeric: tabular-nums` for money, reference numbers, dates, times, and counts.
+- **Display: Lilita One** (`font-display`), self-hosted. **Wordmark only** via `<BrandLogo />` / the lockup — never for page titles, legal headings, prices, or long Taglish copy.
+
+Type ranks (utilities in `globals.css`): issue, document, title, lede, body, record, label, mark.
+
+## Radii, controls, elevation
+
+- **Radii:** 6px (`rounded-control`) on operable controls and tokens; 10px (`rounded-panel`) on panels. Circular exceptions: avatars, map pins, and a 12px ring on an order-progress spine. No `rounded-full` buttons.
+- **Heights:** 44px (`h-tap`) on customer, rider, and merchant phone; 36px (`h-control`) on the dense desk from `lg` up only.
+- **Elevation:** hairline `rule` + quiet `shadow-panel`. One heavier `shadow-overlay` for the focused skip link. No blur or glass.
+- **Focus:** global `:focus-visible` is a 2px action outline at a 2px offset.
+- **Motion:** colour/border 150ms; once-only 240ms `mark-settle` on status marks behind `motion-safe`. Honor `prefers-reduced-motion`.
+
+## Components
+
+Primitives live in `packages/ui` (CVA + shadcn New York + Lucide): Button, Field, Sheet, DataTable, StatusMark, Masthead, IndexRail, BottomNav, Price, Badge, EmptyState, Skeleton, Tabs, ListRow, PhotoFallback, OrderProgress. Story page: `/dev/ui`.
 
 ## Voice
 

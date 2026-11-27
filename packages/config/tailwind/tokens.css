@@ -1,13 +1,16 @@
 /*
  * Klik Go design tokens for Tailwind CSS v4 (CSS-first config). See docs/BRAND.md.
  * Brand = KGo logo: blue #228be6 (brand-600) + yellow #ffd43b (accent-400), Open Color scales.
- * Keep in sync with src/tokens.ts (enforced by src/tokens.test.ts, which also checks contrast).
+ * UI roles (ink, canvas, sheet, action, masthead, status) map those colours onto the
+ * operations-room language used across every surface. Keep in sync with src/tokens.ts
+ * (enforced by src/tokens.test.ts, which also checks contrast).
  *
- * Contrast rules: white text sits on brand-800 or darker (5.0:1). Yellow is a highlight/badge
- * colour with ink text, or large display text on brand-800 (3.5:1). Never yellow or brand-600 for
- * small text on white.
+ * Contrast rules: white text sits on action (brand-800) or darker (5.0:1). Turmeric is a
+ * badge colour with ink text only. Never yellow or brand-600 for small text on white.
+ * Logo blue is never a button fill.
  */
 @theme {
+  /* Open Color blue ramp (charts, rare tints). Prefer role tokens in UI code. */
   --color-brand-50: #e7f5ff;
   --color-brand-100: #d0ebff;
   --color-brand-200: #a5d8ff;
@@ -19,6 +22,7 @@
   --color-brand-800: #1971c2;
   --color-brand-900: #1864ab;
 
+  /* Open Color yellow ramp. accent-400 is turmeric (badges only, with ink text). */
   --color-accent-50: #fff9db;
   --color-accent-100: #fff3bf;
   --color-accent-200: #ffec99;
@@ -34,16 +38,102 @@
   --color-danger-50: #fff5f5;
   --color-danger-900: #c92a2a;
 
+  /* ---- Role tokens (operations-room language) ---- */
   --color-ink: #0b1f33;
   --color-ink-muted: #4a5a6a;
+  --color-ink-faint: #647186;
+
+  --color-canvas: #f1f5f9;
+  --color-sheet: #ffffff;
+  --color-sheet-alt: #f7f9fc;
+
+  --color-rule: #d5dee8;
+  --color-rule-strong: #6b8499;
+
+  --color-masthead: #0b1f33;
+  --color-masthead-ink: #ffffff;
+  --color-masthead-muted: #a8c4dc;
+
+  --color-action: #1971c2;
+  --color-action-hover: #1864ab;
+  --color-action-wash: #e7f5ff;
+
+  --color-seal: #c92a2a;
+  --color-seal-wash: #fff5f5;
+
+  --color-certified: #16734a;
+  --color-certified-wash: #eaf8f0;
+
+  --color-awaiting: #8a5a00;
+  --color-awaiting-wash: #fff9db;
+
+  --color-accent: #ffd43b;
+
+  /* Legacy aliases used by existing screens during the redesign migration. */
   --color-surface: #ffffff;
   --color-surface-muted: #f1f5f9;
 
-  --font-sans:
-    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  /* Logo typeface for the wordmark and big headings only; body text stays on the system font. */
+  --font-sans: var(--font-inter, "Inter"), ui-sans-serif, system-ui, sans-serif;
+  --font-mono:
+    var(--font-jetbrains-mono, "JetBrains Mono"), ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* Logo typeface for the wordmark only; body text stays on Inter. */
   --font-display: var(--font-lilita-one, "Lilita One"), ui-rounded, system-ui, sans-serif;
 
-  --radius-card: 1rem;
-  --spacing-tap: 2.75rem; /* 44px minimum tap target */
+  --radius-control: 6px;
+  --radius-panel: 10px;
+  /* Alias: existing `rounded-card` maps to the panel radius. */
+  --radius-card: 10px;
+
+  --spacing-tap: 2.75rem; /* 44px PWA / phone controls */
+  --spacing-control: 2.25rem; /* 36px desk controls from lg up */
+  --spacing-index: 16rem; /* desk index rail width */
+
+  --shadow-panel: 0 1px 2px rgb(11 31 51 / 0.06);
+  --shadow-overlay: 0 4px 16px rgb(11 31 51 / 0.16);
+
+  --text-issue: 2.25rem;
+  --text-issue--line-height: 2.5rem;
+  --text-document: 1.5rem;
+  --text-document--line-height: 1.875rem;
+  --text-title: 1.125rem;
+  --text-title--line-height: 1.5rem;
+  --text-lede: 1rem;
+  --text-lede--line-height: 1.625rem;
+  --text-body: 0.875rem;
+  --text-body--line-height: 1.4375rem;
+  --text-record: 0.8125rem;
+  --text-record--line-height: 1.25rem;
+  --text-label: 0.75rem;
+  --text-label--line-height: 1rem;
+  --text-mark: 0.6875rem;
+  --text-mark--line-height: 0.875rem;
+}
+
+/* Dark role restatement for a later ship. Light mode remains the only shipped theme. */
+.dark {
+  color-scheme: dark;
+  --color-ink: #f1f5f9;
+  --color-ink-muted: #a8c4dc;
+  --color-ink-faint: #6b8499;
+  --color-canvas: #071521;
+  --color-sheet: #0b1f33;
+  --color-sheet-alt: #122a40;
+  --color-rule: #1e3a52;
+  --color-rule-strong: #6b8499;
+  --color-masthead: #071521;
+  --color-masthead-ink: #ffffff;
+  --color-masthead-muted: #a8c4dc;
+  --color-action: #4dabf7;
+  --color-action-hover: #74c0fc;
+  --color-action-wash: #122a40;
+  --color-seal: #ff8787;
+  --color-seal-wash: #3b1219;
+  --color-certified: #51cf66;
+  --color-certified-wash: #0b2e1c;
+  --color-awaiting: #ffd43b;
+  --color-awaiting-wash: #3b2f0b;
+  --color-surface: #0b1f33;
+  --color-surface-muted: #071521;
+  --shadow-panel: 0 1px 2px rgb(0 0 0 / 0.35);
+  --shadow-overlay: 0 4px 16px rgb(0 0 0 / 0.5);
 }

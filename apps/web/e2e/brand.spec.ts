@@ -33,4 +33,16 @@ test.describe("Klik Go brand", () => {
     await page.goto("/");
     await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute("content", "#228be6");
   });
+
+  test("loads Inter for UI and JetBrains Mono for figures", async ({ page }) => {
+    await page.goto("/dev/ui");
+    await page.evaluate(() => document.fonts.ready);
+    const families = await page.evaluate(() =>
+      [...document.fonts].map((font) => font.family.toLowerCase()),
+    );
+    expect(families.some((family) => family.includes("inter"))).toBe(true);
+    expect(families.some((family) => family.includes("jetbrains"))).toBe(true);
+    const price = page.locator(".font-mono").first();
+    await expect(price).toHaveCSS("font-variant-numeric", /tabular-nums/);
+  });
 });
