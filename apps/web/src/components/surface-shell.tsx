@@ -6,7 +6,8 @@ import { SignOutButton } from "@/components/auth/sign-out-button";
 
 /**
  * Compact portal chrome for rider and merchant phone surfaces.
- * Identity lives in Settings — not in the masthead.
+ * Identity lives in Settings — not in the masthead. Page title lives only in `#main`
+ * so cucumber/e2e locators for "Merchant dashboard" stay unique.
  */
 export async function SurfaceShell({
   title,
@@ -34,7 +35,6 @@ export async function SurfaceShell({
             <span className="font-display text-accent text-2xl tracking-wide">Klik Go</span>
           </Link>
         }
-        title={eyebrow ?? title}
         actions={
           <SignOutButton
             label={t("signOut")}

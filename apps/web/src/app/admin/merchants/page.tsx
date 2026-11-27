@@ -1,4 +1,4 @@
-import { formatManilaDateTime } from "@klikgo/core";
+import { formatManilaDateTime, type SessionUser } from "@klikgo/core";
 import { Sheet, SheetSection } from "@klikgo/ui";
 import { getTranslations } from "next-intl/server";
 import type { JSX } from "react";
@@ -19,11 +19,7 @@ export default async function AdminMerchantsPage(): Promise<JSX.Element> {
   );
 }
 
-async function MerchantsBody({
-  user,
-}: {
-  readonly user: import("@klikgo/core").SessionUser;
-}): Promise<JSX.Element> {
+async function MerchantsBody({ user }: { readonly user: SessionUser }): Promise<JSX.Element> {
   const t = await getTranslations("AdminMerchants");
   const service = getContainer().merchantOnboarding();
   const applications = service.ok
