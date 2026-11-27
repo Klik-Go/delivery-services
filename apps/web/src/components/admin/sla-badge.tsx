@@ -1,19 +1,28 @@
 import type { SlaState } from "@klikgo/core";
+import { StatusMark } from "@klikgo/ui";
+import { AlertTriangle, CheckCircle2, Clock3 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { JSX } from "react";
 
-const STYLES: Readonly<Record<SlaState, string>> = {
-  on_time: "bg-brand-50 text-brand-800",
-  at_risk: "bg-accent-400 text-ink",
-  late: "bg-danger-900 text-white",
+const TONE: Readonly<Record<SlaState, "certified" | "awaiting" | "seal">> = {
+  on_time: "certified",
+  at_risk: "awaiting",
+  late: "seal",
 };
 
-/** The order's timer as a coloured label (words too, never colour alone). */
+const ICON: Readonly<Record<SlaState, typeof CheckCircle2>> = {
+  on_time: CheckCircle2,
+  at_risk: Clock3,
+  late: AlertTriangle,
+};
+
+/** SLA as glyph + word (never colour alone). */
 export function SlaBadge({ state }: { readonly state: SlaState }): JSX.Element {
   const t = useTranslations("Ops.board.sla");
+  const Icon = ICON[state];
   return (
-    <span className={`rounded-full px-2 py-1 text-xs font-bold ${STYLES[state]}`} data-sla={state}>
-      {t(state)}
+    <span data-sla={state}>
+      <StatusMark tone={TONE[state]} icon={<Icon />} label={t(state)} />
     </span>
   );
 }

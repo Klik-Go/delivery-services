@@ -86,12 +86,12 @@ export function OpsBoard({
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         {zones.length > 1 ? (
-          <label className="text-ink flex items-center gap-2 font-semibold">
+          <label className="text-ink text-body flex items-center gap-2 font-semibold">
             {t("zone")}
             <select
               value={zoneId}
               onChange={(event) => setZoneId(event.target.value)}
-              className="border-border bg-surface min-h-tap rounded-lg border px-3"
+              className="border-rule-strong bg-sheet min-h-tap rounded-control lg:min-h-control lg:h-control border px-3"
             >
               <option value="">{t("allZones")}</option>
               {zones.map((zone) => (
@@ -102,26 +102,31 @@ export function OpsBoard({
             </select>
           </label>
         ) : null}
-        <p className="text-ink-muted text-sm" data-testid="riders-online">
+        <p
+          className="text-record text-ink-muted font-mono tabular-nums"
+          data-testid="riders-online"
+        >
           {t("ridersOnline", { count: riders.filter((r) => r.isOnline).length })}
           {live === "live" ? ` · ${t("live")}` : ""}
         </p>
       </div>
-      <OpsMap dots={dots} label={t("map")} />
-      {orders.length === 0 ? (
-        <p className="text-ink-muted">{t("empty")}</p>
-      ) : (
-        <ul className="flex flex-col gap-2" data-testid="ops-board">
-          {orders.map((order) => (
-            <BoardCard
-              key={order.id}
-              order={order}
-              statusLabel={tStatus(order.status)}
-              locale={locale}
-            />
-          ))}
-        </ul>
-      )}
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:items-start">
+        <OpsMap dots={dots} label={t("map")} />
+        {orders.length === 0 ? (
+          <p className="text-body text-ink-muted">{t("empty")}</p>
+        ) : (
+          <ul className="flex flex-col gap-2" data-testid="ops-board">
+            {orders.map((order) => (
+              <BoardCard
+                key={order.id}
+                order={order}
+                statusLabel={tStatus(order.status)}
+                locale={locale}
+              />
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }
@@ -138,19 +143,20 @@ function BoardCard({
   const t = useTranslations("Ops.board");
   return (
     <li
-      className="bg-surface-muted flex flex-wrap items-center gap-3 rounded-xl p-3"
+      className="border-rule bg-sheet shadow-panel rounded-panel flex flex-wrap items-center gap-3 border p-3"
       data-code={order.code}
       data-status={order.status}
     >
-      <div className="flex min-w-0 flex-1 flex-col">
-        <p className="text-ink font-semibold">
-          {order.code} · {order.merchantName}
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <p className="text-body text-ink font-semibold">
+          <span className="font-mono tabular-nums">{order.code}</span> · {order.merchantName}
         </p>
-        <p className="text-ink-muted text-sm">
-          {statusLabel} · {formatPeso(order.totalCentavos)} ·{" "}
+        <p className="text-record text-ink-muted">
+          {statusLabel} ·{" "}
+          <span className="font-mono tabular-nums">{formatPeso(order.totalCentavos)}</span> ·{" "}
           {order.riderName ? t("rider", { name: order.riderName }) : t("noRider")}
         </p>
-        <p className="text-ink-muted text-sm">
+        <p className="text-record text-ink-muted">
           {order.sla ? t("due", { time: manilaTime(order.sla.dueAt, locale) }) : null}
           {order.dispatchFlaggedAt && !order.riderId ? ` · ${t("unassigned")}` : ""}
           {order.flaggedAt && order.status === "placed" ? ` · ${t("storeLate")}` : ""}
@@ -159,7 +165,7 @@ function BoardCard({
       {order.sla ? <SlaBadge state={order.sla.state} /> : null}
       <Link
         href={`/admin/orders/${order.id}`}
-        className="bg-brand-800 min-h-tap inline-flex items-center rounded-full px-4 font-semibold text-white"
+        className="bg-action hover:bg-action-hover h-tap min-h-tap rounded-control text-body lg:h-control lg:min-h-control inline-flex items-center px-4 font-semibold text-white"
       >
         {t("open")}
       </Link>

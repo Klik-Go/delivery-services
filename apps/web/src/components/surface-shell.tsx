@@ -1,14 +1,18 @@
-import { BrandLogo } from "@klikgo/ui";
+import { BrandLogo, Masthead, Sheet, SheetSection, SkipLink } from "@klikgo/ui";
+import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import type { JSX, ReactNode } from "react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 
-/** Header + content frame shared by the merchant, rider and admin surfaces. */
+/**
+ * Compact portal chrome for rider and merchant phone surfaces.
+ * Identity lives in Settings — not in the masthead.
+ */
 export async function SurfaceShell({
   title,
   eyebrow,
   lead,
-  who,
+  who: _who,
   children,
 }: {
   readonly title: string;
@@ -20,21 +24,33 @@ export async function SurfaceShell({
 }): Promise<JSX.Element> {
   const t = await getTranslations("Home");
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-screen-md flex-col gap-6 px-4 py-6">
-      <header className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <BrandLogo size={40} decorative />
-          <span className="font-display text-brand-800 text-2xl tracking-wide">Klik Go</span>
-        </div>
-        <SignOutButton label={t("signOut")} />
-      </header>
-      <main className="flex flex-col gap-4">
-        {eyebrow ? (
-          <p className="text-brand-800 text-sm font-semibold tracking-wide uppercase">{eyebrow}</p>
-        ) : null}
-        <h1 className="text-ink text-3xl font-bold">{title}</h1>
-        <p className="text-ink-muted">{lead}</p>
-        <p className="text-ink-muted text-sm">{t("signedInAs", { who })}</p>
+    <div className="bg-canvas text-ink min-h-dvh">
+      <SkipLink label="Skip to content" />
+      <Masthead
+        density="compact"
+        brand={
+          <Link href="/" className="flex items-center gap-2">
+            <BrandLogo size={36} decorative />
+            <span className="font-display text-accent text-2xl tracking-wide">Klik Go</span>
+          </Link>
+        }
+        title={eyebrow ?? title}
+        actions={
+          <SignOutButton
+            label={t("signOut")}
+            variant="ghost"
+            className="text-masthead-ink hover:text-masthead-ink hover:bg-white/10"
+          />
+        }
+      />
+      <main id="main" className="mx-auto flex w-full max-w-screen-md flex-col gap-4 px-4 py-5">
+        <Sheet>
+          <SheetSection first className="flex flex-col gap-2">
+            {eyebrow ? <p className="text-label text-action uppercase">{eyebrow}</p> : null}
+            <h1 className="text-document text-ink">{title}</h1>
+            <p className="text-body text-ink-muted">{lead}</p>
+          </SheetSection>
+        </Sheet>
         {children}
       </main>
     </div>
