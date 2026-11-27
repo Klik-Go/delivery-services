@@ -1,9 +1,9 @@
 import { safeNext } from "@klikgo/core";
+import { BrandLogo, Sheet, SheetSection } from "@klikgo/ui";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import type { JSX } from "react";
-import { BrandLogo } from "@klikgo/ui";
 import { ConsentForm } from "@/components/hardening/consent-form";
 import { getSessionUser } from "@/server/auth/session";
 import { getContainer } from "@/server/container";
@@ -27,11 +27,17 @@ export default async function ConsentPage({
   if ((await getContainer().consents.missing(user.id)).length === 0) redirect(next);
   const t = await getTranslations("Hardening.consent");
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-screen-sm flex-col gap-4 px-4 py-6">
+    <main className="bg-canvas text-ink mx-auto flex min-h-dvh w-full max-w-screen-sm flex-col gap-4 px-4 py-6">
       <BrandLogo size={44} decorative />
-      <h1 className="font-display text-ink text-3xl">{t("title")}</h1>
-      <p className="text-ink">{t("lead")}</p>
-      <ConsentForm next={next} />
+      <Sheet>
+        <SheetSection first className="flex flex-col gap-2">
+          <h1 className="text-document text-ink">{t("title")}</h1>
+          <p className="text-body text-ink-muted">{t("lead")}</p>
+        </SheetSection>
+        <SheetSection>
+          <ConsentForm next={next} />
+        </SheetSection>
+      </Sheet>
     </main>
   );
 }

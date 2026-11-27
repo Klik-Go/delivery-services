@@ -90,7 +90,7 @@ export default async function MerchantPage({
                 href={href}
                 className="rounded-card hover:bg-brand-50 border-brand-100 flex items-center gap-3 border-2 p-4"
               >
-                <Icon aria-hidden className="text-brand-800 size-6 shrink-0" />
+                <Icon aria-hidden className="text-action size-6 shrink-0" />
                 <span className="flex flex-1 flex-col">
                   <span className="text-ink font-bold">{title}</span>
                   <span className="text-ink-muted text-sm">{lead}</span>
@@ -101,7 +101,7 @@ export default async function MerchantPage({
           ))}
         </ul>
       </nav>
-      <a className="text-brand-800 self-start font-semibold underline" href={`/s/${store.slug}`}>
+      <a className="text-action self-start font-semibold underline" href={`/s/${store.slug}`}>
         {t("storePage")}
       </a>
     </SurfaceShell>

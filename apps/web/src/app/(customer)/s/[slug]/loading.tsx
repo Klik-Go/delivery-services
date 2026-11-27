@@ -9,13 +9,13 @@ export default function Loading(): JSX.Element {
       className="mx-auto flex w-full max-w-screen-md flex-col gap-4 px-4 pt-4"
     >
       <span className="sr-only">Loading…</span>
-      <div className="rounded-card bg-surface-muted aspect-[16/7] w-full animate-pulse motion-reduce:animate-none" />
-      <div className="bg-surface-muted h-8 w-2/3 animate-pulse rounded motion-reduce:animate-none" />
-      <div className="bg-surface-muted min-h-tap w-full animate-pulse rounded-full motion-reduce:animate-none" />
+      <div className="rounded-card bg-sheet-alt aspect-[16/7] w-full animate-pulse motion-reduce:animate-none" />
+      <div className="bg-sheet-alt h-8 w-2/3 animate-pulse rounded motion-reduce:animate-none" />
+      <div className="bg-sheet-alt min-h-tap rounded-control w-full animate-pulse motion-reduce:animate-none" />
       {[0, 1, 2, 3].map((row) => (
         <div
           key={row}
-          className="rounded-card bg-surface-muted h-20 w-full animate-pulse motion-reduce:animate-none"
+          className="rounded-card bg-sheet-alt h-20 w-full animate-pulse motion-reduce:animate-none"
         />
       ))}
     </div>

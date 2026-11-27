@@ -136,7 +136,7 @@ export function TrackingMap({ orderId }: { readonly orderId: string }): JSX.Elem
           className="bg-brand-50 flex items-center gap-3 rounded-xl p-3"
           data-testid="rider-card"
         >
-          <Bike className="text-brand-800 size-6 shrink-0" aria-hidden />
+          <Bike className="text-action size-6 shrink-0" aria-hidden />
           <div className="flex-1">
             <p
               className="text-ink font-semibold"

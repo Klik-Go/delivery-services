@@ -31,7 +31,7 @@ export function AccountPanel(): JSX.Element {
 
   if (deleted) {
     return (
-      <p role="status" className="text-ink bg-surface-muted rounded-lg p-4 font-semibold">
+      <p role="status" className="text-ink bg-sheet-alt rounded-lg p-4 font-semibold">
         {t("deleted")}
       </p>
     );
@@ -47,7 +47,7 @@ export function AccountPanel(): JSX.Element {
         <a
           href="/api/me/export"
           download
-          className="bg-brand-800 min-h-tap inline-flex items-center justify-center self-start rounded-lg px-4 font-semibold text-white"
+          className="bg-action min-h-tap inline-flex items-center justify-center self-start rounded-lg px-4 font-semibold text-white"
         >
           {t("download")}
         </a>

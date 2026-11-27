@@ -64,7 +64,7 @@ function StoreRow({
       <div className="flex flex-wrap items-center gap-2">
         <p className="text-ink flex-1 font-bold">{store.name}</p>
         <span
-          className="bg-surface-muted text-ink rounded-full px-2 py-1 text-xs font-semibold"
+          className="bg-sheet-alt text-ink rounded-control px-2 py-1 text-xs font-semibold"
           data-status={store.status}
         >
           {t(`status.${store.status}`)}

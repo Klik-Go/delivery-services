@@ -595,10 +595,10 @@
       "failed": "Hindi natuloy ang test na bayad."
     },
     "tabs": {
-      "home": "Home",
+      "home": "Bahay",
       "search": "Hanap",
-      "orders": "Orders",
-      "account": "Account",
+      "orders": "Order",
+      "account": "Ako",
       "cart": "Cart, {count} item",
       "skip": "Laktawan papunta sa nilalaman"
     }
@@ -671,21 +671,26 @@
       "cash": "Hawak na cash: {held} sa {limit} na limit mo"
     },
     "applyLink": "Tingnan ang aplikasyon mo",
-    "payouts": "Mga bayad sa iyo"
+    "payouts": "Mga bayad sa iyo",
+    "tabs": {
+      "home": "Bahay",
+      "earnings": "Kita",
+      "skip": "Laktawan papunta sa nilalaman"
+    }
   },
   "Ops": {
     "nav": {
-      "live": "Mga live na order",
-      "riders": "Mga rider",
-      "zones": "Mga zone",
-      "stores": "Mga tindahan",
-      "applications": "Mga aplikasyon",
+      "live": "Live",
+      "riders": "Rider",
+      "zones": "Zone",
+      "stores": "Tindahan",
+      "applications": "Aplikasyon",
       "settings": "Settings",
       "staff": "Staff",
-      "label": "Mga bahagi ng console",
-      "tickets": "Mababang rating",
-      "promos": "Mga promo",
-      "finance": "Pananalapi",
+      "label": "Console",
+      "tickets": "Rating",
+      "promos": "Promo",
+      "finance": "Finance",
       "system": "Sistema",
       "invites": "Imbitasyon",
       "kpis": "KPI"

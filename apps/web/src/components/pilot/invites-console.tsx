@@ -110,7 +110,7 @@ export function InvitesConsole(): JSX.Element {
           </Button>
         </form>
         {created.length > 0 ? (
-          <div className="bg-surface-muted rounded-lg p-3" data-testid="new-codes">
+          <div className="bg-sheet-alt rounded-lg p-3" data-testid="new-codes">
             <p className="text-ink font-semibold">{t("created")}</p>
             <p className="text-ink font-mono text-sm break-words">{created.join("  ")}</p>
             <Button

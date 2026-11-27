@@ -49,7 +49,7 @@ export function RatingSheet({ orderId }: { readonly orderId: string }): JSX.Elem
     );
     return (
       <section
-        className="bg-surface-muted flex flex-col gap-2 rounded-xl p-4"
+        className="bg-sheet-alt flex flex-col gap-2 rounded-xl p-4"
         data-testid="rating-sheet"
       >
         <h2 className="text-ink text-lg font-bold">{t("title")}</h2>
@@ -96,10 +96,7 @@ export function RatingSheet({ orderId }: { readonly orderId: string }): JSX.Elem
     (merchantEditable && merchantDraft.score > 0) || (riderEditable && riderDraft.score > 0);
   const editing = (s.merchant?.rating ?? null) !== null || s.rider?.rating;
   return (
-    <section
-      className="bg-surface-muted flex flex-col gap-4 rounded-xl p-4"
-      data-testid="rating-sheet"
-    >
+    <section className="bg-sheet-alt flex flex-col gap-4 rounded-xl p-4" data-testid="rating-sheet">
       <div>
         <h2 className="text-ink text-lg font-bold">{t("title")}</h2>
         <p className="text-ink-muted text-sm">{editing ? t("editNote") : t("lead")}</p>

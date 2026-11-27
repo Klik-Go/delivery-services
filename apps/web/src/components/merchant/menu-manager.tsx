@@ -228,10 +228,7 @@ export function MenuManager({ merchantId }: { readonly merchantId: string }): JS
                   />
                 </li>
               ) : (
-                <li
-                  key={item.id}
-                  className="bg-surface-muted flex items-center gap-3 rounded-xl p-3"
-                >
+                <li key={item.id} className="bg-sheet-alt flex items-center gap-3 rounded-xl p-3">
                   {item.photoUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element -- Storage URLs, already small WebP
                     <img src={item.photoUrl} alt="" className="size-14 rounded-lg object-cover" />
@@ -245,7 +242,7 @@ export function MenuManager({ merchantId }: { readonly merchantId: string }): JS
                         : ""}
                     </span>
                     {!item.isAvailable ? (
-                      <span className="bg-accent-400 text-ink mt-1 rounded-full px-2 py-0.5 text-xs font-bold">
+                      <span className="bg-accent-400 text-ink rounded-control mt-1 px-2 py-0.5 text-xs font-bold">
                         {t("soldOut")}
                       </span>
                     ) : null}

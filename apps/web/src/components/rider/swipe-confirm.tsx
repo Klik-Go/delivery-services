@@ -22,7 +22,7 @@ export function SwipeConfirm({
     setValue(0);
   };
   return (
-    <div className="bg-brand-800 relative h-14 w-full overflow-hidden rounded-full">
+    <div className="bg-action relative h-14 w-full overflow-hidden rounded-full">
       <span className="pointer-events-none absolute inset-0 grid place-items-center font-semibold text-white">
         {label}
       </span>

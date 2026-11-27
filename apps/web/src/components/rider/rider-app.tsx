@@ -100,7 +100,7 @@ export function RiderApp(): JSX.Element {
 
   return (
     <div className="flex flex-col gap-4" data-testid="rider-app">
-      <section className="bg-surface-muted flex flex-col gap-3 rounded-xl p-4">
+      <section className="bg-sheet-alt flex flex-col gap-3 rounded-xl p-4">
         <div className="flex items-center justify-between gap-3">
           <p className="text-ink text-lg font-semibold" role="status" data-testid="rider-online">
             {online ? t("online") : t("offline")}
@@ -440,7 +440,7 @@ function EarningsCard({ earnings }: { readonly earnings: RiderEarnings }): JSX.E
   const t = useTranslations("Rider.earnings");
   return (
     <section
-      className="bg-surface-muted flex flex-col gap-2 rounded-xl p-4"
+      className="bg-sheet-alt flex flex-col gap-2 rounded-xl p-4"
       aria-label={t("title")}
       data-testid="earnings"
     >

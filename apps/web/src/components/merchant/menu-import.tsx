@@ -106,7 +106,7 @@ export function MenuImport({ merchantId }: { readonly merchantId: string }): JSX
   return (
     <div className="flex flex-col gap-4">
       <p className="text-ink-muted flex items-start gap-2 text-sm">
-        <ShieldCheck aria-hidden className="text-brand-800 size-5 shrink-0" />
+        <ShieldCheck aria-hidden className="text-action size-5 shrink-0" />
         {t("privacy")}
       </p>
       <div className="flex flex-wrap items-end gap-3">
@@ -127,7 +127,7 @@ export function MenuImport({ merchantId }: { readonly merchantId: string }): JSX
       </div>
       <FormError message={error} />
       {added !== null ? (
-        <p aria-live="polite" className="text-brand-800 font-semibold">
+        <p aria-live="polite" className="text-action font-semibold">
           {t("done", { count: added })}
         </p>
       ) : null}

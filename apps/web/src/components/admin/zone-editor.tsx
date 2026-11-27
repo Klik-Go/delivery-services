@@ -42,7 +42,7 @@ export function ZoneEditor({ isAdmin }: { readonly isAdmin: boolean }): JSX.Elem
             role="tab"
             aria-selected={z.id === zone?.id}
             onClick={() => setSelected(z.id)}
-            className={`min-h-tap rounded-full px-4 text-sm font-semibold ${z.id === zone?.id ? "bg-brand-800 text-white" : "bg-surface-muted text-ink"}`}
+            className={`min-h-tap rounded-control px-4 text-sm font-semibold ${z.id === zone?.id ? "bg-action text-white" : "bg-sheet-alt text-ink"}`}
           >
             {z.name}
           </button>
@@ -162,7 +162,7 @@ function ZoneForm({
       <label className="text-ink flex flex-col gap-1 text-sm font-semibold">
         {t("coordinator")}
         <select
-          className={`${field} bg-surface`}
+          className={`${field} bg-sheet`}
           disabled={!isAdmin || busy}
           value={zone.coordinatorId ?? ""}
           onChange={(e) =>
@@ -214,7 +214,7 @@ function ZoneForm({
       </section>
       {error ? <FormError message={error} /> : null}
       {saved ? (
-        <p role="status" className="text-brand-800 font-semibold">
+        <p role="status" className="text-action font-semibold">
           {tOps("saved")}
         </p>
       ) : null}
@@ -244,7 +244,7 @@ function FeeRuleRow({
           : "";
   return (
     <li
-      className="bg-surface-muted flex flex-wrap items-end gap-2 rounded-lg p-2"
+      className="bg-sheet-alt flex flex-wrap items-end gap-2 rounded-lg p-2"
       data-rule={rule.name}
     >
       <div className="flex-1">

@@ -15,7 +15,7 @@ export function OpeningLabel({ opening }: { readonly opening: OpeningStatus }): 
         ? t("opensTomorrow", { time: at.time })
         : t("opensDay", { day: t(`days.${at.day}`), time: at.time });
   return (
-    <span className="bg-surface-muted text-ink rounded-full px-2 py-0.5 text-xs font-semibold">
+    <span className="bg-sheet-alt text-ink rounded-control px-2 py-0.5 text-xs font-semibold">
       {t("closed")}
       {when ? ` · ${when}` : ""}
     </span>

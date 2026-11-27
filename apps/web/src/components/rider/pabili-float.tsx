@@ -48,7 +48,7 @@ export function PabiliFloat({
 
   return (
     <section
-      className="bg-surface-muted flex flex-col gap-3 rounded-xl p-4"
+      className="bg-sheet-alt flex flex-col gap-3 rounded-xl p-4"
       aria-labelledby="pabili-float-title"
       data-testid="pabili-float"
     >

@@ -52,7 +52,12 @@ export function DeskShell({
   }));
 
   const renderLink = (entry: IndexRailEntry, className: string): ReactNode => (
-    <Link href={entry.href} className={className} aria-current={entry.current ? "page" : undefined}>
+    <Link
+      href={entry.href}
+      className={className}
+      title={entry.label}
+      aria-current={entry.current ? "page" : undefined}
+    >
       <span className="truncate">{entry.label}</span>
       {entry.count !== undefined ? (
         <span className="text-record font-mono tabular-nums">{entry.count}</span>

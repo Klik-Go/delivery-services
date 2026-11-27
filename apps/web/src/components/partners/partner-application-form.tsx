@@ -79,9 +79,9 @@ export function PartnerApplicationForm(): JSX.Element {
     return (
       <section
         aria-live="polite"
-        className="bg-surface-muted rounded-card flex flex-col items-start gap-3 p-6"
+        className="bg-sheet-alt rounded-card flex flex-col items-start gap-3 p-6"
       >
-        <CheckCircle2 aria-hidden className="text-brand-800 size-10" />
+        <CheckCircle2 aria-hidden className="text-action size-10" />
         <h2 className="text-ink text-2xl font-bold">{t("thanksTitle")}</h2>
         <p className="text-ink">{done.inArea ? t("thanksInArea") : t("thanksOutOfArea")}</p>
       </section>

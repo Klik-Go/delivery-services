@@ -1,4 +1,6 @@
 import { LEGAL_VERSIONS, type LegalDocument as Doc } from "@klikgo/types";
+import { BrandLogo, Sheet, SheetSection, StatusMark } from "@klikgo/ui";
+import { FileWarning } from "lucide-react";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import type { JSX } from "react";
@@ -17,22 +19,29 @@ export async function LegalDocument({
   const t = await getTranslations("Hardening.legal");
   const sections = t.raw(`${document}.sections`) as Section[];
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-screen-md flex-col gap-4 px-4 py-6">
-      <Link href="/" className="text-action min-h-tap inline-flex items-center font-semibold">
+    <main className="bg-canvas text-ink mx-auto flex min-h-dvh w-full max-w-screen-md flex-col gap-4 px-4 py-6">
+      <Link href="/" className="text-action min-h-tap inline-flex items-center gap-2 font-semibold">
+        <BrandLogo size={28} decorative />
         {t("back")}
       </Link>
-      <h1 className="font-display text-ink text-3xl">{t(`${document}.title`)}</h1>
-      <p className="text-ink-muted text-sm">{t("updated", { date: LEGAL_VERSIONS[document] })}</p>
-      <p role="note" className="bg-accent-100 text-ink rounded-lg p-3 text-sm font-semibold">
-        {t("draft")}
-      </p>
-      <p className="text-ink">{t(`${document}.intro`)}</p>
-      {sections.map((section) => (
-        <section key={section.heading} className="flex flex-col gap-1">
-          <h2 className="text-ink text-lg font-bold">{section.heading}</h2>
-          <p className="text-ink">{section.body}</p>
-        </section>
-      ))}
+      <Sheet>
+        <SheetSection first className="flex flex-col gap-2">
+          <h1 className="text-document text-ink">{t(`${document}.title`)}</h1>
+          <p className="text-record text-ink-muted">
+            {t("updated", { date: LEGAL_VERSIONS[document] })}
+          </p>
+          <StatusMark tone="awaiting" icon={<FileWarning aria-hidden />} label={t("draft")} />
+        </SheetSection>
+        <SheetSection className="flex flex-col gap-4">
+          <p className="text-body text-ink">{t(`${document}.intro`)}</p>
+          {sections.map((section) => (
+            <section key={section.heading} className="flex flex-col gap-1">
+              <h2 className="text-title text-ink">{section.heading}</h2>
+              <p className="text-body text-ink">{section.body}</p>
+            </section>
+          ))}
+        </SheetSection>
+      </Sheet>
     </main>
   );
 }

@@ -50,7 +50,7 @@ export function SystemStatusView(): JSX.Element {
           {t("jobs")}
         </h2>
         <p
-          className={`rounded-lg p-3 font-semibold ${jobs.healthy ? "bg-surface-muted text-ink" : "bg-danger-50 text-danger-900"}`}
+          className={`rounded-lg p-3 font-semibold ${jobs.healthy ? "bg-sheet-alt text-ink" : "bg-danger-50 text-danger-900"}`}
         >
           {jobsLine}
         </p>

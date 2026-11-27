@@ -36,7 +36,7 @@ export function OpenToggle({
   }
 
   return (
-    <section className="bg-surface-muted rounded-card flex flex-col gap-3 p-4">
+    <section className="bg-sheet-alt rounded-card flex flex-col gap-3 p-4">
       <p className="text-ink flex items-center gap-2 text-lg font-bold" aria-live="polite">
         <span
           aria-hidden

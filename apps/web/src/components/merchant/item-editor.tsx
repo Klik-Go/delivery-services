@@ -280,7 +280,7 @@ function ModifierGroupFields({
   const t = useTranslations("Menu");
   const options = useFieldArray({ control, name: `modifierGroups.${index}.options` });
   return (
-    <div className="bg-surface-muted flex flex-col gap-2 rounded-xl p-3">
+    <div className="bg-sheet-alt flex flex-col gap-2 rounded-xl p-3">
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-2">
         <TextField
           label={t("groupName")}

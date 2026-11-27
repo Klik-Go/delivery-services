@@ -109,7 +109,7 @@ export function OrderStatusView({
       <div className="flex items-start justify-between gap-2">
         <h1 className="text-ink text-2xl font-bold">{t("title", { code: o.code })}</h1>
         {live === "live" && LIVE.has(o.status) ? (
-          <span className="bg-brand-50 text-brand-800 rounded-full px-2 py-1 text-xs font-semibold">
+          <span className="bg-brand-50 text-action rounded-control px-2 py-1 text-xs font-semibold">
             {t("live")}
           </span>
         ) : null}
@@ -154,7 +154,7 @@ export function OrderStatusView({
                 aria-current={o.status === step.key ? "step" : undefined}
               >
                 <span
-                  className={`grid size-7 shrink-0 place-items-center rounded-full ${at ? "bg-brand-800 text-white" : "bg-surface-muted text-ink-muted"}`}
+                  className={`grid size-7 shrink-0 place-items-center rounded-full ${at ? "bg-action text-white" : "bg-sheet-alt text-ink-muted"}`}
                   aria-hidden
                 >
                   {at ? <Check className="size-4" /> : null}
@@ -171,7 +171,7 @@ export function OrderStatusView({
         </ol>
       ) : null}
 
-      <dl className="bg-surface-muted flex flex-col gap-2 rounded-xl p-4">
+      <dl className="bg-sheet-alt flex flex-col gap-2 rounded-xl p-4">
         <div className="flex justify-between">
           <dt className="text-ink">{t("total")}</dt>
           <dd className="text-ink font-bold">{formatPeso(o.totalCentavos)}</dd>

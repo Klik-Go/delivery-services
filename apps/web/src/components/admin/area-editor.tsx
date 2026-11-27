@@ -81,7 +81,7 @@ export function AreaEditor({
           keyboard: true,
           title: `${String(index + 1)}`,
           icon: L.divIcon({
-            className: "bg-brand-800 rounded-full border-2 border-white",
+            className: "bg-action rounded-full border-2 border-white",
             iconSize: [14, 14],
           }),
         }).addTo(group);

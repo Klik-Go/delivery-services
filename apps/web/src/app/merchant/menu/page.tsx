@@ -29,7 +29,7 @@ export default async function MenuPage({
         {storeId ? (
           <Link
             href={`/merchant/menu/import?store=${storeId}`}
-            className="text-brand-800 inline-flex items-center gap-1 font-semibold underline"
+            className="text-action inline-flex items-center gap-1 font-semibold underline"
           >
             <Camera aria-hidden className="size-4" />
             {t("importLink")}

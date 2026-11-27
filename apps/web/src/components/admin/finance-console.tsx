@@ -65,7 +65,7 @@ export function FinanceConsole({
             type="button"
             aria-selected={tab === key}
             onClick={() => setTab(key)}
-            className={`min-h-tap rounded-full px-4 text-sm font-semibold ${tab === key ? "bg-brand-800 text-white" : "bg-surface-muted text-ink"}`}
+            className={`min-h-tap rounded-control px-4 text-sm font-semibold ${tab === key ? "bg-action text-white" : "bg-sheet-alt text-ink"}`}
           >
             {t(`tabs.${key}`)}
           </button>

@@ -31,7 +31,7 @@ export function TicketQueue(): JSX.Element {
             type="button"
             aria-selected={tab === key}
             onClick={() => setTab(key)}
-            className={`min-h-tap rounded-full px-4 text-sm font-semibold ${tab === key ? "bg-brand-800 text-white" : "bg-surface-muted text-ink"}`}
+            className={`min-h-tap rounded-control px-4 text-sm font-semibold ${tab === key ? "bg-action text-white" : "bg-sheet-alt text-ink"}`}
           >
             {t(`tabs.${key}`)}
           </button>
@@ -96,7 +96,7 @@ function TicketCard({ ticket }: { readonly ticket: Wire<SupportTicket> }): JSX.E
         </Link>
       </p>
       {ticket.comment ? (
-        <p className="text-ink bg-surface-muted rounded-lg p-2 text-sm">“{ticket.comment}”</p>
+        <p className="text-ink bg-sheet-alt rounded-lg p-2 text-sm">“{ticket.comment}”</p>
       ) : null}
       {ticket.status === "resolved" ? (
         <p className="text-ink text-sm">{t("resolvedWith", { note: ticket.resolution ?? "" })}</p>

@@ -135,7 +135,7 @@ export function SearchView({
             </h2>
             <button
               type="button"
-              className="text-brand-800 min-h-tap px-2 text-sm font-semibold"
+              className="text-action min-h-tap px-2 text-sm font-semibold"
               onClick={() => {
                 setRecent([]);
                 try {

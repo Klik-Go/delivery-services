@@ -116,7 +116,7 @@ export function PabiliShopping({
                       type="button"
                       aria-pressed={outcomes[line.position] === outcome}
                       onClick={() => setOutcomes((now) => ({ ...now, [line.position]: outcome }))}
-                      className={`min-h-tap rounded-full px-4 text-sm font-semibold ${outcomes[line.position] === outcome ? "bg-brand-800 text-white" : "bg-surface-muted text-ink"}`}
+                      className={`min-h-tap rounded-control px-4 text-sm font-semibold ${outcomes[line.position] === outcome ? "bg-action text-white" : "bg-sheet-alt text-ink"}`}
                     >
                       {outcome === "bought" ? t("boughtOutcome") : t("unavailable")}
                     </button>

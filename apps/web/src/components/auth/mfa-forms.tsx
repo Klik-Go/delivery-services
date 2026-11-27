@@ -88,7 +88,7 @@ export function MfaEnroll({ next }: { readonly next: string | null }): JSX.Eleme
         height={192}
         className="mx-auto rounded-xl bg-white p-2"
       />
-      <div className="bg-surface-muted rounded-xl p-3">
+      <div className="bg-sheet-alt rounded-xl p-3">
         <p className="text-ink-muted text-xs font-semibold uppercase">{t("setupKey")}</p>
         <code data-testid="totp-secret" className="text-ink font-mono text-sm break-all">
           {enrollment.secret}

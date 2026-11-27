@@ -127,7 +127,7 @@ export function RewardsView(): JSX.Element {
           {Array.from({ length: r.stamps.goal }, (_, i) => (
             <li
               key={i}
-              className={`grid aspect-square place-items-center rounded-full text-sm font-bold ${i < r.stamps.count ? "bg-brand-800 text-white" : "bg-surface-muted text-ink-muted"}`}
+              className={`grid aspect-square place-items-center rounded-full text-sm font-bold ${i < r.stamps.count ? "bg-action text-white" : "bg-sheet-alt text-ink-muted"}`}
             >
               {i + 1}
             </li>

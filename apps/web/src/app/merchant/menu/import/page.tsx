@@ -20,7 +20,7 @@ export default async function MenuImportPage({
     <SurfaceShell title={t("title")} lead={t("lead")} who={user.email ?? user.id}>
       <Link
         href={`/merchant/menu${storeId ? `?store=${storeId}` : ""}`}
-        className="text-brand-800 self-start font-semibold underline"
+        className="text-action self-start font-semibold underline"
       >
         ← {tMenu("title")}
       </Link>

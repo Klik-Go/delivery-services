@@ -282,7 +282,7 @@ export function CheckoutView({
         {methods.map((m) => (
           <label
             key={m}
-            className="bg-surface-muted min-h-tap flex items-center gap-3 rounded-xl px-4 py-2"
+            className="bg-sheet-alt min-h-tap flex items-center gap-3 rounded-xl px-4 py-2"
           >
             <input
               type="radio"
@@ -382,7 +382,7 @@ export function CheckoutView({
       {data && !data.quote.deliverable ? <FormError message={tCart("notDeliverable")} /> : null}
       {error ? <FormError message={error} /> : null}
 
-      <div className="bg-surface fixed inset-x-0 bottom-0 border-t px-4 py-3">
+      <div className="bg-sheet fixed inset-x-0 bottom-0 border-t px-4 py-3">
         <Button
           type="submit"
           size="lg"

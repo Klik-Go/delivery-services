@@ -206,7 +206,7 @@ export function StoreSettingsForm({
           {status === "saving" ? t("saving") : t("save")}
         </Button>
         {status === "saved" ? (
-          <p aria-live="polite" className="text-brand-800 font-semibold">
+          <p aria-live="polite" className="text-action font-semibold">
             {t("saved")}
           </p>
         ) : null}
@@ -223,7 +223,7 @@ export function StoreSettingsForm({
           {closures.map((closure) => (
             <li
               key={closure.id}
-              className="bg-surface-muted flex items-center justify-between rounded-xl p-3"
+              className="bg-sheet-alt flex items-center justify-between rounded-xl p-3"
             >
               <span className="text-ink">
                 {closure.closedOn}

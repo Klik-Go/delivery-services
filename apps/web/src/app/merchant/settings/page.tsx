@@ -34,7 +34,7 @@ export default async function StoreSettingsPage({
     >
       <Link
         href={`/merchant${storeId ? `?store=${storeId}` : ""}`}
-        className="text-brand-800 self-start font-semibold underline"
+        className="text-action self-start font-semibold underline"
       >
         ← {tMerchant("back")}
       </Link>
