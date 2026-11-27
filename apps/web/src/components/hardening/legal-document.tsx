@@ -30,7 +30,9 @@ export async function LegalDocument({
           <p className="text-record text-ink-muted">
             {t("updated", { date: LEGAL_VERSIONS[document] })}
           </p>
-          <StatusMark tone="awaiting" icon={<FileWarning aria-hidden />} label={t("draft")} />
+          <p role="note">
+            <StatusMark tone="awaiting" icon={<FileWarning aria-hidden />} label={t("draft")} />
+          </p>
         </SheetSection>
         <SheetSection className="flex flex-col gap-4">
           <p className="text-body text-ink">{t(`${document}.intro`)}</p>
